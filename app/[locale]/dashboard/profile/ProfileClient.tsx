@@ -161,7 +161,7 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
         location: formData.location || undefined,
       }); */
 
-      toast.success(t("saveSuccess") || "Profile saved successfully");
+      toast.success(t("saveSuccess") || "Profile saved successfully!");
     } catch (error: any) {
       console.error("Error saving profile:", error);
 
