@@ -1,0 +1,340 @@
+{
+  "home": {
+    "hero": {
+      "badge": "AI chat analysis • Conversation intelligence",
+      "title1": "Transform Conversations",
+      "title2": "Into Comprehensive",
+      "title3": "Professional Analyses",
+      "subtitle": "Accurately extract data and insights from WhatsApp, Discord, and Telegram conversations using advanced AI.",
+      "bullet1": "Automatic executive summaries, sentiment & behavioral analysis.",
+      "bullet2": "Turn messy chat logs into clean, structured insights in minutes.",
+      "bullet3": "Export ready-to-share reports for teams, managers, and clients.",
+      "getStarted": "Get Started",
+      "learnMore": "Learn More",
+      "trustRow1": "⚡ No training required",
+      "trustRow2": "Paste chats • Get analysis • Export",
+      "cardChatSources": "Chat Sources",
+      "cardLivePreview": "Live Preview",
+      "cardRawConversation": "Raw Conversation",
+      "cardExampleText": "We need a quote for a new feature, what's your best price and timeline?",
+      "cardInput": "Input",
+      "cardAiAnalysis": "AI Analysis",
+      "cardExecutiveSummary": "Executive Summary",
+      "cardExampleSummary": "Negotiation focused on price and delivery time. Client shows resistance at initial anchor but remains open after concession. Outcome pending.",
+      "cardSentiment": "Sentiment",
+      "cardResolution": "Resolution",
+      "cardMatch": "Match",
+      "cardExportAs": "Export as:",
+      "cardPdfReport": "PDF Report",
+      "cardFaqs": "FAQs",
+      "cardMarkdown": "Markdown"
+    },
+    "features": {
+      "title": "Advanced AI-Powered Capabilities",
+      "subtitle": "Transform raw conversations into fully analyzed insights, performance metrics, and structured knowledge.",
+      "item1": {
+        "title": "Full Conversation Intelligence",
+        "desc": "Executive summaries, sentiment evolution, friction detection, and full communication profiling."
+      },
+      "item2": {
+        "title": "Behavioral & Linguistic Analysis",
+        "desc": "Clarity, empathy, assertiveness, engagement level, tone mapping, and linguistic patterns."
+      },
+      "item3": {
+        "title": "Outcome & Negotiation Insights",
+        "desc": "Resolution likelihood, negotiation strength, price tension points, and risk indicators."
+      },
+      "item4": {
+        "title": "Employee Performance Analytics",
+        "desc": "Track response time, sentiment averages, strengths, weaknesses, and behavioral trends over time."
+      },
+      "item5": {
+        "title": "Auto-Generated FAQs & KB",
+        "desc": "Extract recurring questions and generate accurate answers with confidence scoring."
+      },
+      "item6": {
+        "title": "Export-Ready Executive Reports",
+        "desc": "Download polished PDF reports, Markdown summaries, and structured insights instantly."
+      },
+      "item7": {
+        "title": "Multi-Language Intelligence",
+        "desc": "Arabic, English, Turkish, Spanish, French, and Hindi — with precise cross-language analysis."
+      }
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "subtitle": "From raw chats to polished docs in three simple steps.",
+      "step1": {
+        "title": "Import Chats",
+        "desc": "Upload WhatsApp/Discord/Telegram chats or CSV/TXT files.",
+        "badge": "Input"
+      },
+      "step2": {
+        "title": "AI Analysis",
+        "desc": "We embed, cluster and summarize conversations using advanced AI.",
+        "badge": "AI"
+      },
+      "step3": {
+        "title": "Instant Docs",
+        "desc": "Export polished PDFs/Markdown, FAQs and analytics reports.",
+        "badge": "Output"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "All you need to know before getting started.",
+      "q1": "What chat platforms are supported?",
+      "a1": "We support WhatsApp, Discord, Telegram, and CSV/TXT file formats. Simply export your chat history and upload it to our platform.",
+      "q2": "How accurate is the AI analysis?",
+      "a2": "Our AI uses advanced natural language processing to provide highly accurate sentiment analysis, behavioral insights, and conversation summaries. The accuracy improves with longer conversation threads.",
+      "q3": "Can I export the analysis reports?",
+      "a3": "Yes! You can export your analysis as PDF reports, Markdown files, or structured FAQs. All exports are ready to share with your team or clients.",
+      "q4": "Is my chat data secure?",
+      "a4": "Absolutely. We use enterprise-grade encryption and never store your conversations permanently. Your data is processed securely and can be deleted at any time.",
+      "q5": "Do you support multiple languages?",
+      "a5": "Yes, we support Arabic, English, Turkish, Spanish, French, and Hindi with precise cross-language analysis capabilities."
+    },
+    "footer": {
+      "brandName": "Repvix",
+      "description": "Turn support chats into polished docs, FAQs and insights in seconds.",
+      "productLabel": "Product",
+      "companyLabel": "Company",
+      "features": "Features",
+      "howItWorks": "How it works",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "contact": "Contact",
+      "copyright": "© {year} Repvix. All rights reserved.",
+      "tagline": "Built with love and a bit of AI ✨"
+    }
+  },
+  "header": {
+    "hero": "Home",
+    "features": "Features",
+    "howItWorks": "How it Works",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "myTeam": "My Team",
+    "billing": "Billing",
+    "settings": "Settings",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "logoAlt": "Repvix logo",
+    "brandName": "Repvix"
+  },
+  "dashboard": {
+    "breadcrumb": {
+      "dashboard": "Dashboard",
+      "analytics": "Analytics",
+      "myTeam": "My Team",
+      "settings": "Settings",
+      "profile": "Profile",
+      "chats": "Chats",
+      "edit": "Edit",
+      "billing": "Billing",
+      "pricing": "Pricing",
+      "employee": "Employee",
+      "chat": "Chat"
+    },
+    "pricing": {
+      "title": "Choose Your Plan",
+      "subtitle": "Select the perfect plan for your needs. All plans include our core features with varying limits.",
+      "popular": "Popular",
+      "perMonth": "/month",
+      "customPrice": "Custom",
+      "subscribeNow": "Subscribe Now",
+      "contactUs": "Contact Us",
+      "plans": {
+        "basic": {
+          "title": "Basic",
+          "description": "Perfect for individuals getting started",
+          "features": {
+            "f1": "Up to 10 conversations per month",
+            "f2": "Basic sentiment analysis",
+            "f3": "PDF export",
+            "f4": "Email support",
+            "f5": "Standard processing speed",
+            "f6": "Basic analytics dashboard"
+          }
+        },
+        "starter": {
+          "title": "Starter",
+          "description": "Ideal for small teams and growing businesses",
+          "features": {
+            "f1": "Up to 50 conversations per month",
+            "f2": "Advanced sentiment & behavioral analysis",
+            "f3": "PDF & Markdown export",
+            "f4": "Priority email support",
+            "f5": "Faster processing speed",
+            "f6": "Enhanced analytics dashboard",
+            "f7": "Auto-generated FAQs"
+          }
+        },
+        "pro": {
+          "title": "Pro",
+          "description": "For professional teams and agencies",
+          "features": {
+            "f1": "Up to 200 conversations per month",
+            "f2": "Full conversation intelligence suite",
+            "f3": "All export formats (PDF, Markdown, CSV)",
+            "f4": "Priority support with SLA",
+            "f5": "Fastest processing speed",
+            "f6": "Advanced analytics & insights",
+            "f7": "Multi-language support"
+          }
+        },
+        "business": {
+          "title": "Business",
+          "description": "For larger organizations with high volume",
+          "features": {
+            "f1": "Up to 500 conversations per month",
+            "f2": "Enterprise-grade analysis",
+            "f3": "Custom export formats",
+            "f4": "Dedicated account manager",
+            "f5": "Custom integrations",
+            "f6": "Advanced reporting & API access"
+          }
+        },
+        "enterprise": {
+          "title": "Enterprise",
+          "description": "Custom solutions for large-scale operations",
+          "features": {
+            "f1": "Unlimited conversations",
+            "f2": "Custom AI model training",
+            "f3": "White-label solutions",
+            "f4": "24/7 dedicated support",
+            "f5": "On-premise deployment options",
+            "f6": "Custom SLA & compliance"
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "title": "Repvix - AI-Powered Chat Analytics & Conversation Intelligence",
+    "description": "Transform WhatsApp, Discord, and Telegram conversations into comprehensive professional analyses. Get executive summaries, sentiment analysis, behavioral insights, and export-ready reports in seconds.",
+    "keywords": "chat analysis, conversation intelligence, WhatsApp analysis, Discord analytics, Telegram insights, AI chat analytics, sentiment analysis, behavioral analysis, conversation analytics, chat export, PDF reports, AI-powered insights, customer support analytics, team performance analytics"
+  },
+  "locale": {
+    "arabic": "Arabic",
+    "english": "English",
+    "french": "French",
+    "turkish": "Turkish",
+    "spanish": "Spanish",
+    "hindi": "Hindi"
+  },
+  "signUp": {
+    "title": "Create your account",
+    "subtitle": "Welcome! Please fill in the details to get started.",
+    "backToHome": "Back to Home",
+    "continueWithGoogle": "Google",
+    "continueWithSlack": "Slack",
+    "or": "or",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "username": "Username",
+    "emailAddress": "Email address",
+    "password": "Password",
+    "optional": "Optional",
+    "firstNamePlaceholder": "First name",
+    "lastNamePlaceholder": "Last name",
+    "usernamePlaceholder": "Choose a username",
+    "emailPlaceholder": "Enter your email address",
+    "passwordPlaceholder": "Enter your password",
+    "continue": "Continue",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "verificationEmailSent": "Verification email sent! Please check your inbox.",
+    "errorOccurred": "An error occurred. Please try again."
+  },
+  "login": {
+    "title": "Sign in to Repvix",
+    "subtitle": "Welcome back! Please sign in to continue",
+    "backToHome": "Back to Home",
+    "continueWithGoogle": "Google",
+    "continueWithSlack": "Slack",
+    "or": "or",
+    "emailOrUsername": "Email address or username",
+    "phoneNumber": "Phone number",
+    "password": "Password",
+    "useEmail": "Use email",
+    "usePhone": "Use phone",
+    "emailOrUsernamePlaceholder": "Enter your email or username",
+    "phonePlaceholder": "Enter your phone number",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "continue": "Continue",
+    "dontHaveAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "signInSuccess": "Signed in successfully!",
+    "additionalStepsRequired": "Additional steps required",
+    "errorOccurred": "An error occurred. Please try again."
+  },
+  "verifyEmail": {
+    "title": "Verify your email",
+    "subtitle": "We've sent a verification code to your email address.",
+    "sentTo": "Code sent to",
+    "enterCode": "Enter the 6-digit code",
+    "verify": "Verify Email",
+    "resendCode": "Didn't receive the code? Resend",
+    "backToSignUp": "Back to Sign Up",
+    "backToHome": "Back to Home",
+    "verificationSuccess": "Email verified successfully!",
+    "invalidCode": "Please enter a valid 6-digit code",
+    "codeResent": "Verification code resent! Please check your email.",
+    "errorOccurred": "An error occurred. Please try again."
+  },
+  "team": {
+    "title": "My Team",
+    "subtitle": "Manage your team members and their roles",
+    "loading": "Loading...",
+    "createYourOrganization": "Create Your Organization",
+    "createOrganizationDescription": "Get started by creating your organization to manage your team",
+    "companyName": "Company Name",
+    "enterCompanyName": "Enter your company name",
+    "creating": "Creating...",
+    "createOrganization": "Create Organization",
+    "organizationCreated": "Organization created successfully!",
+    "errorCreatingOrganization": "Failed to create organization",
+    "totalMembers": "Total Members",
+    "supportAgents": "Support Agents",
+    "salesReps": "Sales Reps",
+    "managers": "Managers",
+    "searchPlaceholder": "Search by name or email...",
+    "filterByRole": "Filter by Role",
+    "allRoles": "All Roles",
+    "support": "Support",
+    "sales": "Sales",
+    "manager": "Manager",
+    "noTeamMembersYet": "No team members yet",
+    "startBuildingTeam": "Start building your team by inviting members",
+    "inviteFirstMember": "Invite First Member",
+    "inviteMember": "Invite Member",
+    "viewDetails": "View Details",
+    "sendMessage": "Send Message",
+    "viewSchedule": "View Schedule",
+    "joined": "Joined",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "support": "Support",
+      "sales": "Sales",
+      "manager": "Manager"
+    },
+    "alreadySignedIn": "You're already signed in. Redirecting...",
+    "inviteMemberDescription": "Send an invitation to join your organization",
+    "emailAddress": "Email Address",
+    "role": "Role",
+    "selectRole": "Select Role",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "sendInvitation": "Send Invitation",
+    "invitationSent": "Invitation sent successfully!",
+    "invitationError": "Failed to send invitation"
+  }
+}

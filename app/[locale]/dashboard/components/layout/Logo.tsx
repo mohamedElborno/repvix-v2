@@ -1,0 +1,22 @@
+"use client";
+import React from "react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+
+export default function Logo({ open }: { open: boolean }) {
+  const t = useTranslations("header");
+  return (
+    <div className="flex items-center gap-2">
+      <Image
+        src="/logo.png"
+        alt="Logo"
+        className={`h-6 w-auto dark:invert shrink-0 transition-opacity ease-in-out duration-400 ${
+          open ? "opacity-100" : "opacity-0"
+        }`}
+        width={500}
+        height={500}
+      />
+      <p className="text-xl font-medium text-white">{t("brandName")}</p>
+    </div>
+  );
+}
