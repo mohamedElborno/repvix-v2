@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireUser } from "./auth";
+import { requireAdmin, requireUser } from "./auth";
 
 /**
  * Get current user's organization membership
@@ -44,6 +44,11 @@ export const addMemberFromInvite = mutation({
     role: v.string(),
   },
   handler: async (ctx, args) => {
+    // 1. Security check: Ensure the current user is an owner or admin of the organization.
+    // If not, an "Insufficient permissions" error will be thrown.
+    await requireAdmin(ctx, args.organizationId);
+
+    // 2. Add the member
     await ctx.db.insert("organizationMembers", {
       organizationId: args.organizationId,
       clerkUserId: args.clerkUserId,

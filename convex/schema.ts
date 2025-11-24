@@ -26,6 +26,7 @@ export default defineSchema({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    // Add "org:admin" and "org:member" and "org:basic_member" to match Clerk default roles
     role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member")),
     joinedAt: v.number(),
   })

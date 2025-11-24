@@ -2,6 +2,7 @@
 
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireAdmin } from "./auth";
 
 export const getByClerkId = query({
   args: { clerkOrgId: v.string() },
@@ -154,5 +155,71 @@ export const getOrganizationMembers = query({
       .collect();
 
     return members;
+  },
+});
+
+export const updateMemberRole = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(), // مُعرِّف الموظف الذي سيتم تعديل بياناته
+    newRole: v.union(
+      v.literal("owner"),
+      v.literal("admin"),
+      v.literal("member")
+    ),
+  },
+  handler: async (ctx, args) => {
+    // 1. التحقق الأمني: يجب أن يكون المستخدم الحالي مديرًا أو مالكًا.
+    await requireAdmin(ctx, args.organizationId);
+
+    // 2. البحث عن العضوية في Convex
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+      .first();
+
+    if (!membership) throw new Error("العضو غير موجود في هذه المنظمة.");
+
+    // 3. تطبيق التعديل على Convex
+    await ctx.db.patch(membership._id, { role: args.newRole });
+
+    // 4. ملاحظة مهمة: تحديث Clerk (يجب أن يتم هذا في الـ Frontend أو Webhook)
+    // لا يمكن لدوال Convex تعديل Clerk مباشرة.
+    return true;
+  },
+});
+
+export const removeMember = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(), // مُعرِّف الموظف المراد حذفه
+  },
+  handler: async (ctx, args) => {
+    // 1. التحقق الأمني: يجب أن يكون المستخدم الحالي مديرًا أو مالكًا.
+    await requireAdmin(ctx, args.organizationId);
+
+    // 2. البحث عن العضوية في Convex
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+      .first();
+
+    if (!membership) throw new Error("العضو غير موجود في هذه المنظمة.");
+
+    // 3. حذف العضوية من Convex
+    await ctx.db.delete(membership._id);
+
+    // 4. حذف بيانات الموظف المرتبطة (اختياري، حسب احتياجك)
+    const employee = await ctx.db
+      .query("employees")
+      .withIndex("by_user", (q) => q.eq("userId", args.clerkUserId))
+      .first();
+    if (employee) await ctx.db.delete(employee._id);
+
+    // 5. ملاحظة مهمة: يجب استدعاء Clerk API للحذف
+    // يجب أن يتم هذا في الـ Frontend.
+    return true;
   },
 });
