@@ -1,140 +1,48 @@
+// convex/orgMembers.ts
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin, requireOrgMembership, requireUser } from "./auth";
-import { Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 
 /**
- * Get current user's organization membership
+ * Get one member by Convex Id with strict org-boundary checks
  */
-export const getCurrent = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await requireUser(ctx);
-
-    // Find the user's organization membership
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("clerkUserId", user.subject))
-      .first();
-
-    if (!membership) {
-      return null;
-    }
-
-    // Get the organization details
-    const org = await ctx.db.get(membership.organizationId);
-
-    return {
-      orgId: membership.organizationId,
-      role: membership.role,
-      organization: org,
-    };
-  },
-});
-
-/**
- * Add a member from an invitation
- * 🔒 SECURITY: Verifies member doesn't already exist
- */
-export const addMemberFromInvite = mutation({
-  args: {
-    organizationId: v.id("organizations"),
-    clerkUserId: v.string(),
-    name: v.string(),
-    email: v.string(),
-    imageUrl: v.string(),
-    role: v.string(),
-  },
-  handler: async (ctx, args) => {
-    // 1. 🔒 Security check: Ensure the current user is an owner or admin of the organization.
-    await requireAdmin(ctx, args.organizationId);
-
-    // 2. 🔒 التحقق من أن العضو غير موجود مسبقاً
-    const existingMember = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
-      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
-      .first();
-
-    if (existingMember) {
-      throw new Error("Member already exists in this organization.");
-    }
-
-    // 3. Add the member
-    await ctx.db.insert("organizationMembers", {
-      organizationId: args.organizationId,
-      clerkUserId: args.clerkUserId,
-      name: args.name,
-      email: args.email,
-      imageUrl: args.imageUrl,
-      role: args.role as "owner" | "admin" | "member",
-      joinedAt: Date.now(),
-    });
-  },
-});
-
 export const getOrganizationMemberById = query({
   args: {
-    memberId: v.id("organizationMembers"), // 🚨 يجب أن يكون هذا ID Convex
-    organizationId: v.string(), // Clerk org ID
+    memberId: v.id("organizationMembers"),
   },
   handler: async (ctx, args) => {
-    // 1. جلب بيانات المستخدم الحالي
     const user = await requireUser(ctx);
 
-    // 2. تحويل Clerk org ID إلى Convex org ID
-    const org = await ctx.db
-      .query("organizations")
-      .withIndex("by_clerkOrgId", (q) =>
-        q.eq("clerkOrgId", args.organizationId)
-      )
-      .first();
-
-    if (!org) {
-      throw new Error("Organization not found.");
-    }
-
-    const convexOrgId = org._id;
-
-    // 3. التحقق من أن المستخدم الحالي عضو في هذه المنظمة
-    await requireOrgMembership(ctx, convexOrgId);
-
-    // 4. جلب بيانات العضوية المطلوبة
     const organizationMember = await ctx.db.get(args.memberId);
-
     if (!organizationMember) {
       throw new Error("Member not found.");
     }
 
-    // 5. التحقق من أن العضو ينتمي للمنظمة الصحيحة
-    if (organizationMember.organizationId !== convexOrgId) {
-      throw new Error("Member does not belong to this organization.");
-    }
+    const orgId = organizationMember.organizationId;
 
-    // 6. جلب عضوية المستخدم الحالي للتحقق من الصلاحيات
+    // Current user must belong to this org
+    await requireOrgMembership(ctx, orgId);
+
+    // Find current user's membership in this org
     const userMembership = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", user.subject))
-      .filter((q) => q.eq(q.field("organizationId"), convexOrgId))
+      .filter((q) => q.eq(q.field("organizationId"), orgId))
       .first();
 
     if (!userMembership) {
-      throw new Error("Unauthorized: Not a member of this organization.");
+      throw new Error("Unauthorized.");
     }
 
-    // 7. تطبيق سياسة الصلاحيات: من يحق له الرؤية؟
     const isOwnerOrAdmin =
       userMembership.role === "owner" || userMembership.role === "admin";
     const isSelf = organizationMember.clerkUserId === user.subject;
 
     if (!isOwnerOrAdmin && !isSelf) {
-      // إذا لم يكن مديراً/مالكاً ولم يكن يحاول عرض صفحته
-      throw new Error(
-        "Unauthorized: Insufficient permissions to view this member."
-      );
+      throw new Error("Unauthorized: insufficient permissions.");
     }
 
-    // 🚨 الآن، نُعيد بيانات العضو ومُعرّف Clerk الخاص به
     return {
       organizationMember,
       clerkUserId: organizationMember.clerkUserId,
@@ -142,14 +50,9 @@ export const getOrganizationMemberById = query({
   },
 });
 
-/**
- * Update organization member information (name, email, role)
- * 🔒 SECURITY: organizationId is extracted from user's membership, not from client
- */
 export const updateMemberInfo = mutation({
   args: {
     memberId: v.id("organizationMembers"),
-    // ❌ REMOVED: organizationId - لا نثق بالعميل، نستخرجه من عضوية المستخدم
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     role: v.optional(
@@ -157,69 +60,137 @@ export const updateMemberInfo = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    // 1. 🔒 جلب بيانات العضوية المستهدفة أولاً
-    const targetMembership = await ctx.db.get(args.memberId);
+    const target = await ctx.db.get(args.memberId);
+    if (!target) throw new Error("Member not found.");
 
-    if (!targetMembership) {
-      throw new Error("Member not found.");
+    const orgId = target.organizationId;
+
+    // هوية المستخدم الحالي
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller) throw new Error("Unauthorized.");
+
+    // عضوية المستخدم الحالي داخل المنظمة
+    const callerMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("clerkUserId", caller.subject))
+      .filter((q) => q.eq(q.field("organizationId"), orgId))
+      .first();
+
+    if (!callerMembership) {
+      throw new Error("Unauthorized: Not part of this organization.");
     }
 
-    const organizationId = targetMembership.organizationId;
+    const callerRole = callerMembership.role;
+    const isCallerAdmin = callerRole === "admin" || callerRole === "owner";
+    const isCallerOwner = callerRole === "owner";
+    const isSelf = caller.subject === target.clerkUserId;
 
-    // 2. 🔒 التحقق الأمني: يجب أن يكون المستخدم الحالي مديرًا أو مالكًا
-    // نستخدم organizationId من قاعدة البيانات، وليس من العميل
-    const currentUserMembership = await requireAdmin(ctx, organizationId);
+    // ---------------------------------------------------------------------
+    // 1) تعديل الدور (role) → يتطلب أن يكون Caller = Admin أو Owner
+    // ---------------------------------------------------------------------
+    if (args.role !== undefined && args.role !== target.role) {
+      if (!isCallerAdmin) {
+        throw new Error("Only admins or owners can change member roles.");
+      }
 
-    // 3. 🔒 منع تغيير دور Owner الوحيد
-    if (args.role !== undefined && args.role !== targetMembership.role) {
-      // إذا كان العضو المستهدف هو Owner ونحاول تغيير دوره
-      if (targetMembership.role === "owner" && args.role !== "owner") {
-        // عدّ عدد Owners في المنظمة
-        const allOwners = await ctx.db
+      // منع تغيير آخر Owner في المنظمة
+      if (target.role === "owner" && args.role !== "owner") {
+        const owners = await ctx.db
           .query("organizationMembers")
-          .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+          .withIndex("by_org", (q) => q.eq("organizationId", orgId))
           .filter((q) => q.eq(q.field("role"), "owner"))
           .collect();
 
-        if (allOwners.length === 1) {
-          throw new Error(
-            "Cannot change role of the last owner. At least one owner is required."
-          );
+        if (owners.length === 1) {
+          throw new Error("Cannot change role of the last owner.");
         }
       }
 
-      // 🔒 منع Member من ترقية نفسه إلى Owner (يجب أن يكون Admin على الأقل)
-      if (
-        args.role === "owner" &&
-        currentUserMembership.role !== "owner" &&
-        targetMembership.clerkUserId === currentUserMembership.clerkUserId
-      ) {
-        throw new Error("Only owners can promote members to owner role.");
+      // منع ترقية النفس إلى Owner إذا لم يكن Owner أصلاً
+      if (args.role === "owner" && !isCallerOwner && isSelf) {
+        throw new Error("Only owners can promote themselves to owner.");
       }
     }
 
-    // 4. تحديث البيانات
+    // ---------------------------------------------------------------------
+    // 2) تعديل الاسم أو الإيميل → مسموح فقط في حال:
+    //    * المستخدم يعدّل نفسه
+    //    * أو Caller = Admin/Owner
+    // ---------------------------------------------------------------------
+    if (!isSelf && !isCallerAdmin) {
+      throw new Error("Insufficient permissions to update another member.");
+    }
+
     const updates: {
       name?: string;
       email?: string;
       role?: "owner" | "admin" | "member";
     } = {};
 
-    if (args.name !== undefined) {
-      updates.name = args.name || undefined;
-    }
-    if (args.email !== undefined) {
-      updates.email = args.email || undefined;
-    }
-    if (args.role !== undefined) {
-      updates.role = args.role;
-    }
+    if (args.name !== undefined) updates.name = args.name || undefined;
+    if (args.email !== undefined) updates.email = args.email || undefined;
+    if (args.role !== undefined) updates.role = args.role;
 
-    // 5. تطبيق التحديثات
     if (Object.keys(updates).length > 0) {
       await ctx.db.patch(args.memberId, updates);
     }
 
     return true;
+  },
+});
+
+export const addMemberFromInvite = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(),
+    name: v.string(),
+    email: v.string(),
+    imageUrl: v.optional(v.string()),
+    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member")),
+  },
+  handler: async (ctx, args) => {
+    // هذا يُستدعى من webhook عن طريق server client
+    // وبالتالي لا نستخدم requireUser/requireAdmin هنا
+    // (الأمان الحقيقي يكون بالتحقق من توقيع Clerk في Route نفسه)
+
+    // تأكد أن العضو غير مضاف مسبقاً
+    const existing = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+      .first();
+
+    if (existing) {
+      // فقط نعمل تحديث لو تغير الدور أو الصورة
+      const needsUpdate =
+        existing.role !== args.role ||
+        existing.imageUrl !== args.imageUrl ||
+        existing.email !== args.email ||
+        existing.name !== args.name;
+
+      if (needsUpdate) {
+        await ctx.db.patch(existing._id, {
+          role: args.role,
+          name: args.name || existing.name,
+          email: args.email || existing.email,
+          imageUrl: args.imageUrl || existing.imageUrl,
+        });
+      }
+
+      return existing._id;
+    }
+
+    // عضو جديد
+    const id = await ctx.db.insert("organizationMembers", {
+      organizationId: args.organizationId,
+      clerkUserId: args.clerkUserId,
+      name: args.name || undefined,
+      email: args.email || undefined,
+      imageUrl: args.imageUrl || undefined,
+      role: args.role,
+      joinedAt: Date.now(),
+    });
+
+    return id;
   },
 });

@@ -1,6 +1,6 @@
 "use server";
 
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 
 /**
  * Server action to remove a member from Clerk organization
@@ -48,4 +48,18 @@ export async function removeMemberFromClerk(clerkUserId: string) {
       error?.message || "Failed to remove member from Clerk organization"
     );
   }
+}
+
+export async function leaveOrganizationAction(orgId: string) {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthorized");
+
+  // Remove the user from the organization in Clerk
+  const clerk = await clerkClient();
+  await clerk.organizations.deleteOrganizationMembership({
+    organizationId: orgId,
+    userId: user.id,
+  });
+
+  return { success: true, message: "User left organization successfully" };
 }

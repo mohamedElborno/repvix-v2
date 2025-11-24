@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Card } from "@/components/ui/card";
+
+import { useAuth, useOrganization, useOrganizationList } from "@clerk/nextjs";
+
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useOrganizationList, useOrganization } from "@clerk/nextjs";
 import {
   Select,
   SelectContent,
@@ -19,122 +20,273 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+import {
   Users,
   UserPlus,
   Search,
-  MoreVertical,
-  Mail,
   Calendar,
   Shield,
   User as UserIcon,
   Crown,
-  Plus,
-  Building2,
+  MoreVertical,
   Loader2,
+  LogOut,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+
 import InviteEmployeeDialog from "../components/InviteEmployeeDialog";
+import { leaveOrganizationAction } from "./[memberConvexId]/actions";
 
 export default function EmployeesClient() {
   const t = useTranslations("team");
   const locale = useLocale();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  const [companyName, setCompanyName] = useState("");
-  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
-  const { createOrganization, setActive, isLoaded } = useOrganizationList();
   const router = useRouter();
-  const { organization } = useOrganization();
+  const { userId } = useAuth();
 
-  async function invite(email: string, role: string) {
-    if (!organization) {
-      toast.error("No organization found");
-      return;
+  // ----------- HOOKS ALWAYS ON TOP ----------- //
+  const { organization, isLoaded, membership } = useOrganization();
+  const { userMemberships, setActive, createOrganization } =
+    useOrganizationList();
+
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [showInvite, setShowInvite] = useState(false);
+
+  const myRole = useMemo<"owner" | "admin" | "member" | undefined>(
+    () =>
+      membership?.role
+        ? (membership?.role.replace("org:", "") as "owner" | "admin" | "member")
+        : undefined,
+    [membership?.role]
+  );
+
+  // ----------- AUTO ACTIVATE ----------- //
+  useEffect(() => {
+    if (
+      isLoaded &&
+      !organization &&
+      userMemberships.data?.length &&
+      userMemberships.data.length === 1 &&
+      setActive
+    ) {
+      if (!userMemberships.data?.[0]?.organization) return;
+      setActive({ organization: userMemberships.data?.[0]?.organization?.id });
     }
+  }, [isLoaded, organization, userMemberships, setActive]);
 
-    try {
-      // Convert our custom roles to Clerk organization roles
-      // Clerk uses "org:admin", "org:member", "org:owner"
-      let clerkRole: "org:admin" | "org:member" | "org:owner";
-
-      if (role === "admin" || role === "manager") {
-        clerkRole = "org:admin";
-      } else if (role === "owner") {
-        clerkRole = "org:owner";
-      } else {
-        clerkRole = "org:member";
-      }
-
-      await organization.inviteMember({
-        emailAddress: email,
-        role: clerkRole,
-      });
-
-      toast.success(t("invitationSent") || "Invitation sent successfully!");
-
-      // Refresh the page to sync new members
-      router.refresh();
-    } catch (error: any) {
-      console.error("Error inviting member:", error);
-      toast.error(
-        error.message || t("invitationError") || "Failed to send invitation"
-      );
-    }
-  }
-
-  // Get organization members from Convex
-  const orgMembers = useQuery(
+  console.log(userMemberships);
+  // ----------- LOAD MEMBERS ----------- //
+  const members = useQuery(
     api.orgs.getOrganizationMembers,
     organization?.id ? { clerkOrgId: organization.id } : "skip"
   );
 
-  const handleCreateOrganization = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoaded || !companyName.trim()) return;
+  const filteredMembers = useMemo(() => {
+    if (!members) return [];
+    return members
+      .filter((m: any) => {
+        const matchSearch =
+          !search || m.name?.toLowerCase().includes(search.toLowerCase());
+        const matchRole = filterRole === "all" || m.role === filterRole;
+        return matchSearch && matchRole;
+      })
+      .sort((a: any, b: any) => b._creationTime - a._creationTime);
+  }, [members, search, filterRole]);
 
-    setIsCreatingOrg(true);
+  // ----------- LEAVE ORG ----------- //
+  async function handleLeaveOrganization() {
     try {
-      // 1) إنشاء المنظمة في Clerk
-      const org = await createOrganization({
-        name: companyName.trim(),
-      });
-
-      // 2) جعل المنظمة نشطة
-      await setActive({ organization: org.id });
-
-      // 3) تحديث الصفحة (سيشغّل المزامنة في السيرفر)
-      toast.success(
-        t("organizationCreated") || "Organization created successfully!"
-      );
+      if (!organization) return;
+      await leaveOrganizationAction(organization.id);
+      toast.success("You have left the organization.");
       router.refresh();
-    } catch (error: any) {
-      console.error("Error creating organization:", error);
-      toast.error(
-        error.message ||
-          t("errorCreatingOrganization") ||
-          "Failed to create organization"
-      );
-    } finally {
-      setIsCreatingOrg(false);
+    } catch (err: any) {
+      toast.error(err.message);
     }
-  };
+  }
+
+  // ----------- UI STATE RENDERING ----------- //
+  const ui = (() => {
+    // 1) Clerk not loaded
+    if (!isLoaded) {
+      return (
+        <div className="flex justify-center items-center min-h-[calc(100vh-120px)]">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      );
+    }
+
+    // 2) block multi-org
+    if (userMemberships.data?.length && userMemberships.data.length > 1) {
+      return (
+        <div className="p-8 text-center min-h-[calc(100vh-120px)]">
+          <h2 className="text-xl font-bold text-red-500 mb-2">
+            Multiple Organizations Detected
+          </h2>
+          <p className="text-gray-500">
+            Please leave all other organizations first.
+          </p>
+        </div>
+      );
+    }
+
+    // 3) user has no orgs → create org UI
+    if (userMemberships.data?.length && userMemberships.data.length === 0) {
+      return (
+        <CreateOrganizationUI
+          createOrganization={createOrganization}
+          t={t}
+          router={router}
+        />
+      );
+    }
+
+    // 4) Clerk switching → organization null temporarily
+    if (!organization) {
+      return (
+        <div className="flex justify-center items-center min-h-[calc(100vh-120px)]">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      );
+    }
+    console.log("userMemberships", userMemberships);
+    // 4) normal dashboard
+    return (
+      <div className="space-y-6 min-h-[calc(100vh-120px)]">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">{organization.name}</h1>
+            <p className="text-gray-500">{t("subtitle")}</p>
+          </div>
+
+          <div className="flex gap-2">
+            {myRole === "member" && (
+              <Button variant="destructive" onClick={handleLeaveOrganization}>
+                <LogOut className="w-4 h-4 mr-2" />
+                {t("leaveOrganization")}
+              </Button>
+            )}
+            {myRole === "owner" ||
+              (myRole === "admin" && (
+                <Button
+                  className="bg-blue-600 text-white"
+                  onClick={() => setShowInvite(true)}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  {t("inviteMember")}
+                </Button>
+              ))}
+          </div>
+        </div>
+
+        {/* FILTER BAR */}
+        <Card className="p-4 flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder={t("searchPlaceholder")}
+              className="pl-10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <Select value={filterRole} onValueChange={setFilterRole}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue
+                placeholder={t("filterByRole") || "Filter by role"}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span>{t("allRoles")}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="owner">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-600" />
+                  <span>{t("roles.owner")}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="admin">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-purple-600" />
+                  <span>{t("roles.admin")}</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="member">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-4 h-4 text-blue-600" />
+                  <span>{t("roles.member")}</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </Card>
+
+        {/* MEMBERS GRID */}
+        <MembersGrid
+          members={filteredMembers}
+          t={t}
+          locale={locale}
+          myRole={myRole}
+          currentUserId={userId}
+        />
+
+        {/* INVITE DIALOG */}
+        {myRole === "owner" ||
+          (myRole === "admin" && (
+            <InviteEmployeeDialog
+              isOpen={showInvite}
+              onClose={() => setShowInvite(false)}
+              onSubmit={async (email: string, role: string) => {
+                const clerkRole =
+                  role === "owner"
+                    ? "org:owner"
+                    : role === "admin"
+                      ? "org:admin"
+                      : "org:member";
+
+                await organization.inviteMember({
+                  emailAddress: email,
+                  role: clerkRole,
+                });
+
+                toast.success(t("invitationSent"));
+                router.refresh();
+              }}
+            />
+          ))}
+      </div>
+    );
+  })();
+
+  return <div className="space-y-6">{ui}</div>;
+}
+
+/* ------------------------------------------------------------------------- */
+/* MEMBERS GRID */
+/* ------------------------------------------------------------------------- */
+function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
+  const router = useRouter();
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "sales":
-        return <UserIcon className="w-4 h-4" />;
-      case "support":
-        return <Shield className="w-4 h-4" />;
-      case "manager":
+      case "owner":
         return <Crown className="w-4 h-4" />;
+      case "admin":
+        return <Shield className="w-4 h-4" />;
       default:
         return <UserIcon className="w-4 h-4" />;
     }
@@ -142,18 +294,19 @@ export default function EmployeesClient() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "sales":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "support":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "manager":
-        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "owner":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400";
+      case "admin":
+        return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400";
+      case "member":
+        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const formatDate = (timestamp: number) => {
+    if (!timestamp) return "N/A";
     return new Date(timestamp).toLocaleDateString(locale, {
       year: "numeric",
       month: "short",
@@ -161,320 +314,151 @@ export default function EmployeesClient() {
     });
   };
 
-  // Show loading state while Clerk is loading
-  if (!isLoaded) {
+  if (!members || members.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-7.5rem)]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">
-            {t("loading") || "Loading..."}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // After loading, check if organization exists
-  // If no organization exists, show creation form
-  if (!organization) {
-    return (
-      <div className="relative min-h-[calc(100vh-7.5rem)]">
-        {/* BLUR OVERLAY */}
-        <div className="absolute inset-0 backdrop-blur-sm bg-black/40 z-40"></div>
-
-        {/* MODAL CARD */}
-        <div className="absolute inset-0 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md p-8 shadow-xl border border-white/10 bg-white/10 backdrop-blur-xl">
-            <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Building2 className="w-8 h-8 text-blue-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">
-                {t("createYourOrganization") || "Create Your Organization"}
-              </h2>
-              <p className="text-gray-300">
-                {t("createOrganizationDescription") ||
-                  "Get started by creating your organization to manage your team"}
-              </p>
-            </div>
-
-            <form onSubmit={handleCreateOrganization} className="space-y-4">
-              <div>
-                <Label
-                  htmlFor="companyName"
-                  className="text-sm font-medium text-gray-200"
-                >
-                  {t("companyName") || "Company Name"}
-                </Label>
-                <Input
-                  id="companyName"
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder={
-                    t("enterCompanyName") || "Enter your company name"
-                  }
-                  className="mt-2 bg-white/20 border-white/30 text-white placeholder:text-gray-300"
-                  required
-                  disabled={isCreatingOrg}
-                  autoFocus
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={isCreatingOrg || !companyName.trim()}
-              >
-                {isCreatingOrg ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t("creating") || "Creating..."}
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("createOrganization") || "Create Organization"}
-                  </>
-                )}
-              </Button>
-            </form>
-          </Card>
-        </div>
+      <div className="text-center py-12">
+        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          {t("noTeamMembersYet")}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          {t("startBuildingTeam")}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 min-h-[calc(100vh-7.5rem)]">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {organization.name}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t("subtitle")}
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsInviteDialogOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          {t("inviteMember")}
-        </Button>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {members.map((member: any) => {
+        const canClick =
+          myRole === "owner" ||
+          myRole === "admin" ||
+          (currentUserId && member.clerkUserId === currentUserId);
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t("totalMembers")}</p>
-              <p className="text-2xl font-bold">{orgMembers?.length || 0}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Shield className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t("supportAgents")}</p>
-              <p className="text-2xl font-bold">
-                {orgMembers?.filter((member: any) => member.role === "support")
-                  .length || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <UserIcon className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t("salesReps")}</p>
-              <p className="text-2xl font-bold">
-                {orgMembers?.filter((member: any) => member.role === "sales")
-                  .length || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Crown className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t("managers")}</p>
-              <p className="text-2xl font-bold">
-                {orgMembers?.filter((member: any) => member.role === "manager")
-                  .length || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder={t("searchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder={t("filterByRole")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("allRoles")}</SelectItem>
-              <SelectItem value="support">{t("support")}</SelectItem>
-              <SelectItem value="sales">{t("sales")}</SelectItem>
-              <SelectItem value="manager">{t("manager")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
-
-      {/* Employees List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {!orgMembers || orgMembers.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {t("noTeamMembersYet")}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {t("startBuildingTeam")}
-            </p>
-            <Button
-              onClick={() => setIsInviteDialogOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              {t("inviteFirstMember")}
-            </Button>
-          </div>
-        ) : (
-          (orgMembers || [])
-            .filter((employee: any) => {
-              // Filter by search term (name or email)
-              const employeeName = employee.name || "";
-              const employeeEmail = employee.email || "";
-              const matchesSearch =
-                !searchTerm ||
-                employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                employeeEmail.toLowerCase().includes(searchTerm.toLowerCase());
-
-              // Filter by role
-              const matchesRole =
-                roleFilter === "all" || employee.role === roleFilter;
-
-              return matchesSearch && matchesRole;
-            })
-            .map((employee: any) => (
-              <Card
-                key={employee._id}
-                className="p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage
-                        src={employee.imageUrl || undefined}
-                        alt={employee.name || employee.email || "Employee"}
-                      />
-                      <AvatarFallback>
-                        {employee.name?.charAt(0).toUpperCase() ||
-                          employee.email?.charAt(0).toUpperCase() ||
-                          "E"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {employee.name || "Employee"}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {employee.email}
-                      </p>
-                    </div>
-                  </div>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() =>
-                          (window.location.href = `/dashboard/my-team/${employee._id}`)
-                        }
-                      >
-                        <UserIcon className="w-4 h-4 mr-2" />
-                        {t("viewDetails")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Mail className="w-4 h-4 mr-2" />
-                        {t("sendMessage")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        {t("viewSchedule")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+        return (
+          <Card
+            key={member._id}
+            className={`p-6 hover:shadow-lg transition-shadow ${
+              canClick ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+            }`}
+            onClick={() => {
+              if (!canClick) return;
+              router.push(`/dashboard/my-team/${member._id}`);
+            }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage
+                    src={member.imageUrl || undefined}
+                    alt={member.name || "Member"}
+                  />
+                  <AvatarFallback>
+                    {member.name?.charAt(0).toUpperCase() || "M"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                    {member.name || "Member"}
+                  </h3>
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Badge
-                      className={`${getRoleColor(employee.role)} flex items-center gap-1`}
+              {canClick && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    asChild
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/dashboard/my-team/${member._id}`);
+                      }}
                     >
-                      {getRoleIcon(employee.role)}
-                      {t(`roles.${employee.role}`)}
-                    </Badge>
-                  </div>
+                      <UserIcon className="w-4 h-4 mr-2" />
+                      {t("viewDetails")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
 
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4" />
-                      {t("joined")} {formatDate(employee.joinedAt)}
-                    </div>
-                  </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Badge
+                  className={`${getRoleColor(
+                    member.role
+                  )} flex items-center gap-1`}
+                >
+                  {getRoleIcon(member.role)}
+                  {t(`roles.${member.role}`)}
+                </Badge>
+              </div>
+
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {t("joined")} {formatDate(member.joinedAt)}
                 </div>
-              </Card>
-            ))
-        )}
-      </div>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
 
-      {/* Invite Dialog */}
-      <InviteEmployeeDialog
-        isOpen={isInviteDialogOpen}
-        onClose={() => setIsInviteDialogOpen(false)}
-        onSubmit={invite}
-      />
+/* ------------------------------------------------------------------------- */
+/* CREATE ORG UI */
+/* ------------------------------------------------------------------------- */
+function CreateOrganizationUI({ createOrganization, t, router }: any) {
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleCreate() {
+    try {
+      setLoading(true);
+
+      await createOrganization({ name });
+      toast.success(t("organizationCreated"));
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex justify-center items-center h-[60vh]">
+      <Card className="p-6 max-w-md w-full space-y-4">
+        <h2 className="text-xl font-bold">{t("createYourOrganization")}</h2>
+        <Input
+          placeholder={t("companyName")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <Button
+          className="w-full bg-blue-600 text-white"
+          disabled={loading || !name.trim()}
+          onClick={handleCreate}
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            t("createOrganization")
+          )}
+        </Button>
+      </Card>
     </div>
   );
 }

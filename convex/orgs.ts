@@ -70,60 +70,58 @@ export const syncOrganizationMembers = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    // First, find the Convex organization ID from the Clerk organization ID
     const org = await ctx.db
       .query("organizations")
       .withIndex("by_clerkOrgId", (q) => q.eq("clerkOrgId", args.clerkOrgId))
       .first();
-
-    if (!org) {
-      throw new Error(
-        `Organization with clerkOrgId ${args.clerkOrgId} not found`
-      );
-    }
-
-    const organizationId = org._id;
+    if (!org) throw new Error("Organization not found.");
 
     // 🔒 SECURITY: Verify user is a member of this organization
     // This is called from layout.tsx for authenticated users, so we just verify membership
     // The actual security is that this syncs FROM Clerk (source of truth), not arbitrary data
-    await requireOrgMembership(ctx, organizationId);
+    // Any member can trigger sync since it's read-only from Clerk's perspective
+    await requireOrgMembership(ctx, org._id);
 
-    // Now query existing members using the Convex organization ID
     const existingMembers = await ctx.db
       .query("organizationMembers")
-      .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+      .withIndex("by_org", (q) => q.eq("organizationId", org._id))
       .collect();
 
     const existingMap = new Map(existingMembers.map((m) => [m.clerkUserId, m]));
 
-    for (const member of args.members) {
-      const existing = existingMap.get(member.clerkUserId);
-      const normalizedRole = normalizeRole(member.role);
+    const normalizeRole = (clerkRole: string): "owner" | "admin" | "member" => {
+      const normalized = clerkRole.replace(/^org:/, "").toLowerCase();
+      if (normalized === "owner") return "owner";
+      if (normalized === "admin") return "admin";
+      return "member";
+    };
 
-      if (!existing) {
+    for (const member of args.members) {
+      const current = existingMap.get(member.clerkUserId);
+      const role = normalizeRole(member.role);
+
+      if (!current) {
         await ctx.db.insert("organizationMembers", {
-          organizationId: organizationId,
+          organizationId: org._id,
           clerkUserId: member.clerkUserId,
           name: member.name || undefined,
           email: member.email || undefined,
           imageUrl: member.imageUrl || undefined,
-          role: normalizedRole,
+          role,
           joinedAt: Date.now(),
         });
         continue;
       }
 
-      // Update role and user info if changed
       const needsUpdate =
-        existing.role !== normalizedRole ||
-        existing.name !== member.name ||
-        existing.email !== member.email ||
-        existing.imageUrl !== member.imageUrl;
+        current.role !== role ||
+        current.name !== member.name ||
+        current.email !== member.email ||
+        current.imageUrl !== member.imageUrl;
 
       if (needsUpdate) {
-        await ctx.db.patch(existing._id, {
-          role: normalizedRole,
+        await ctx.db.patch(current._id, {
+          role,
           name: member.name || undefined,
           email: member.email || undefined,
           imageUrl: member.imageUrl || undefined,
@@ -145,7 +143,6 @@ export const getOrganizationMembers = query({
     clerkOrgId: v.string(),
   },
   handler: async (ctx, args) => {
-    // First, find the Convex organization ID from the Clerk organization ID
     const org = await ctx.db
       .query("organizations")
       .withIndex("by_clerkOrgId", (q) => q.eq("clerkOrgId", args.clerkOrgId))
@@ -155,25 +152,20 @@ export const getOrganizationMembers = query({
       return [];
     }
 
-    // 🔒 SECURITY: Verify user is a member of this organization
     try {
       await requireOrgMembership(ctx, org._id);
     } catch {
-      // User is not a member, return empty array
       return [];
     }
 
-    // Get all members of this organization
     const members = await ctx.db
       .query("organizationMembers")
       .withIndex("by_org", (q) => q.eq("organizationId", org._id))
       .collect();
 
-    // 🔒 SECURITY: Return only necessary fields to prevent information leakage
-    // Members can see: name, role, imageUrl, joinedAt
-    // Sensitive data like email and clerkUserId are excluded for non-admins
     return members.map((m) => ({
       _id: m._id,
+      clerkUserId: m.clerkUserId, // 👈 مهم جداً
       name: m.name,
       role: m.role,
       imageUrl: m.imageUrl,
@@ -232,39 +224,28 @@ export const updateMemberRole = mutation({
 
 export const removeMember = mutation({
   args: {
-    organizationId: v.id("organizations"),
-    clerkUserId: v.string(), // مُعرِّف الموظف المراد حذفه
+    memberId: v.id("organizationMembers"),
   },
   handler: async (ctx, args) => {
-    // 1. 🔒 التحقق الأمني: يجب أن يكون المستخدم الحالي مديرًا أو مالكًا.
-    await requireAdmin(ctx, args.organizationId);
+    const target = await ctx.db.get(args.memberId);
+    if (!target) throw new Error("Member not found.");
+    const orgId = target.organizationId;
 
-    // 2. البحث عن العضوية في Convex
-    const membership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
-      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
-      .first();
+    await requireAdmin(ctx, orgId);
 
-    if (!membership) throw new Error("العضو غير موجود في هذه المنظمة.");
-
-    // 3. 🔒 منع حذف Owner
-    if (membership.role === "owner") {
-      throw new Error("Cannot remove owner. Please transfer ownership first.");
+    if (target.role === "owner") {
+      throw new Error("Cannot remove owner. Transfer ownership first.");
     }
 
-    // 4. حذف العضوية من Convex
-    await ctx.db.delete(membership._id);
+    await ctx.db.delete(target._id);
 
-    // 5. حذف بيانات الموظف المرتبطة (اختياري، حسب احتياجك)
+    // Optional: cascade delete from your custom "employees" collection if exists
     const employee = await ctx.db
       .query("employees")
-      .withIndex("by_user", (q) => q.eq("userId", args.clerkUserId))
+      .withIndex("by_user", (q) => q.eq("userId", target.clerkUserId))
       .first();
     if (employee) await ctx.db.delete(employee._id);
 
-    // 6. ملاحظة مهمة: يجب استدعاء Clerk API للحذف
-    // يجب أن يتم هذا في الـ Frontend.
     return true;
   },
 });

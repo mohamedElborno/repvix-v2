@@ -1,86 +1,96 @@
-// app/dashboard/my-team/[employeeId]/page.tsx
+// app/[locale]/dashboard/my-team/[memberConvexId]/page.tsx
 
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+
 import { api } from "@/convex/_generated/api";
 import { getConvexServerClient } from "@/lib/convex";
 import type { Id } from "@/convex/_generated/dataModel";
 
 import EmployeeDetailsClient from "./EmployeeDetailsClient";
 
-export default async function EmployeeDetailsPage({
-  params,
-}: {
-  params: Promise<any>;
-}) {
-  // 1. 🔑 التحقق من مصادقة Clerk وتحديد المنظمة
-  const { userId, orgId } = await auth();
+type PageParams = {
+  locale: string; // لأن عندك [locale] في المسار
+  memberConvexId: string; // اسم البرام في المسار
+};
 
-  if (!userId || !orgId) {
+export default async function EmployeeDetailsPage(props: {
+  params: Promise<PageParams>;
+}) {
+  // 1) فك الـ params مرة واحدة فقط
+  const [{ userId }, { memberConvexId, locale }] = await Promise.all([
+    auth(),
+    props.params,
+  ]);
+
+  // لو حاب تطبّع بعد ما تفك الوعد (هذا آمن)
+  console.log("Server params:", { locale, memberConvexId });
+
+  // 2) لو مافيش user → روح للّوجين
+  if (!userId) {
     redirect("/login");
   }
 
-  const { memberConvexId } = await params;
+  // 3) تحقق بسيط على شكل الـ id (اختياري لكن أنظف من regex الغلط السابق)
+  const isValidConvexId = /^[a-z0-9]{32}$/.test(memberConvexId);
 
-  // 2. 🛡️ جلب العميل المعرفي (Convex Server Client)
+  if (!memberConvexId || !isValidConvexId) {
+    console.error(
+      "ERROR: Invalid memberConvexId",
+      memberConvexId,
+      isValidConvexId
+    );
+    // إعادة توجيه بدلاً من `return null` عشان السلوك يكون واضح
+    redirect(`/${locale}/dashboard/my-team`);
+  }
+
   const convex = await getConvexServerClient();
 
   try {
-    // 3. 💾 الاستعلام عن بيانات الموظف باستخدام Convex والدالة الجديدة
-    const employeeData = await convex.query(
+    const result = await convex.query(
       api.orgMembers.getOrganizationMemberById,
       {
-        memberId: memberConvexId as Id<"organizationMembers">, // 🚨 تمرير ID Convex الصحيح
-        organizationId: orgId, // تمرير orgId للتحقق من الملكية
+        memberId: memberConvexId as Id<"organizationMembers">,
       }
     );
 
-    const organizationMember = employeeData?.organizationMember;
-    const employeeClerkUserId = employeeData?.clerkUserId;
-
-    if (!organizationMember || !employeeClerkUserId) {
-      redirect("/dashboard/my-team");
+    if (!result) {
+      console.error("ERROR: No result found");
+      redirect(`/${locale}/dashboard/my-team`);
     }
 
-    // 4. 🚀 تمرير البيانات إلى المكون العميل
+    const { organizationMember, clerkUserId } = result;
+
+    if (!organizationMember || !clerkUserId) {
+      console.error("ERROR: No organization member found");
+      redirect(`/${locale}/dashboard/my-team`);
+    }
+
     return (
       <EmployeeDetailsClient
-        // لاحظ أننا نستخدم الآن organizationMember مباشرة
+        clerkUserId={clerkUserId}
         employee={{
-          id: (organizationMember?._id as string) || "",
-          name: organizationMember?.name || "",
-          email: organizationMember?.email || "",
-          image: organizationMember?.imageUrl || "",
-          manager_id: organizationMember?.organizationId || "",
-          full_name: organizationMember?.name || "",
-          phone: "",
-          imageUrl: organizationMember?.imageUrl || "",
-          userId: employeeClerkUserId || "",
-          createdAt: organizationMember?._creationTime || 0,
+          id: organizationMember._id as string,
+          name: organizationMember.name || "",
+          email: organizationMember.email || "",
+          imageUrl: organizationMember.imageUrl || "",
+          clerkUserId,
           organizationId:
-            (organizationMember?.organizationId as Id<"organizations">) ||
-            ("" as Id<"organizations">),
-          clerkUserId: employeeClerkUserId || "",
-          joinedAt: organizationMember?.joinedAt || 0,
-          role:
-            (organizationMember?.role as "owner" | "admin" | "member") ||
-            "member",
+            organizationMember.organizationId as Id<"organizations">,
+          role: organizationMember.role,
+          joinedAt: organizationMember.joinedAt || 0,
+          createdAt: organizationMember._creationTime || 0,
           lastActive:
-            (organizationMember?.joinedAt ??
-              organizationMember?._creationTime) ||
+            organizationMember.joinedAt ??
+            organizationMember._creationTime ??
             0,
           isActive: true,
           isOnline: false,
-          isAway: false,
-          isBusy: false,
-          isIdle: false,
-          isOffline: true,
         }}
-        clerkUserId={employeeClerkUserId || ""} // تمرير ID المستخدم في Clerk
       />
     );
-  } catch (error) {
-    // 🔒 لا نعرض تفاصيل الخطأ للمستخدم (Security best practice)
-    redirect("/dashboard/my-team");
+  } catch (err) {
+    console.error("ERROR fetching member from Convex:", err);
+    redirect(`/${locale}/dashboard/my-team`);
   }
 }
