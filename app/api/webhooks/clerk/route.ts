@@ -3,7 +3,8 @@ import { api } from "@/convex/_generated/api";
 
 export async function POST(req: Request) {
   const payload = await req.json();
-  const convex = getConvexServerClient();
+  // Webhooks لا تحتاج إلى token المستخدم
+  const convex = await getConvexServerClient(true);
 
   if (payload.type === "organization.membership.created") {
     const data = payload.data;

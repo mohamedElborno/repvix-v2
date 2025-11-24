@@ -16,7 +16,7 @@ export default async function ProtectedLayout({
 
   if (userId && orgId) {
     const clerk = await clerkClient();
-    const convex = getConvexServerClient();
+    const convex = await getConvexServerClient();
 
     // 1) جلب بيانات المنظمة
     const org = await clerk.organizations.getOrganization({

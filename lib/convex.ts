@@ -1,6 +1,7 @@
 // lib/convex.ts
 import { ConvexHttpClient } from "convex/browser";
 import type { ConvexReactClient } from "convex/react";
+import { auth } from "@clerk/nextjs/server";
 
 /**
  * ============================================
@@ -10,17 +11,35 @@ import type { ConvexReactClient } from "convex/react";
  * - layout.tsx
  * - server actions
  * - أي component يعمل على السيرفر
+ *
+ * ⚠️ هذا العميل يمرر token المستخدم من Clerk تلقائياً
+ *
+ * @param skipAuth - إذا كان true، لن يتم تمرير token المستخدم (مفيد للـ webhooks)
  */
-let serverClient: ConvexHttpClient | null = null;
+export async function getConvexServerClient(skipAuth = false) {
+  const url = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!url) throw new Error("NEXT_PUBLIC_CONVEX_URL is missing.");
 
-export function getConvexServerClient() {
-  if (!serverClient) {
-    const url = process.env.NEXT_PUBLIC_CONVEX_URL;
-    if (!url) throw new Error("NEXT_PUBLIC_CONVEX_URL is missing.");
+  // إنشاء عميل جديد (لا نستخدم singleton لأن كل طلب يحتاج token مختلف)
+  const client = new ConvexHttpClient(url);
 
-    serverClient = new ConvexHttpClient(url);
+  // جلب token المستخدم من Clerk (فقط إذا لم يتم تخطي المصادقة)
+  if (!skipAuth) {
+    try {
+      const { getToken } = await auth();
+      const token = await getToken({ template: "convex" });
+
+      // تعيين token المستخدم
+      if (token) {
+        client.setAuth(token);
+      }
+    } catch (error) {
+      // إذا فشل جلب token، نتابع بدون token
+      console.warn("Failed to get auth token, continuing without auth:", error);
+    }
   }
-  return serverClient;
+
+  return client;
 }
 
 /**
