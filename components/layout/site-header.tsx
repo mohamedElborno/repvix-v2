@@ -18,22 +18,14 @@ import { useTranslations } from "next-intl";
 import LocaleSwitcher from "@/components/layout/LocaleSwitcher";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 
 export function SiteHeader() {
   const t = useTranslations("header");
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<string | null>(null);
-  const { userId } = useAuth();
-
-  // Get the user from the database
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (userId) setUser(userId);
-    };
-    fetchUser();
-  }, []);
+  const { user } = useUser();
+  console.log("user", user);
 
   // Check if we are on a protected route
   const isProtectedRoute = pathname?.includes("/protected");

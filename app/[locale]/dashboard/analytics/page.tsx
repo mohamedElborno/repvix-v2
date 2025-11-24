@@ -25,8 +25,6 @@ export default async function GlobalAnalyticsPage() {
 }
  */
 
-import React from "react";
-
 export default function page() {
   return <div></div>;
 }

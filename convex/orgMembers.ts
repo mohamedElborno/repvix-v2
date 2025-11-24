@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, requireUser } from "./auth";
+import { requireAdmin, requireOrgMembership, requireUser } from "./auth";
+import { Id } from "./_generated/dataModel";
 
 /**
  * Get current user's organization membership
@@ -58,5 +59,41 @@ export const addMemberFromInvite = mutation({
       role: args.role as "owner" | "admin" | "member",
       joinedAt: Date.now(),
     });
+  },
+});
+
+export const getOrganizationMemberById = query({
+  args: {
+    memberId: v.id("organizationMembers"), // 🚨 يجب أن يكون هذا ID Convex
+    organizationId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 1. 🛡️ التحقق من الصلاحيات: تأكد أن المستخدم ينتمي إلى المنظمة المحددة
+    await requireOrgMembership(ctx, args.organizationId as Id<"organizations">);
+
+    // 2. جلب بيانات العضوية
+    const organizationMember = await ctx.db.get(args.memberId);
+
+    // 3. التحقق من وجود العضو وانتمائه للمنظمة الصحيحة
+    if (
+      !organizationMember ||
+      organizationMember.organizationId !==
+        (
+          await ctx.db
+            .query("organizations")
+            .withIndex("by_clerkOrgId", (q) =>
+              q.eq("clerkOrgId", args.organizationId)
+            )
+            .first()
+        )?._id
+    ) {
+      return null; // لا يوجد عضو أو لا ينتمي للمنظمة
+    }
+
+    // 🚨 الآن، نُعيد بيانات العضو ومُعرّف Clerk الخاص به
+    return {
+      organizationMember,
+      clerkUserId: organizationMember.clerkUserId,
+    };
   },
 });
