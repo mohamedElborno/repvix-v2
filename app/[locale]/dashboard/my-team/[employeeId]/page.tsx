@@ -41,8 +41,9 @@ export default async function EmployeeDetailsPage({
 
     const organizationMember = employeeData?.organizationMember;
     const employeeClerkUserId = employeeData?.clerkUserId;
-
+    console.log(employeeData);
     if (!organizationMember || !employeeClerkUserId) {
+      console.log(employeeData);
       redirect("/dashboard/my-team");
     }
 
