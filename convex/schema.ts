@@ -50,55 +50,92 @@ export default defineSchema({
     .index("by_org", ["orgId"]),
 
   // =============================
-  // Employees
-  // =============================
-  employees: defineTable({
-    organizationId: v.id("organizations"), // Organization this employee belongs to
-    managerId: v.optional(v.string()), // Clerk user id
-    name: v.string(),
-    email: v.optional(v.string()),
-    role: v.string(), // "sales" | "support" | "manager"
-    phone: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
-    userId: v.optional(v.string()), // Clerk user id if linked
-    createdAt: v.number(),
-  })
-    .index("by_org", ["organizationId"])
-    .index("by_manager", ["managerId"])
-    .index("by_user", ["userId"])
-    .index("by_email", ["email"]),
-
-  // =============================
   // Chats
   // =============================
+
   chats: defineTable({
-    userId: v.optional(v.string()), // Clerk user id (owner of the chat)
-    organizationId: v.optional(v.id("organizations")), // Organization that owns this chat
-    title: v.optional(v.string()),
-    employeeId: v.optional(v.id("employees")), // Employee assigned to this chat
+    // The organization that owns the chat
+    organizationId: v.id("organizations"),
+
+    // The member who created the chat (a member of the organization)
+    createdByMemberId: v.id("organizationMembers"),
+
+    // Useful if you want to link it directly to a Clerk user
+    createdByUserId: v.string(), // clerkUserId
+
+    // The main employee responsible for the chat (optional)
+    primaryAgentMemberId: v.optional(v.id("organizationMembers")),
+
+    // Source type: manual or integration?
+    sourceType: v.union(
+      v.literal("manual"), // The user copied/uploaded the chat
+      v.literal("integration") // Came from WhatsApp / Telegram / etc.
+    ),
+
+    // The channel if it was an Integration: "whatsapp" | "telegram" | "intercom" | ...
+    sourceChannel: v.optional(v.string()),
+
+    // The chat ID in the external system (if it exists)
     externalChatId: v.optional(v.string()),
-    channel: v.optional(v.string()),
-    customerIdentifier: v.optional(v.string()),
-    createdAt: v.number(),
+
+    // The customer identity in the external system (optional)
+    customerIdentifier: v.optional(v.string()), // رقم، إيميل، يوزرنيم...
+
+    // Some useful metadata for later
+    title: v.optional(v.string()), // A simple title for the chat
+    language: v.optional(v.string()), // "en" | "ar" | ...
+
+    // التوقيت
+    startedAt: v.number(), // The first message in the chat (timestamp)
+    endedAt: v.optional(v.number()), // The last message if it was closed
+    createdAt: v.number(), // The time it was entered into the system (ingestion time)
+
+    // The status of the chat if we need it for the dashboard
+    status: v.union(v.literal("open"), v.literal("closed")),
+
+    // A simple aggregation for later
+    messageCount: v.optional(v.number()),
+    lastMessageAt: v.optional(v.number()),
   })
-    .index("by_user", ["userId"])
     .index("by_org", ["organizationId"])
-    .index("by_employee", ["employeeId"])
-    .index("by_external", ["externalChatId"]),
+    .index("by_org_createdBy", ["organizationId", "createdByMemberId"])
+    .index("by_org_primaryAgent", ["organizationId", "primaryAgentMemberId"])
+    .index("by_external", ["organizationId", "externalChatId"]),
 
   // =============================
   // Chat Messages
   // =============================
   chatMessages: defineTable({
     chatId: v.id("chats"),
-    senderType: v.union(v.literal("customer"), v.literal("agent")),
+
+    // من كتب هذه الرسالة؟
+    senderType: v.union(
+      v.literal("customer"),
+      v.literal("agent"),
+      v.literal("system")
+    ),
+    senderMemberId: v.optional(v.id("organizationMembers")), // لو agent داخل المنظمة
     senderName: v.optional(v.string()),
-    messageText: v.optional(v.string()),
-    messageType: v.string(), // default "text"
+
+    // النص الخام + النص المنظّف
+    textRaw: v.string(), // النص كما هو بالضبط
+    textClean: v.string(), // النص بعد التنظيف/الفلترة للـ LLM
+
+    messageType: v.string(), // "text" حالياً، ممكن تزيد لاحقًا
+
+    // التوقيت
     externalMessageId: v.optional(v.string()),
-    externalTimestamp: v.optional(v.number()),
-    internalTimestamp: v.number(),
-    rawPayload: v.optional(v.any()), // JSON object
+    externalTimestamp: v.optional(v.number()), // من المصدر لو موجود
+    internalTimestamp: v.number(), // اللي نعتمده داخلياً
+
+    // ميتاداتا تتعلق بالتنظيف/السمّية
+    language: v.optional(v.string()), // "ar" / "en" ...
+    toxicityScore: v.optional(v.number()), // 0–1 أو 0–100
+    containsBannedContent: v.optional(v.boolean()), // شيء يكسر سياسة المزود
+    containsProfanity: v.optional(v.boolean()), // فيه شتائم عامة
+    profanityCategory: v.optional(v.string()), // "friendly_banter" | "hostile" | ...
+
+    rawPayload: v.optional(v.any()),
   })
     .index("by_chat", ["chatId"])
     .index("by_chat_timestamp", ["chatId", "internalTimestamp"]),

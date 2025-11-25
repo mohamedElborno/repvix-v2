@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as chats from "../chats.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as messages from "../messages.js";
 import type * as orgMembers from "../orgMembers.js";
@@ -22,6 +23,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  chats: typeof chats;
   "lib/plans": typeof lib_plans;
   messages: typeof messages;
   orgMembers: typeof orgMembers;

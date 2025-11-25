@@ -76,11 +76,46 @@ export const syncOrganizationMembers = mutation({
       .first();
     if (!org) throw new Error("Organization not found.");
 
-    // 🔒 SECURITY: Verify user is a member of this organization
-    // This is called from layout.tsx for authenticated users, so we just verify membership
-    // The actual security is that this syncs FROM Clerk (source of truth), not arbitrary data
-    // Any member can trigger sync since it's read-only from Clerk's perspective
-    await requireOrgMembership(ctx, org._id);
+    // ✅ هوية المستخدم الحالي من JWT الخاص بـ Clerk
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller) throw new Error("Unauthorized.");
+
+    // نحاول إيجاد عضويته في Convex
+    let callerMembership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("clerkUserId", caller.subject))
+      .filter((q) => q.eq(q.field("organizationId"), org._id))
+      .first();
+
+    // ✅ إذا لم نجد عضوية في Convex لكن المستخدم فعلاً عضو في المنظمة في Clerk
+    if (!callerMembership) {
+      const fromClerk = args.members.find(
+        (m) => m.clerkUserId === caller.subject
+      );
+
+      if (!fromClerk) {
+        // المستخدم ليس عضوًا فعليًا في المنظمة في Clerk → Unauthorized حقيقية
+        throw new Error("Not a member of this organization.");
+      }
+
+      // ✨ أنشئ عضوية جديدة في Convex بناءً على بيانات Clerk
+      const role = normalizeRole(fromClerk.role); // تستخدم الدالة اللي فوق الملف
+
+      await ctx.db.insert("organizationMembers", {
+        organizationId: org._id,
+        clerkUserId: fromClerk.clerkUserId,
+        name: fromClerk.name || undefined,
+        email: fromClerk.email || undefined,
+        imageUrl: fromClerk.imageUrl || undefined,
+        role,
+        joinedAt: Date.now(),
+      });
+
+      // لا حاجة لإسناد النتيجة لـ callerMembership
+      // يكفينا أننا تأكدنا أنه الآن عضو في المنظمة
+    }
+
+    // 👇 باقي الكود كما هو
 
     const existingMembers = await ctx.db
       .query("organizationMembers")
@@ -88,13 +123,6 @@ export const syncOrganizationMembers = mutation({
       .collect();
 
     const existingMap = new Map(existingMembers.map((m) => [m.clerkUserId, m]));
-
-    const normalizeRole = (clerkRole: string): "owner" | "admin" | "member" => {
-      const normalized = clerkRole.replace(/^org:/, "").toLowerCase();
-      if (normalized === "owner") return "owner";
-      if (normalized === "admin") return "admin";
-      return "member";
-    };
 
     for (const member of args.members) {
       const current = existingMap.get(member.clerkUserId);
@@ -238,13 +266,6 @@ export const removeMember = mutation({
     }
 
     await ctx.db.delete(target._id);
-
-    // Optional: cascade delete from your custom "employees" collection if exists
-    const employee = await ctx.db
-      .query("employees")
-      .withIndex("by_user", (q) => q.eq("userId", target.clerkUserId))
-      .first();
-    if (employee) await ctx.db.delete(employee._id);
 
     return true;
   },

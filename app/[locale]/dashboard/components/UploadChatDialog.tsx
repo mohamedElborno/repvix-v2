@@ -27,16 +27,17 @@ export default function UploadChatDialog({
 }: UploadChatDialogProps) {
   const t = useTranslations("dashboard");
   const router = useRouter();
+
   const [title, setTitle] = useState("");
   const [rawText, setRawText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [useNoAI] = useState(false);
   const [isWhatsApp, setIsWhatsApp] = useState(false);
   const [whatsAppStats, setWhatsAppStats] = useState<WhatsAppChatStats | null>(
     null
   );
   const [isDragOver, setIsDragOver] = useState(false);
+  const [customerName, setCustomerName] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +51,8 @@ export default function UploadChatDialog({
     setIsLoading(true);
 
     try {
-      const endpoint = useNoAI
-        ? "/api/chats/process-no-ai"
-        : "/api/chats/process";
-
-      const response = await fetch(endpoint, {
+      // ✅ new endpoint built on Convex (ingestion only)
+      const response = await fetch("/api/chats/import", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,29 +60,18 @@ export default function UploadChatDialog({
         body: JSON.stringify({
           title: title.trim(),
           rawText: rawText.trim(),
+          customerName: customerName.trim(),
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // إذا فشل مع AI، اقترح استخدام No-AI mode
-        if (!useNoAI && data.details?.includes("quota")) {
-          setError(
-            "OpenAI quota exceeded. Try enabling 'Test Mode (No AI)' below to upload without AI features."
-          );
-          setIsLoading(false);
-          return;
-        }
-        throw new Error(data.details || data.error || "Failed to process chat");
+        // The backend must return { error: "..."} in case of failure
+        throw new Error(data.error || data.details || "Failed to import chat");
       }
 
-      // عرض تحذير إذا كان في No-AI mode
-      if (data.warning) {
-        console.warn(data.warning);
-      }
-
-      // Check if this was a WhatsApp chat
+      // Optional: if the backend calculates WhatsApp statistics
       if (data.isWhatsApp && data.whatsAppStats) {
         setIsWhatsApp(true);
         setWhatsAppStats(data.whatsAppStats);
@@ -98,7 +85,7 @@ export default function UploadChatDialog({
       setWhatsAppStats(null);
       onClose();
 
-      // Navigate to chat page automatically
+      // The path remains the same: it depends on you displaying the ChatView page based on the chatId (Convex)
       router.push(`/dashboard/chats/${data.chatId}`);
     } catch (err) {
       console.error("Error uploading chat:", err);
@@ -108,7 +95,7 @@ export default function UploadChatDialog({
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     processFile(file);
@@ -228,6 +215,26 @@ export default function UploadChatDialog({
               <Label htmlFor="title" className="text-white/80 mb-2">
                 {t("chatTitle")}
               </Label>
+              {/* Customer Name Input */}
+              <div>
+                <Label htmlFor="customerName" className="text-white/80 mb-2">
+                  اسم العميل في واتساب (اختياري لكن يُفضَّل)
+                </Label>
+                <Input
+                  id="customerName"
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="مثال: [phone number] أو اسم العميل كما يظهر في واتساب"
+                  className="bg-white/5 border-white/10 text-white placeholder-white/40"
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-white/40 mt-1">
+                  سنحاول تقريب الاسم الذي أدخلته مع الأسماء الموجودة في المحادثة
+                  حتى لو كان فيه أخطاء بسيطة أو اختلاف بسيط في الكتابة.
+                </p>
+              </div>
+
               <Input
                 id="title"
                 type="text"

@@ -127,6 +127,41 @@
     "brandName": "Repvix"
   },
   "dashboard": {
+    "welcome": "Welcome Back",
+    "uploadChat": "Upload Chat",
+    "searchPlaceholder": "Search chats by title, customer, or channel...",
+    "keyMetrics": "Key Metrics",
+    "yourChats": "Your Chats",
+    "noChats": "No chats yet",
+    "noResults": "No results found",
+    "tryDifferentSearch": "Try adjusting your search terms",
+    "uploadFirstChat": "Start by uploading your first chat conversation to get insights",
+    "uploadNewChat": "Upload New Chat",
+    "chatTitle": "Chat Title",
+    "chatTitlePlaceholder": "Enter a title for this chat...",
+    "uploadFile": "Upload File",
+    "optional": "(Optional)",
+    "selectFile": "Select a file to upload",
+    "supportedFormats": "Supported formats",
+    "chatContent": "Chat Content",
+    "chatContentPlaceholder": "Paste your chat conversation here...\n\nFor WhatsApp:\n1. Open WhatsApp chat\n2. Tap the menu (⋮)\n3. Select 'More' → 'Export chat'\n4. Choose 'Without Media'\n5. Copy and paste the content here",
+    "fillAllFields": "Please fill in all required fields",
+    "processing": "Processing...",
+    "upload": "Upload",
+    "cancel": "Cancel",
+    "view": "View",
+    "delete": "Delete",
+    "confirmDelete": "Confirm Delete",
+    "thisActionCannotBeUndone": "This action cannot be undone. The chat and all its messages will be permanently deleted.",
+    "chats": {
+      "statusOpen": "Open",
+      "statusClosed": "Closed",
+      "sourceManual": "Manual Upload",
+      "sourceIntegration": "Integration",
+      "messageCount": "{count} messages",
+      "untitledChat": "Untitled Chat",
+      "noPreviewShort": "No preview available yet. Click to view full conversation."
+    },
     "breadcrumb": {
       "dashboard": "Dashboard",
       "analytics": "Analytics",
@@ -226,6 +261,14 @@
     "turkish": "Turkish",
     "spanish": "Spanish",
     "hindi": "Hindi"
+  },
+  "chat": {
+    "back": "Back",
+    "untitledChat": "Untitled Chat",
+    "messages": "messages",
+    "noMessages": "No messages found",
+    "customer": "Customer",
+    "agent": "Agent"
   },
   "signUp": {
     "title": "Create your account",

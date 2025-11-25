@@ -1,117 +1,123 @@
-/* "use client";
+"use client";
 
-import { useEffect, useState } from "react";
-import type { Chat } from "@/lib/types/database";
-import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { MessageSquare, Trash2, Eye, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MessageSquare, Trash2, Eye, Calendar } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import clsx from "clsx";
 
-interface ChatListItemProps {
-  chat: Chat;
-  onDelete: (chatId: string | Id<"chats">) => void;
+/* ========================================================================== */
+/* TYPES                                                                      */
+/* ========================================================================== */
+
+type ChatStatus = "open" | "closed";
+type ChatSourceType = "manual" | "integration";
+
+export interface ChatListItemData {
+  _id: Id<"chats">;
+
+  organizationId: Id<"organizations">;
+  createdByMemberId: Id<"organizationMembers">;
+  createdByUserId: string;
+
+  primaryAgentMemberId?: Id<"organizationMembers"> | null;
+
+  sourceType: ChatSourceType;
+  sourceChannel?: string | null; // "whatsapp" | "telegram" | "manual" | ...
+  externalChatId?: string | null;
+  customerIdentifier?: string | null; // رقم / إيميل / يوزرنيم
+
+  title?: string | null;
+  language?: string | null; // "ar" | "en" | ...
+
+  startedAt: number; // أول رسالة في المحادثة
+  endedAt?: number | null;
+  createdAt: number; // وقت الإدخال في النظام
+  lastMessageAt?: number | null;
+
+  status: ChatStatus; // "open" | "closed"
+  messageCount?: number | null;
 }
 
-// 🎭 خريطة المشاعر الدقيقة (ألوان ناعمة لا تكسر الثيم)
-const sentimentStyles: Record<
-  string,
-  { bg: string; border: string; glow: string; hover: string }
-> = {
-  positive: {
-    bg: "from-emerald-500/10 to-teal-500/5",
-    border: "border-emerald-400/10",
-    glow: "group-hover:shadow-emerald-500/20",
-    hover: "hover:bg-emerald-500/10",
-  },
-  neutral: {
-    bg: "from-slate-500/10 to-indigo-500/5",
-    border: "border-slate-400/10",
-    glow: "group-hover:shadow-indigo-500/20",
-    hover: "hover:bg-indigo-500/10",
-  },
-  negative: {
-    bg: "from-rose-500/10 to-red-500/5",
-    border: "border-rose-400/10",
-    glow: "group-hover:shadow-rose-500/20",
-    hover: "hover:bg-rose-500/10",
-  },
-  curious: {
-    bg: "from-amber-500/10 to-orange-500/5",
-    border: "border-amber-400/10",
-    glow: "group-hover:shadow-amber-500/20",
-    hover: "hover:bg-amber-500/10",
-  },
-  emotional: {
-    bg: "from-pink-500/10 to-rose-500/5",
-    border: "border-pink-400/10",
-    glow: "group-hover:shadow-pink-500/20",
-    hover: "hover:bg-pink-500/10",
-  },
-};
+interface ChatListItemProps {
+  chat: ChatListItemData;
+  onDelete: (chatId: Id<"chats">) => Promise<void> | void;
+}
+
+/* ========================================================================== */
+/* HELPERS                                                                    */
+/* ========================================================================== */
+
+function formatDate(ts: number | null | undefined, locale: string) {
+  if (!ts) return "";
+  const date = new Date(ts);
+  return new Intl.DateTimeFormat(locale || "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getStatusLabel(
+  status: ChatStatus,
+  t: ReturnType<typeof useTranslations>
+) {
+  if (status === "open") return t("chats.statusOpen");
+  return t("chats.statusClosed");
+}
+
+function getSourceLabel(
+  sourceType: ChatSourceType,
+  sourceChannel: string | null | undefined,
+  t: ReturnType<typeof useTranslations>
+) {
+  if (sourceType === "manual") {
+    return t("chats.sourceManual");
+  }
+
+  if (sourceChannel) {
+    // يمكنك عمل ترجمة لكل قناة لاحقاً لو حاب
+    return `${t("chats.sourceIntegration")} · ${sourceChannel}`;
+  }
+
+  return t("chats.sourceIntegration");
+}
+
+/* ========================================================================== */
+/* COMPONENT                                                                  */
+/* ========================================================================== */
 
 export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
   const t = useTranslations("dashboard");
+  const locale = useLocale();
   const router = useRouter();
+
   const [isDeleting, setIsDeleting] = useState(false);
-  const [preview, setPreview] = useState<string>("");
-  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // تحديد المشاعر بناءً على خاصية chat.sentiment أو افتراض neutral
-  const sentiment =
-    (chat as Chat)?.sentiment && sentimentStyles[(chat as Chat).sentiment]
-      ? (chat as Chat).sentiment
-      : "neutral";
+  const statusLabel = getStatusLabel(chat.status, t);
+  const sourceLabel = getSourceLabel(
+    chat.sourceType,
+    chat.sourceChannel ?? undefined,
+    t
+  );
 
-  const mood = sentimentStyles[sentiment];
+  const createdLabel = formatDate(chat.startedAt || chat.createdAt, locale);
+  const msgCount = chat.messageCount ?? 0;
 
-  // استخراج chat.summary إلى متغير منفصل لتجنب complex expression في dependency array
-  const chatSummary = chat?.summary;
+  const handleView = () => {
+    router.push(`/dashboard/chats/${chat._id}`);
+  };
 
-  useEffect(() => {
-    let isActive = true;
-    const fetchPreview = async () => {
-      try {
-        // استخدام summary مباشرة من chat object إذا كان موجوداً (تم جلبه مسبقاً)
-        if (chatSummary) {
-          const truncated =
-            chatSummary.length > 180
-              ? chatSummary.slice(0, 177) + "..."
-              : chatSummary;
-          if (isActive) {
-            setPreview(truncated);
-            setIsLoadingPreview(false);
-          }
-          return;
-        }
-
-        // إذا لم يكن summary موجوداً، جلب أول chunk فقط (بدون تحليل كامل)
-        const res = await fetch(`/api/chats/${chat.id}`);
-        if (!res.ok) throw new Error("Failed to load preview");
-        const data = await res.json();
-        const firstChunk: string | undefined = data?.chunks?.[0]?.text;
-        const text = firstChunk || "";
-        const truncated = text.length > 180 ? text.slice(0, 177) + "..." : text;
-        if (isActive) setPreview(truncated);
-      } catch {
-        if (isActive) setPreview("");
-      } finally {
-        if (isActive) setIsLoadingPreview(false);
-      }
-    };
-    fetchPreview();
-    return () => {
-      isActive = false;
-    };
-  }, [chat.id, chatSummary]);
-
-  const handleDelete = async (): Promise<void> => {
+  const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await onDelete(chat.id);
+      await onDelete(chat._id);
     } catch (error) {
       console.error("Error deleting chat:", error);
     } finally {
@@ -120,36 +126,20 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
     }
   };
 
-  const handleView = () => {
-    router.push(`/dashboard/chats/${chat.id}`);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
-
   return (
     <>
       <Card
         className={clsx(
           "relative overflow-hidden p-5 border backdrop-blur-md rounded-2xl bg-gradient-to-br transition-all duration-500 ease-out group cursor-pointer",
-          mood.bg,
-          mood.border,
-          mood.hover,
-          mood.glow,
+          // ألوان بسيطة مرتبطة بالحالة
+          chat.status === "open"
+            ? "from-emerald-500/10 to-teal-500/5 border-emerald-400/10 hover:bg-emerald-500/10 group-hover:shadow-emerald-500/20"
+            : "from-slate-600/10 to-slate-900/5 border-slate-500/10 hover:bg-slate-600/10 group-hover:shadow-slate-500/20",
           "hover:scale-[1.015] hover:border-white/10",
           "before:absolute before:inset-0 before:opacity-0 hover:before:opacity-10 before:transition-opacity before:duration-500 before:bg-gradient-to-br before:from-white/10 before:to-transparent"
         )}
         onClick={handleView}
       >
-      
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-700" />
 
         <div className="flex items-start gap-3 relative z-10">
@@ -158,23 +148,72 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white/90 mb-1 truncate">
-              {chat.title}
-            </h3>
+            {/* العنوان */}
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-sm font-semibold text-white/90 truncate">
+                {chat.title ||
+                  t("chats.untitledChat", { default: "Untitled chat" })}
+              </h3>
 
-            <p className="text-xs text-white/60 mb-2 truncate flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {formatDate(chat.created_at)}
-            </p>
+              {/* شارة الحالة Open / Closed */}
+              <span
+                className={clsx(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border",
+                  chat.status === "open"
+                    ? "bg-emerald-500/10 border-emerald-400/30 text-emerald-200"
+                    : "bg-slate-700/40 border-slate-400/30 text-slate-200"
+                )}
+              >
+                {statusLabel}
+              </span>
+            </div>
 
-            <p className="text-sm text-white/85 leading-5">
-              {isLoadingPreview ? (
-                <span className="inline-block h-4 w-2/3 bg-white/10 rounded animate-pulse" />
-              ) : preview ? (
-                preview
-              ) : (
-                t("noPreview")
+            {/* التاريخ + المصدر */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/60 mb-2">
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {createdLabel}
+              </span>
+
+              <span className="w-1 h-1 rounded-full bg-white/30" />
+
+              <span className="truncate">{sourceLabel}</span>
+
+              {chat.language && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-white/30" />
+                  <span className="uppercase tracking-wide">
+                    {chat.language}
+                  </span>
+                </>
               )}
+
+              {msgCount > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-white/30" />
+                  <span>
+                    {t("chats.messageCount", {
+                      count: msgCount,
+                    })}
+                  </span>
+                </>
+              )}
+
+              {chat.customerIdentifier && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-white/30" />
+                  <span className="truncate max-w-[140px]">
+                    {chat.customerIdentifier}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* لا يوجد preview حالياً؛ لاحقاً ممكن نضيفه من التحليل أو من أول رسالة */}
+            <p className="text-sm text-white/80 leading-5 line-clamp-2">
+              {t("chats.noPreviewShort", {
+                default: "No preview yet. Analysis will appear here later.",
+              })}
             </p>
           </div>
         </div>
@@ -207,12 +246,15 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
           </Button>
         </div>
       </Card>
+
+      {/* Dialog تأكيد الحذف */}
       {confirmOpen && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-4"
           onClick={() => setConfirmOpen(false)}
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
           <div
             className="relative z-[201] w-full max-w-sm rounded-xl border border-white/10 bg-neutral-900/90 p-5 text-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
@@ -231,15 +273,18 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
                 </p>
               </div>
             </div>
+
             <div className="mt-4 flex items-center justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 className="bg-white/10 border-white/10 hover:bg-white/20 text-white"
                 onClick={() => setConfirmOpen(false)}
+                disabled={isDeleting}
               >
                 {t("cancel") || "Cancel"}
               </Button>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -258,9 +303,4 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
       )}
     </>
   );
-}
- */
-import React from "react";
-export default function page() {
-  return <div></div>;
 }

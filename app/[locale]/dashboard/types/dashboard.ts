@@ -1,27 +1,9 @@
-/* import type { Chat } from "@/convex/_generated/dataModel";
-import type { User } from "@clerk/nextjs/server"; */
+import type { ChatListItemData } from "../components/ChatListItem";
+import type { User as ClerkUser } from "@clerk/nextjs/server";
 
 // DashboardClientProps is the props for the DashboardClient component
-interface Chat {
-  id: string;
-  title: string;
-  createdAt: number;
-}
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  image: string;
-}
-
 export interface DashboardClientProps {
-  initialChats: Chat[];
-  stats: {
-    totalChats: number;
-    totalChunks: number;
-  };
-  user: User;
+  initialChats: ChatListItemData[];
 }
 
 // DashboardLayoutClientProps is the props for the DashboardLayoutClient component
@@ -46,7 +28,7 @@ interface EmployeeInvitation {
 
 // TeamClientProps is the props for the TeamClient component
 export interface TeamClientProps {
-  user: User;
+  user: ClerkUser;
   employees: Employee[];
   pendingInvitations: EmployeeInvitation[];
   employeesError: any;

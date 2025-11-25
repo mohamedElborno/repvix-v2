@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import UploadChatDialog from "../UploadChatDialog";
-import ChatListItem from "../ChatListItem";
+import ChatListItem, { ChatListItemData } from "../ChatListItem";
 import InviteEmployeeDialog from "../InviteEmployeeDialog";
 import { useTranslations } from "next-intl";
 import type { DashboardClientProps } from "../../types/dashboard";
@@ -87,33 +87,38 @@ const SentimentDistribution = dynamic(
 
 export default function DashboardClient({
   initialChats,
-  stats: _stats,
 }: DashboardClientProps) {
   const t = useTranslations("dashboard");
   const { user } = useUser();
-  const [chats, setChats] = useState<any[]>(initialChats);
+  const [chats, setChats] = useState<ChatListItemData[]>(initialChats);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [kpiData, setKpiData] = useState<any>(null);
   const [isLoadingKPIs, setIsLoadingKPIs] = useState(true);
 
   // تحديث البيانات عند تغيير المستخدم
   useEffect(() => {
-    setChats(initialChats);
+    setChats(initialChats as ChatListItemData[]);
   }, [initialChats]);
 
   // الاستماع لتغييرات auth state
   useEffect(() => {
     if (user) {
-      setChats(initialChats);
+      setChats(initialChats as ChatListItemData[]);
     }
   }, [user]);
 
   // Filter chats based on search query
-  const filteredChats = chats.filter((chat) =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredChats = chats.filter((chat) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+
+    const title = (chat.title ?? "").toLowerCase();
+    const customerId = (chat.customerIdentifier ?? "").toLowerCase();
+    const channel = (chat.sourceChannel ?? "").toLowerCase();
+
+    return title.includes(q) || customerId.includes(q) || channel.includes(q);
+  });
 
   // Fetch KPIs - مرة واحدة فقط عند تحميل الصفحة
   useEffect(() => {
@@ -143,7 +148,7 @@ export default function DashboardClient({
     };
   }, []); // فارغ - يعمل مرة واحدة فقط
 
-  const handleDeleteChat = async (chatId: string | Id<"chats">) => {
+  const handleDeleteChat = async (chatId: Id<"chats">) => {
     try {
       const response = await fetch(`/api/chats/${chatId}`, {
         method: "DELETE",
@@ -153,14 +158,14 @@ export default function DashboardClient({
         throw new Error("Failed to delete chat");
       }
 
-      setChats(chats.filter((chat) => chat.id !== chatId));
+      setChats(chats.filter((chat) => chat._id !== chatId));
     } catch (error) {
       console.error("Error deleting chat:", error);
       alert("Failed to delete chat");
     }
   };
   return (
-    <div className="min-h-[calc(100vh-110px)]">
+    <div className="min-h-[calc(100vh-120px)]">
       {/* Header with gradient background */}
       <div className="sticky px-3 sm:px-4 md:px-6 lg:px-8 mx-auto top-0 z-10 bg-zinc-950/70 backdrop-blur-xl border-b border-purple-500/10 rounded-2xl mb-6">
         <div className="py-4 sm:py-5 md:py-6">
@@ -334,13 +339,13 @@ export default function DashboardClient({
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {/*                 {filteredChats.map((chat) => (
+                {filteredChats.map((chat) => (
                   <ChatListItem
-                    key={chat.id}
+                    key={chat._id}
                     chat={chat}
                     onDelete={handleDeleteChat}
                   />
-                ))} */}
+                ))}
               </div>
             )}
           </div>
@@ -352,15 +357,6 @@ export default function DashboardClient({
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
       />
-
-      {/* Invite Employee Dialog */}
-      {/*       <InviteEmployeeDialog
-        isOpen={isInviteDialogOpen}
-        onClose={() => setIsInviteDialogOpen(false)}
-        onInviteSent={() => {
-          // يمكن إضافة إشعار أو تحديث هنا
-        }}
-      /> */}
     </div>
   );
 }
