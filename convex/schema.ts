@@ -154,26 +154,348 @@ export default defineSchema({
     .index("by_chat_index", ["chatId", "chunkIndex"]),
 
   // =============================
-  // Chat Analysis
+  // Chat Analyses (per chat)
   // =============================
-  chatAnalysis: defineTable({
+  chatAnalyses: defineTable({
+    // ربط أساسي
     chatId: v.id("chats"),
-    organizationId: v.optional(v.id("organizations")),
-    summary: v.optional(v.string()),
-    recommendations: v.optional(v.any()), // JSON array
-    linguisticAnalysis: v.optional(v.any()), // JSON object
-    behavioralAnalysis: v.optional(v.any()), // JSON object
-    outcomeAnalysis: v.optional(v.any()), // JSON object
-    psychologicalProfile: v.optional(v.any()), // JSON object
-    intentAnalysis: v.optional(v.any()), // JSON object
-    temporalDynamics: v.optional(v.any()), // JSON object
-    analystCommentary: v.optional(v.string()),
-    rootCauseAnalysis: v.optional(v.any()), // JSON object
-    analysisVersion: v.string(), // default "v1"
-    createdAt: v.number(),
+    organizationId: v.id("organizations"),
+    language: v.optional(v.string()), // لو اختلفت عن chat.language
+    modelVersion: v.optional(v.string()), // "gpt-5.1-mini-2025-11"
+    analysisVersion: v.string(), // للتحكم في منطق التحليل
+    createdAt: v.number(), // timestamp ms
+    updatedAt: v.number(),
+
+    // 1) نتيجة المحادثة (Outcome)
+    outcomeStatus: v.union(
+      v.literal("resolved"),
+      v.literal("partially_resolved"),
+      v.literal("unresolved"),
+      v.literal("escalated"),
+      v.literal("pending_customer"),
+      v.literal("pending_internal")
+    ),
+    outcomeConfidence: v.optional(v.number()), // 0-100
+    outcomeSummary: v.string(), // ملخص قصير جدًا لما حدث
+
+    requiresFollowUp: v.boolean(),
+    followUpOwnerType: v.union(
+      v.literal("none"),
+      v.literal("agent"),
+      v.literal("team"),
+      v.literal("system")
+    ),
+    followUpDeadline: v.optional(v.number()), // ms
+    followUpNotes: v.optional(v.string()),
+
+    // 2) تجربة العميل (Customer Experience & Sentiment)
+    customerSatisfactionScore: v.optional(v.number()), // 0-100
+    customerSatisfactionLabel: v.optional(
+      v.union(
+        v.literal("very_low"),
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("very_high")
+      )
+    ),
+
+    sentimentStartScore: v.optional(v.number()), // 0-100
+    sentimentStartLabel: v.optional(
+      v.union(
+        v.literal("very_negative"),
+        v.literal("negative"),
+        v.literal("neutral"),
+        v.literal("positive"),
+        v.literal("very_positive")
+      )
+    ),
+    sentimentEndScore: v.optional(v.number()),
+    sentimentEndLabel: v.optional(
+      v.union(
+        v.literal("very_negative"),
+        v.literal("negative"),
+        v.literal("neutral"),
+        v.literal("positive"),
+        v.literal("very_positive")
+      )
+    ),
+    sentimentVolatilityScore: v.optional(v.number()), // 0-100
+
+    emotionTrajectory: v.optional(
+      v.array(
+        v.object({
+          phase: v.union(
+            v.literal("start"),
+            v.literal("early"),
+            v.literal("mid"),
+            v.literal("late"),
+            v.literal("end")
+          ),
+          score: v.number(), // 0-100
+          label: v.union(
+            v.literal("very_negative"),
+            v.literal("negative"),
+            v.literal("neutral"),
+            v.literal("positive"),
+            v.literal("very_positive")
+          ),
+        })
+      )
+    ),
+
+    // 3) هيكلة المحادثة والـ SLA
+    conversationComplexity: v.optional(v.number()), // 1-5
+    conversationClarityScore: v.optional(v.number()), // 0-100
+    hadClearProblemStatement: v.optional(v.boolean()),
+    hadClearResolutionSummary: v.optional(v.boolean()),
+
+    // ---------------------------
+    // الحقول الزمنية الأساسية
+    // ---------------------------
+    avgResponseDelayMs: v.optional(v.number()),
+    maxResponseDelayMs: v.optional(v.number()),
+    slaBreached: v.optional(v.boolean()),
+
+    // ---------------------------
+    // كائن تفصيلي للوقت (Rule-based)
+    // ---------------------------
+    timeMetrics: v.optional(
+      v.object({
+        channelType: v.string(), // "live_chat" | "messaging" | "email_like"
+
+        firstResponseMs: v.optional(v.number()),
+        avgAgentResponseMs: v.optional(v.number()),
+        maxAgentResponseMs: v.optional(v.number()),
+
+        softViolationCount: v.number(),
+        hardViolationCount: v.number(),
+      })
+    ),
+
+    // 4) أداء الموظف (إجمالي على مستوى المحادثة)
+    agentOverallScore: v.optional(v.number()), // 0-100
+    agentClarityScore: v.optional(v.number()),
+    agentEmpathyScore: v.optional(v.number()),
+    agentOwnershipScore: v.optional(v.number()),
+    agentProactivityScore: v.optional(v.number()),
+    agentProfessionalismScore: v.optional(v.number()),
+
+    agentStrengths: v.optional(v.string()),
+    agentImprovements: v.optional(v.string()),
+    agentCoachingTips: v.optional(v.string()),
+
+    // 5) النوايا والمبيعات (Intent & Sales Lens)
+    primaryIntent: v.optional(
+      v.union(
+        v.literal("complaint"),
+        v.literal("pre_sales_question"),
+        v.literal("technical_issue"),
+        v.literal("refund_request"),
+        v.literal("cancellation"),
+        v.literal("billing_issue"),
+        v.literal("account_issue"),
+        v.literal("feedback"),
+        v.literal("other")
+      )
+    ),
+    secondaryIntents: v.optional(v.array(v.string())), // يمكن تضييقها لاحقًا
+    salesStage: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("awareness"),
+        v.literal("consideration"),
+        v.literal("decision"),
+        v.literal("post_purchase")
+      )
+    ),
+    purchaseIntentScore: v.optional(v.number()), // 0-100
+
+    mainObjections: v.optional(
+      v.array(
+        v.object({
+          type: v.union(
+            v.literal("price"),
+            v.literal("features"),
+            v.literal("complexity"),
+            v.literal("trust"),
+            v.literal("timing"),
+            v.literal("other")
+          ),
+          strength: v.number(), // 0-100
+          note: v.optional(v.string()),
+        })
+      )
+    ),
+
+    // 6) الأسباب الجذرية (Root Causes)
+    primaryRootCauseCategory: v.optional(
+      v.union(
+        v.literal("product"),
+        v.literal("policy"),
+        v.literal("billing"),
+        v.literal("ux"),
+        v.literal("onboarding"),
+        v.literal("expectation_mismatch"),
+        v.literal("other")
+      )
+    ),
+    primaryRootCauseDetails: v.optional(v.string()),
+
+    secondaryRootCauses: v.optional(
+      v.array(
+        v.object({
+          category: v.string(),
+          details: v.optional(v.string()),
+          weight: v.optional(v.number()), // 0-100 لو حبيت
+        })
+      )
+    ),
+
+    // 7) المخاطر (Risks)
+    churnRiskScore: v.optional(v.number()), // 0-100
+    churnRiskLevel: v.optional(
+      v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
+    ),
+    escalationRiskScore: v.optional(v.number()), // 0-100
+    reputationalRiskScore: v.optional(v.number()), // 0-100
+    riskNotes: v.optional(v.string()),
+
+    // 8) التوصيات العملية (Actions & Feedback)
+    internalActions: v.optional(
+      v.array(
+        v.object({
+          priority: v.union(
+            v.literal("low"),
+            v.literal("medium"),
+            v.literal("high")
+          ),
+          area: v.string(), // "support_process" | "product" | "billing"...
+          title: v.string(),
+          description: v.string(),
+          owner: v.optional(v.string()), // "support_team" | "product_team"...
+          suggestedTimelineDays: v.optional(v.number()),
+        })
+      )
+    ),
+
+    customerActions: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          description: v.string(),
+          channel: v.optional(
+            v.union(
+              v.literal("email"),
+              v.literal("whatsapp"),
+              v.literal("phone"),
+              v.literal("in_app"),
+              v.literal("other")
+            )
+          ),
+        })
+      )
+    ),
+
+    productFeedback: v.optional(
+      v.array(
+        v.object({
+          severity: v.union(
+            v.literal("low"),
+            v.literal("medium"),
+            v.literal("high"),
+            v.literal("critical")
+          ),
+          module: v.optional(v.string()), // "billing", "dashboard", ...
+          note: v.string(),
+        })
+      )
+    ),
+
+    // 9) الشواهد النصية (Evidence)
+    keyQuotes: v.optional(
+      v.array(
+        v.object({
+          role: v.union(
+            v.literal("customer"),
+            v.literal("agent"),
+            v.literal("system")
+          ),
+          purpose: v.union(
+            v.literal("frustration"),
+            v.literal("satisfaction"),
+            v.literal("objection"),
+            v.literal("appreciation"),
+            v.literal("threat"),
+            v.literal("other")
+          ),
+          text: v.string(),
+          messageId: v.optional(v.id("chatMessages")),
+        })
+      )
+    ),
+
+    // 10) مرحلة التحليل القاعدي (Rule-based pre-analysis)
+    ruleBasedFlags: v.optional(
+      v.object({
+        hasInsults: v.optional(v.boolean()),
+        hasProfanity: v.optional(v.boolean()),
+        hasSlaViolation: v.optional(v.boolean()),
+        hasRefundRequest: v.optional(v.boolean()),
+        hasCancellationThreat: v.optional(v.boolean()),
+        hasPriceNegotiation: v.optional(v.boolean()),
+      })
+    ),
+
+    ruleBasedMetrics: v.optional(
+      v.object({
+        customerMessageCount: v.optional(v.number()),
+        agentMessageCount: v.optional(v.number()),
+        turnCount: v.optional(v.number()),
+        topicsCount: v.optional(v.number()),
+        durationMs: v.optional(v.number()),
+      })
+    ),
+
+    // ---------------------------
+    // كائن تفصيلي لبنية المحادثة (Rule-based)
+    // ---------------------------
+    structureMetrics: v.optional(
+      v.object({
+        totalMessages: v.number(),
+        customerMessageCount: v.number(),
+        agentMessageCount: v.number(),
+        systemMessageCount: v.number(),
+        turnCount: v.number(),
+        roundTripCount: v.number(),
+
+        customerTalkRatio: v.number(), // 0-1
+        agentTalkRatio: v.number(), // 0-1
+
+        avgCustomerCharsPerMessage: v.optional(v.number()),
+        avgAgentCharsPerMessage: v.optional(v.number()),
+        maxCustomerChars: v.optional(v.number()),
+        maxAgentChars: v.optional(v.number()),
+
+        durationMs: v.optional(v.number()),
+      })
+    ),
+
+    profanityMessageCount: v.optional(v.number()),
+    refundKeywordHits: v.optional(v.number()),
+    cancellationThreatHits: v.optional(v.number()),
+    priceNegotiationHits: v.optional(v.number()),
+
+    // 11) مخرجات الـ AI الخام + ميتاداتا تقنية
+    aiRawOutput: v.optional(v.any()),
+    processingTimeMs: v.optional(v.number()),
+    tokenInputCount: v.optional(v.number()),
+    tokenOutputCount: v.optional(v.number()),
+    isPartial: v.optional(v.boolean()),
   })
     .index("by_chat", ["chatId"])
-    .index("by_org", ["organizationId"]),
+    .index("by_org", ["organizationId"])
+    .index("by_org_createdAt", ["organizationId", "createdAt"]),
 
   // =============================
   // Chat FAQs

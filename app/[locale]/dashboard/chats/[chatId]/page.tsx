@@ -31,5 +31,16 @@ export default async function ChatPage({ params }: PageProps) {
     notFound();
   }
 
-  return <ChatViewClient chat={data.chat} messages={data.messages} />;
+  // جلب آخر تحليل
+  const analysis = await convex.query(api.chats.getLatestAnalysis, {
+    chatId: chatId as Id<"chats">,
+  });
+
+  return (
+    <ChatViewClient
+      chat={data.chat}
+      messages={data.messages}
+      analysis={analysis}
+    />
+  );
 }

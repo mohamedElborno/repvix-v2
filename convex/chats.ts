@@ -192,3 +192,28 @@ export const listForDashboard = query({
     return chats;
   },
 });
+
+export const getLatestAnalysis = query({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    // 1) Get the chat
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) {
+      return null;
+    }
+
+    // 2) Verify user is member of the organization
+    await requireOrgMembership(ctx, chat.organizationId);
+
+    // 3) Get the latest analysis for this chat
+    const analyses = await ctx.db
+      .query("chatAnalyses")
+      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
+      .order("desc")
+      .take(1);
+
+    return analyses.length > 0 ? analyses[0] : null;
+  },
+});
