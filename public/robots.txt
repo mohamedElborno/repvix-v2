@@ -1,0 +1,39 @@
+# robots.txt for Repvix
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /server/
+Disallow: /convex/
+Disallow: /clerk/
+
+# Sitemap locations
+Sitemap: https://repvix.com/sitemap.xml
+Sitemap: https://repvix.com/sitemap-en.xml
+Sitemap: https://repvix.com/sitemap-ar.xml
+Sitemap: https://repvix.com/sitemap-tr.xml
+Sitemap: https://repvix.com/sitemap-fr.xml
+Sitemap: https://repvix.com/sitemap-es.xml
+Sitemap: https://repvix.com/sitemap-hi.xml
+
+# Crawling and indexing directives
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth/
+
+# Ensure maximum image and snippet previews in search
+User-agent: *
+# Allow full previews for SEO-rich results
+Max-snippet: -1
+Max-image-preview: large
+Max-video-preview: -1

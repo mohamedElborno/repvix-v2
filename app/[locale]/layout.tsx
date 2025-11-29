@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "next-themes";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -31,22 +31,21 @@ export async function generateMetadata({
     title: t("title"),
     description: t("description"),
     keywords: t("keywords"),
-    authors: [{ name: "Repvix Team" }],
-    creator: "Repvix",
+    authors: [{ name: "Repvix Team" }, { name: "Mohamed Elborno" }],
+    creator: "Mohamed Elborno",
     publisher: "Repvix",
     openGraph: {
       type: "website",
-      locale: locale,
-      url: defaultUrl,
       title: t("title"),
       description: t("description"),
+      url: defaultUrl,
       siteName: "Repvix",
       images: [
         {
-          url: "/logo.png",
+          url: "/Repvix.png",
           width: 1200,
           height: 630,
-          alt: "Repvix - AI-Powered Chat Analytics",
+          alt: "Repvix AI Chat Analysis Dashboard Preview",
         },
       ],
     },
@@ -54,18 +53,30 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: t("title"),
       description: t("description"),
-      images: ["/logo.png"],
+      images: ["/Repvix.png"],
       creator: "@repvix",
+    },
+    alternates: {
+      canonical: defaultUrl,
+      languages: {
+        en: `${defaultUrl}/en`,
+        ar: `${defaultUrl}/ar`,
+        fr: `${defaultUrl}/fr`,
+        tr: `${defaultUrl}/tr`,
+        es: `${defaultUrl}/es`,
+        hi: `${defaultUrl}/hi`,
+      },
     },
     robots: {
       index: true,
       follow: true,
+      nocache: false,
       googleBot: {
         index: true,
         follow: true,
-        "max-video-preview": -1,
         "max-image-preview": "large",
         "max-snippet": -1,
+        "max-video-preview": -1,
       },
     },
     icons: {
@@ -73,6 +84,16 @@ export async function generateMetadata({
       shortcut: "/logo.png",
       apple: "/logo.png",
     },
+  };
+}
+
+export function generateViewport(): Viewport {
+  return {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+    themeColor: "#6b46c1",
   };
 }
 
@@ -95,14 +116,44 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang={locale} suppressHydrationWarning>
+        <head>
+          <link rel="manifest" href="/manifest.json" />
+          <script type="application/ld+json">
+            {`
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Repvix",
+  "operatingSystem": "Web",
+  "applicationCategory": "BusinessApplication",
+  "description": "Repvix analyzes customer support and sales chats using AI to deliver performance insights, sentiment analytics, and multilingual reports.",
+  "url": "https://repvix.com",
+  "image": "https://repvix.com/Repvix.png",
+  "author": {
+    "@type": "Person",
+    "name": "Mohamed Elborno"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Repvix"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+`}
+          </script>
+        </head>
         <body
           className={`${
             locale === "ar" ? almarai.className : "font-sans"
-          } antialiased bg-black`}
+          } antialiased bg-background text-foreground`}
         >
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="dark"
             enableSystem
             disableTransitionOnChange
           >

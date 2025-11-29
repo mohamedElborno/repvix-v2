@@ -1,0 +1,60 @@
+{
+  "name": "Repvix",
+  "short_name": "Repvix",
+  "description": "Repvix analyzes customer support and sales conversations using AI to generate insights, summaries, and multilingual reports.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f12",
+  "theme_color": "#6b46c1",
+  "categories": ["business", "productivity", "analytics", "ai"],
+  "icons": [
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screens/repvix-dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "AI Chat Analysis Dashboard"
+    },
+    {
+      "src": "/screens/repvix-analysis.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Conversation Report and Insights"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Analysis",
+      "short_name": "Analyze Chat",
+      "description": "Upload a conversation for AI-powered analysis",
+      "url": "/dashboard/upload"
+    },
+    {
+      "name": "My Reports",
+      "short_name": "Reports",
+      "description": "View your previous chat analyses and summaries",
+      "url": "/dashboard/analysis"
+    }
+  ],
+  "dir": "auto"
+}

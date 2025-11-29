@@ -38,13 +38,13 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="howItWorks" className="relative py-16 md:py-20">
-      <div className="mx-auto w-full max-w-6xl px-6 sm:px-8">
+    <section id="howItWorks" className="relative py-16 md:py-20 bg-background">
+      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         <div className="text-center mb-12 md:mb-14">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 dark:from-purple-400 dark:via-fuchsia-300 dark:to-purple-500">
             {t("title") ?? "How it works"}
           </h2>
-          <p className="mt-3 text-sm sm:text-base md:text-lg text-white/75 max-w-3xl mx-auto">
+          <p className="mt-3 text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
             {t("subtitle") ??
               "From raw chats to polished docs in three simple steps."}
           </p>
@@ -65,13 +65,13 @@ export default function HowItWorks() {
                 {/* Image side */}
                 <div className="relative">
                   <div className="absolute -inset-2 -z-10 rounded-3xl bg-gradient-to-br from-purple-500/20 via-fuchsia-400/10 to-purple-600/10 blur-2xl" />
-                  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                  <div className="relative flex items-center justify-center h-[400px] w-full overflow-hidden rounded-2xl border border-border bg-card backdrop-blur-md shadow-sm">
                     <Image
-                      src={s.image}
+                      src="/logo.svg"
                       alt={s.title}
-                      width={1200}
-                      height={800}
-                      className="w-full h-auto object-cover"
+                      width={500}
+                      height={500}
+                      className="w-auto h-full object-contain p-40"
                       priority={i === 0}
                     />
                   </div>
@@ -79,25 +79,25 @@ export default function HowItWorks() {
 
                 {/* Content side */}
                 <div className="relative">
-                  <div className="group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 md:p-7 transition-all duration-300 hover:bg-white/7.5 hover:border-white/15">
+                  <div className="group relative rounded-2xl border border-border bg-card backdrop-blur-md p-6 md:p-7 transition-all duration-300 hover:bg-muted/50 hover:border-purple-300/50 shadow-sm">
                     <div className="mb-3 flex items-center gap-3">
-                      <span className="inline-flex size-9 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-300/20 text-purple-300">
+                      <span className="inline-flex size-9 items-center justify-center rounded-xl bg-purple-500/10 dark:bg-purple-500/15 border border-purple-300/30 dark:border-purple-300/20 text-purple-600 dark:text-purple-300">
                         <Icon className="size-4" />
                       </span>
                       {/* Fancy badge */}
                       <span className="relative inline-flex items-center">
-                        <span className="absolute -left-1 size-1.5 rounded-full bg-purple-400/80 shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
+                        <span className="absolute -left-1 size-1.5 rounded-full bg-purple-500 dark:bg-purple-400/80 shadow-[0_0_8px_rgba(168,85,247,0.5)] dark:shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
                         <span className="rounded-full p-[1px] bg-gradient-to-r from-purple-400/60 via-fuchsia-400/40 to-purple-600/60">
-                          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold tracking-wide bg-white/5 border border-white/10 text-white/90">
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold tracking-wide bg-background dark:bg-white/5 border border-border dark:border-white/10 text-foreground dark:text-white/90">
                             {s.badge}
                           </span>
                         </span>
                       </span>
                     </div>
-                    <h3 className="text-lg md:text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/85">
+                    <h3 className="text-lg md:text-xl font-semibold text-foreground">
                       {i + 1}. {s.title}
                     </h3>
-                    <p className="mt-2 text-sm sm:text-[15px] text-white/75 leading-relaxed">
+                    <p className="mt-2 text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
                       {s.desc}
                     </p>
                   </div>

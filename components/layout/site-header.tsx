@@ -16,6 +16,7 @@ import {
 import { GlassElement } from "./GlassElement/GlassElement";
 import { useTranslations } from "next-intl";
 import LocaleSwitcher from "@/components/layout/LocaleSwitcher";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -25,7 +26,6 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
-  console.log("user", user);
 
   // Check if we are on a protected route
   const isProtectedRoute = pathname?.includes("/protected");
@@ -59,7 +59,7 @@ export function SiteHeader() {
   const links = isProtectedRoute ? protectedLinks : publicLinks;
 
   return (
-    <div className="sticky max-w-[90vw] 2xl:max-w-[1400px] mx-auto flex items-center justify-center top-2 sm:top-4 z-50 gap-2">
+    <div className="sticky max-w-[90vw] 2xl:max-w-[1400px] mx-auto flex items-center justify-center top-4 z-50 gap-2">
       <GlassElement
         className="mx-auto rounded-full flex items-center justify-between w-full max-w-[90vw] shadow-2xl"
         styles={{
@@ -74,7 +74,7 @@ export function SiteHeader() {
         {/* Logo - Left side */}
         <div className="flex items-center pointer-events-auto p-4">
           <Image
-            src={`/logo.png`}
+            src={`/logo.svg`}
             alt={t("logoAlt") || "Repvix logo"}
             width={500}
             height={500}
@@ -88,16 +88,10 @@ export function SiteHeader() {
             <li key={link.href} className="cursor-pointer">
               <Link
                 href={link.href}
-                className="flex items-center text-white gap-1 md:gap-2 hover:text-purple-500 transition-all duration-300 hover:scale-105 group"
+                className="flex items-center text-foreground gap-1 md:gap-2 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 hover:scale-105 group"
               >
                 <link.icon className="size-3 md:size-4 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300" />
-                <span
-                  className="text-xs md:text-sm tracking-[0.1em] font-semibold"
-                  style={{
-                    // text-shadow syntax: offset-x offset-y blur color (no spread)
-                    textShadow: "0 0 16px rgba(255, 255, 255)",
-                  }}
-                >
+                <span className="text-xs md:text-sm tracking-[0.1em] font-semibold">
                   {link.label}
                 </span>
               </Link>
@@ -133,7 +127,7 @@ export function SiteHeader() {
             className="flex flex-col space-y-[3px] rounded-pill bg-transparent hover:bg-transparent items-center justify-center gap-1 h-9 w-9 m-2 xl:hidden rounded-full hover:scale-[1.04] transition-all duration-300 cursor-pointer p-2"
           >
             <span
-              className={`w-6 h-[1px] bg-white transition-all duration-400 rounded-pill ${
+              className={`w-6 h-[1.5px] bg-foreground transition-all duration-400 rounded-pill ${
                 isMobileMenuOpen ? "rotate-45 translate-y-[4px] w-5" : ""
               }`}
               style={{
@@ -141,7 +135,7 @@ export function SiteHeader() {
               }}
             ></span>
             <span
-              className={`w-6 h-[1px] bg-white transition-all duration-400 rounded-pill ${
+              className={`w-6 h-[1.5px] bg-foreground transition-all duration-400 rounded-pill ${
                 isMobileMenuOpen ? "-rotate-45 -translate-y-[4px] w-5" : ""
               }`}
               style={{
@@ -151,55 +145,63 @@ export function SiteHeader() {
           </Button>
         </div>
       </GlassElement>
+      <ThemeToggle />
       <LocaleSwitcher />
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div
-          className="fixed left-0 right-0 top-16 mt-4 shadow-2xl xl:hidden max-w-[90vw] max-h-fit z-50 mx-auto rounded-3xl backdrop-blur-sm"
+          className="fixed left-0 right-0 top-16 mt-4 xl:hidden max-w-[90vw] max-h-fit z-50 mx-auto rounded-3xl backdrop-blur-sm"
           style={{
             background: "rgba(99, 99, 99, 0.089)",
             boxShadow: "inset 0 0 4px 0px rgba(255, 255, 255, 0.192)",
           }}
         >
-          <div className="flex flex-col space-y-2 p-4">
-            {links.map((link, index) => (
-              <Button
-                key={index}
-                className="max-w-full justify-start rounded-full bg-transparent hover:bg-transparent"
-              >
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-white"
+          <div className="p-2 space-y-2">
+            {links.map((link, index) => {
+              return (
+                <button
+                  key={index}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full flex items-center gap-3 text-left rounded-full transition-all duration-300 group hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 active:scale-95 active:bg-white/30 ease-out"
                 >
-                  <link.icon className="w-4 h-4 shadow-lg" />
-                  <span
-                    className="text-sm font-medium"
-                    style={{
-                      textShadow: "0 0 12px rgba(255, 255, 255, 255)",
-                    }}
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-white text-black"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {link.label}
-                  </span>
-                </Link>
-              </Button>
-            ))}
+                    <link.icon className="w-4 h-4 shadow-lg" />
+                    <span
+                      className="text-sm font-medium dark:text-white text-black"
+                      style={{
+                        textShadow: "0 0 12px rgba(255, 255, 255, 255)",
+                      }}
+                    >
+                      {link.label}
+                    </span>
+                  </Link>
+                </button>
+              );
+            })}
+
             {user ? (
-              <Button className="rounded-full cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
+              <Button className="rounded-full w-full cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                 <Link href="/dashboard">{t("dashboard")}</Link>
               </Button>
             ) : (
-              <>
-                <Button className="rounded-full cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
+              <div className="flex flex-col w-full items-center gap-2">
+                <Button className="rounded-full cursor-pointer w-full text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                   <Link href="/sign-up">{t("signUp")}</Link>
                 </Button>
-                <Button className="rounded-full bg-purple-600 cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
+                <Button className="rounded-full bg-purple-600 cursor-pointer w-full text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                   <Link href="/sign-in">{t("signIn")}</Link>
                 </Button>
-              </>
+              </div>
             )}
           </div>
+
+          {/* Bottom gradient line */}
+          <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
         </div>
       )}
     </div>

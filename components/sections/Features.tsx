@@ -67,41 +67,63 @@ export default function Features() {
   ];
 
   return (
-    <section id="features" className="relative py-16 lg:py-20">
-      <div className="mx-auto max-w-6xl px-6 sm:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">
+    <section id="features" className="relative py-20 lg:py-28 bg-muted/20">
+      <div className="mx-auto max-w-[1440px] px-6 sm:px-8">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
             {t("title") || "Advanced AI-Powered Capabilities"}
           </h2>
-          <p className="mt-3 text-base md:text-lg text-white/70 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             {t("subtitle") ||
               "Transform raw conversations into fully analyzed insights, performance metrics, and structured knowledge."}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {items.map((item, idx) => {
             const Icon = item.icon;
             return (
               <div
                 key={idx}
-                className="group rounded-2xl border border-white/10 p-6 bg-white/[0.05] backdrop-blur-md
-                           hover:border-white/20 hover:bg-white/[0.08] transition-all duration-300
-                           shadow-[0_0_20px_rgba(0,0,0,0.2)]"
+                className="group relative rounded-3xl border border-border/50 p-8 bg-card/50 backdrop-blur-sm
+                           hover:border-purple-500/50 hover:bg-card/80 transition-all duration-500
+                           hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1"
               >
-                <div
-                  className="rounded-xl p-3 w-fit mb-4 bg-gradient-to-br from-purple-600/20 to-fuchsia-500/20
-                             border border-purple-300/30 text-purple-200 shadow-[0_0_18px_rgba(168,85,247,0.35)]"
-                >
-                  <Icon className="size-5" />
+                {/* Icon Container */}
+                <div className="relative mb-6">
+                  <div
+                    className="relative rounded-xl p-4 w-fit bg-gradient-to-br from-purple-500/10 via-fuchsia-500/10 to-purple-500/10
+                               dark:from-purple-600/20 dark:via-fuchsia-500/20 dark:to-purple-600/20
+                               border border-purple-400/20 dark:border-purple-300/30
+                               group-hover:border-purple-500/50 dark:group-hover:border-purple-400/60
+                               transition-all duration-500 group-hover:scale-110"
+                  >
+                    <Icon className="size-6 text-purple-600 dark:text-purple-400 transition-colors duration-500" />
+
+                    {/* Glow effect on hover */}
+                    <div
+                      className="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-500/0 via-fuchsia-500/0 to-purple-500/0
+                                    group-hover:from-purple-500/20 group-hover:via-fuchsia-500/20 group-hover:to-purple-500/20
+                                    transition-all duration-500 blur-xl -z-10"
+                    ></div>
+                  </div>
                 </div>
 
-                <h3 className="text-lg font-semibold text-white mb-2">
+                {/* Content */}
+                <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-500">
                   {item.title}
                 </h3>
-                <p className="text-sm text-white/70 leading-relaxed">
+                <p className="text-base text-muted-foreground leading-relaxed">
                   {item.desc}
                 </p>
+
+                {/* Decorative gradient line */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/0 to-transparent
+                                group-hover:via-purple-500/50 transition-all duration-500"
+                ></div>
               </div>
             );
           })}

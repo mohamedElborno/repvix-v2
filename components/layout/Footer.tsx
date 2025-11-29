@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Twitter, Mail } from "lucide-react";
+import { Mail, Instagram, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { IconBrandInstagram, IconBrandX, IconMail } from "@tabler/icons-react";
 
 export default function Footer() {
   const t = useTranslations("home.footer");
@@ -24,59 +26,65 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-14 sm:mt-20 mb-5">
-      <div className="mx-auto w-full max-w-6xl xl:max-w-[1400px] px-6 sm:px-8">
+      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         {/* Outer gradient ring */}
-        <div className="rounded-3xl p-[1.5px] bg-gradient-to-br from-purple-400/20 via-fuchsia-400/10 to-purple-600/20">
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md">
+        <div className="rounded-3xl p-[1.5px] bg-gradient-to-br from-purple-400/20 via-fuchsia-400/10 to-purple-600/20 dark:from-purple-400/30 dark:via-fuchsia-400/20 dark:to-purple-600/30">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-card backdrop-blur-md shadow-sm">
             {/* soft glow */}
-            <div className="pointer-events-none absolute -top-10 inset-x-0 h-16 bg-gradient-to-b from-white/10 to-transparent" />
+            <div className="pointer-events-none absolute -top-10 inset-x-0 h-16 bg-gradient-to-b from-purple-500/5 dark:from-white/10 to-transparent" />
 
             <div className="px-5 sm:px-6 py-8 sm:py-10">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* Brand */}
                 <div className="md:col-span-2">
-                  <div className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-white to-purple-300">
-                    {t("brandName") || "Repvix"}
-                  </div>
-                  <p className="mt-2 text-sm text-white/75 max-w-md">
-                    {t("description") ||
-                      "Turn support chats into polished docs, FAQs and insights in seconds."}
+                  <Image
+                    src="/Repvix.svg"
+                    alt="Repvix"
+                    width={2000}
+                    height={2000}
+                    className="absolute left-1 top-4 w-auto h-20 object-contain origin-right invert dark:invert-0"
+                  />
+                  <p className="mt-12 text-sm text-muted-foreground max-w-md ">
+                    {t("description")}
                   </p>
 
                   {/* Socials */}
                   <div className="mt-4 flex items-center gap-2.5">
                     <Link
-                      href="https://twitter.com"
-                      className="rounded-lg p-2 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                      href="https://x.com/repvix?t=VmOqKWakdzZ6jyWOCAcKyg&s=09"
+                      target="_blank"
+                      className="rounded-lg p-1 border border-border bg-muted/50 hover:bg-muted dark:hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
                     >
-                      <Twitter className="size-4" />
+                      <IconBrandX stroke={1.5} className="size-5" />
                     </Link>
                     <Link
-                      href="https://github.com"
-                      className="rounded-lg p-2 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                      href="https://www.instagram.com/repvix.ai?igsh=d2JvODI1a2pxdnR6"
+                      target="_blank"
+                      className="rounded-lg p-1 border border-border bg-muted/50 hover:bg-muted dark:hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
                     >
-                      <Github className="size-4" />
+                      <IconBrandInstagram stroke={1.5} className="size-5" />
                     </Link>
                     <Link
                       href="mailto:contact@example.com"
-                      className="rounded-lg p-2 border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                      target="_blank"
+                      className="rounded-lg p-1 border border-border bg-muted/50 hover:bg-muted dark:hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
                     >
-                      <Mail className="size-4" />
+                      <IconMail stroke={1.5} className="size-5" />
                     </Link>
                   </div>
                 </div>
 
                 {/* Product */}
                 <div>
-                  <h4 className="text-sm font-semibold text-white/90 tracking-wide">
-                    {t("productLabel") || "Product"}
+                  <h4 className="text-sm font-semibold text-foreground tracking-wide">
+                    {t("productLabel")}
                   </h4>
                   <ul className="mt-3 space-y-2.5 text-sm">
                     {nav.product.map((l) => (
                       <li key={l.href}>
                         <Link
                           href={l.href}
-                          className="text-white/80 hover:text-white transition-colors"
+                          className="text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {l.label}
                         </Link>
@@ -87,15 +95,15 @@ export default function Footer() {
 
                 {/* Company */}
                 <div>
-                  <h4 className="text-sm font-semibold text-white/90 tracking-wide">
-                    {t("companyLabel") || "Company"}
+                  <h4 className="text-sm font-semibold text-foreground tracking-wide">
+                    {t("companyLabel")}
                   </h4>
                   <ul className="mt-3 space-y-2.5 text-sm">
                     {nav.company.map((l) => (
                       <li key={l.href}>
                         <Link
                           href={l.href}
-                          className="text-white/80 hover:text-white transition-colors"
+                          className="text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {l.label}
                         </Link>
@@ -106,16 +114,15 @@ export default function Footer() {
               </div>
 
               {/* Divider */}
-              <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
               {/* Bottom bar */}
               <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-xs sm:text-sm text-white/70">
-                  {t("copyright", { year }) ||
-                    `© ${year} Repvix. All rights reserved.`}
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {t("copyright", { year })}
                 </p>
-                <div className="text-xs sm:text-sm text-white/70">
-                  {t("tagline") || "Built with love and a bit of AI ✨"}
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  {t("tagline")}
                 </div>
               </div>
             </div>

@@ -71,7 +71,7 @@ export default function LocaleSwitcher() {
           {/* Globe Icon */}
           <Globe
             size={16}
-            className="shrink-0 w-4 h-4 text-white/80 rounded-full group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_4px_rgba(168,85,247,0.3)]"
+            className="shrink-0 w-4 h-4 dark:text-white text-black/80 rounded-full group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_4px_rgba(168,85,247,0.3)]"
             style={{
               boxShadow: "0 0 8px 4px rgba(255, 255, 255, 0.192)",
             }}
@@ -113,7 +113,7 @@ export default function LocaleSwitcher() {
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-xs font-bold text-white">
                     {language.code.toUpperCase().charAt(0)}
                   </div>
-                  <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_4px_rgba(168,85,247,0.2)]">
+                  <span className="text-sm font-medium dark:text-white/90 text-black/90 group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_4px_rgba(168,85,247,0.2)]">
                     {language.name}
                   </span>
                 </div>

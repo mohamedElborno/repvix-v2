@@ -1,102 +1,95 @@
 {
   "home": {
     "hero": {
-      "badge": "AI chat analysis • Conversation intelligence",
-      "title1": "Transform Conversations",
-      "title2": "Into Comprehensive",
-      "title3": "Professional Analyses",
-      "subtitle": "Accurately extract data and insights from WhatsApp, Discord, and Telegram conversations using advanced AI.",
-      "bullet1": "Automatic executive summaries, sentiment & behavioral analysis.",
-      "bullet2": "Turn messy chat logs into clean, structured insights in minutes.",
-      "bullet3": "Export ready-to-share reports for teams, managers, and clients.",
-      "getStarted": "Get Started",
-      "learnMore": "Learn More",
-      "trustRow1": "⚡ No training required",
-      "trustRow2": "Paste chats • Get analysis • Export",
-      "cardChatSources": "Chat Sources",
-      "cardLivePreview": "Live Preview",
-      "cardRawConversation": "Raw Conversation",
-      "cardExampleText": "We need a quote for a new feature, what's your best price and timeline?",
-      "cardInput": "Input",
-      "cardAiAnalysis": "AI Analysis",
-      "cardExecutiveSummary": "Executive Summary",
-      "cardExampleSummary": "Negotiation focused on price and delivery time. Client shows resistance at initial anchor but remains open after concession. Outcome pending.",
-      "cardSentiment": "Sentiment",
-      "cardResolution": "Resolution",
-      "cardMatch": "Match",
-      "cardExportAs": "Export as:",
-      "cardPdfReport": "PDF Report",
-      "cardFaqs": "FAQs",
-      "cardMarkdown": "Markdown"
+      "badge": "AI Chat Analysis",
+      "title1": "Analyze Every",
+      "title2": "Customer Conversation.",
+      "title3": "In Any Language.",
+      "subtitle": "Repvix turns every customer support and sales conversation into actionable insights. Measure clarity, empathy, and results — powered by advanced AI that understands tone, emotion, and context across six languages. Manage your team, monitor performance, and ensure every interaction meets your standards.",
+      "feature1Title": "Behavioral Insights",
+      "feature1Desc": "Understand how your team communicates — clarity, empathy, tone, and professionalism — all measured automatically.",
+      "feature2Title": "Unified Support + Sales Analytics",
+      "feature2Desc": "Analyze both support interactions and sales negotiations to improve customer satisfaction and conversion.",
+      "feature3Title": "Risk & Sentiment Detection",
+      "feature3Desc": "Spot customer frustration, churn risks, and sentiment shifts before they affect your reputation.",
+      "feature4Title": "Guided AI Logic",
+      "feature4Desc": "Repvix’s custom rule engine ensures every analysis follows consistent, reliable, and ethical standards.",
+      "getStarted": "Get Started Free",
+      "learnMore": "See How It Works",
+      "trustNote": "No setup required • Team performance tracking included"
     },
     "features": {
-      "title": "Advanced AI-Powered Capabilities",
-      "subtitle": "Transform raw conversations into fully analyzed insights, performance metrics, and structured knowledge.",
+      "title": "Powerful AI-Driven Analysis for Every Conversation",
+      "subtitle": "Repvix breaks down customer and sales chats into clear insights about behavior, performance, and outcomes — helping teams improve communication and results.",
       "item1": {
-        "title": "Full Conversation Intelligence",
-        "desc": "Executive summaries, sentiment evolution, friction detection, and full communication profiling."
+        "title": "Comprehensive Chat Analysis",
+        "desc": "Automatically analyze entire conversations — from message flow to tone, sentiment, and intent — to understand what truly happened between agent and customer."
       },
       "item2": {
-        "title": "Behavioral & Linguistic Analysis",
-        "desc": "Clarity, empathy, assertiveness, engagement level, tone mapping, and linguistic patterns."
+        "title": "Behavior & Communication Insights",
+        "desc": "Measure clarity, empathy, professionalism, and engagement. Identify communication strengths and recurring behavior patterns across your team."
       },
       "item3": {
-        "title": "Outcome & Negotiation Insights",
-        "desc": "Resolution likelihood, negotiation strength, price tension points, and risk indicators."
+        "title": "Sales & Resolution Outcomes",
+        "desc": "Reveal how close a conversation is to reaching agreement or resolution. Detect pricing friction, negotiation dynamics, and outcome confidence."
       },
       "item4": {
-        "title": "Employee Performance Analytics",
-        "desc": "Track response time, sentiment averages, strengths, weaknesses, and behavioral trends over time."
+        "title": "Team Performance Overview",
+        "desc": "Track each employee’s response time, tone balance, satisfaction impact, and improvement trends — all in one structured view."
       },
       "item5": {
-        "title": "Auto-Generated FAQs & KB",
-        "desc": "Extract recurring questions and generate accurate answers with confidence scoring."
+        "title": "Knowledge Extraction & FAQs",
+        "desc": "Automatically extract frequent customer questions and generate accurate responses for your internal knowledge base or FAQ section."
       },
       "item6": {
-        "title": "Export-Ready Executive Reports",
-        "desc": "Download polished PDF reports, Markdown summaries, and structured insights instantly."
+        "title": "Structured Reports & Summaries",
+        "desc": "Export executive-ready reports with clear metrics, summaries, and recommendations. Perfect for managers and client presentations."
       },
       "item7": {
-        "title": "Multi-Language Intelligence",
-        "desc": "Arabic, English, Turkish, Spanish, French, and Hindi — with precise cross-language analysis."
+        "title": "Multi-Language Support",
+        "desc": "Arabic, English, Turkish, French, Spanish, and Hindi — all analyzed with consistent accuracy and contextual understanding."
       }
     },
     "howItWorks": {
-      "title": "How it works",
-      "subtitle": "From raw chats to polished docs in three simple steps.",
+      "title": "How It Works",
+      "subtitle": "From raw chat exports to deep performance insights — in three simple steps.",
       "step1": {
-        "title": "Import Chats",
-        "desc": "Upload WhatsApp/Discord/Telegram chats or CSV/TXT files.",
+        "title": "Upload Conversations",
+        "desc": "Import your WhatsApp, Telegram, or chat transcripts (TXT/CSV). Repvix automatically cleans and structures your data for analysis.",
         "badge": "Input"
       },
       "step2": {
-        "title": "AI Analysis",
-        "desc": "We embed, cluster and summarize conversations using advanced AI.",
+        "title": "AI-Powered Analysis",
+        "desc": "Our AI interprets every message — detecting tone, emotion, and intent. It identifies key moments, behavioral signals, and outcomes for each conversation.",
         "badge": "AI"
       },
       "step3": {
-        "title": "Instant Docs",
-        "desc": "Export polished PDFs/Markdown, FAQs and analytics reports.",
-        "badge": "Output"
+        "title": "Get Clear Insights",
+        "desc": "View structured results with performance metrics, behavioral scores, and improvement recommendations — ready to export or share with your team.",
+        "badge": "Results"
       }
     },
     "faq": {
       "title": "Frequently Asked Questions",
-      "subtitle": "All you need to know before getting started.",
-      "q1": "What chat platforms are supported?",
-      "a1": "We support WhatsApp, Discord, Telegram, and CSV/TXT file formats. Simply export your chat history and upload it to our platform.",
-      "q2": "How accurate is the AI analysis?",
-      "a2": "Our AI uses advanced natural language processing to provide highly accurate sentiment analysis, behavioral insights, and conversation summaries. The accuracy improves with longer conversation threads.",
-      "q3": "Can I export the analysis reports?",
-      "a3": "Yes! You can export your analysis as PDF reports, Markdown files, or structured FAQs. All exports are ready to share with your team or clients.",
-      "q4": "Is my chat data secure?",
-      "a4": "Absolutely. We use enterprise-grade encryption and never store your conversations permanently. Your data is processed securely and can be deleted at any time.",
-      "q5": "Do you support multiple languages?",
-      "a5": "Yes, we support Arabic, English, Turkish, Spanish, French, and Hindi with precise cross-language analysis capabilities."
+      "subtitle": "Everything you need to know before getting started.",
+      "q1": "Which chat platforms are supported?",
+      "a1": "Repvix currently supports manual chat uploads in CSV or TXT format. Integrations with WhatsApp, Telegram, and Discord are planned for upcoming releases — we’re currently in open beta.",
+      "q2": "Do all plans use the same AI model?",
+      "a2": "Yes. Every plan uses the same advanced AI engine and rule-based framework to ensure consistent analysis quality across all accounts and languages.",
+      "q3": "What insights does Repvix provide?",
+      "a3": "Each conversation is analyzed for clarity, empathy, professionalism, intent, sentiment, and outcome — producing actionable insights, performance scores, and structured recommendations.",
+      "q4": "Can I export my analysis results?",
+      "a4": "Yes! Depending on your plan, you can export analyses as PDF, Markdown, or CSV files — or even extract FAQs automatically for internal knowledge bases.",
+      "q5": "Is my data private and secure?",
+      "a5": "Yes. Chats uploaded manually are stored securely in our database so you can revisit or delete them anytime. Conversations imported via future integrations will be processed temporarily without permanent storage.",
+      "q6": "Do you support multiple languages?",
+      "a6": "Yes — Repvix analyzes chats in Arabic, English, Turkish, French, Spanish, and Hindi, maintaining consistent accuracy and context understanding in every language.",
+      "q7": "Can teams collaborate under one account?",
+      "a7": "Yes. You can invite your team members to your organization, assign roles, and analyze individual or collective performance depending on your subscription plan."
     },
     "footer": {
       "brandName": "Repvix",
-      "description": "Turn support chats into polished docs, FAQs and insights in seconds.",
+      "description": "Transform customer and sales conversations into clear insights, structured FAQs, and professional reports — powered by AI.",
       "productLabel": "Product",
       "companyLabel": "Company",
       "features": "Features",
@@ -107,7 +100,7 @@
       "privacy": "Privacy",
       "contact": "Contact",
       "copyright": "© {year} Repvix. All rights reserved.",
-      "tagline": "Built with love and a bit of AI ✨"
+      "tagline": "Powered by precision, insight, and a bit of AI ✨"
     }
   },
   "header": {
@@ -177,7 +170,7 @@
     },
     "pricing": {
       "title": "Choose Your Plan",
-      "subtitle": "Select the perfect plan for your needs. All plans include our core features with varying limits.",
+      "subtitle": "Select the perfect plan for your needs. All plans include the same AI-powered analysis and processing speed — only limits and integrations differ.",
       "popular": "Popular",
       "perMonth": "/month",
       "customPrice": "Custom",
@@ -188,71 +181,68 @@
           "title": "Basic",
           "description": "Perfect for individuals getting started",
           "features": {
-            "f1": "Up to 10 conversations per month",
-            "f2": "Basic sentiment analysis",
-            "f3": "PDF export",
-            "f4": "Email support",
-            "f5": "Standard processing speed",
-            "f6": "Basic analytics dashboard"
+            "f1": "Up to 3 analyses per day",
+            "f2": "1 team member",
+            "f3": "Full analysis for each chat + global insights",
+            "f4": "PDF export only",
+            "f5": "Email support"
           }
         },
         "starter": {
           "title": "Starter",
           "description": "Ideal for small teams and growing businesses",
           "features": {
-            "f1": "Up to 50 conversations per month",
-            "f2": "Advanced sentiment & behavioral analysis",
-            "f3": "PDF & Markdown export",
-            "f4": "Priority email support",
-            "f5": "Faster processing speed",
-            "f6": "Enhanced analytics dashboard",
-            "f7": "Auto-generated FAQs"
+            "f1": "Up to 10 analyses per day",
+            "f2": "Up to 3 team members",
+            "f3": "Full conversation & team-level analysis",
+            "f4": "PDF & Markdown export",
+            "f5": "Auto-generated FAQs",
+            "f6": "Priority email support"
           }
         },
         "pro": {
           "title": "Pro",
           "description": "For professional teams and agencies",
           "features": {
-            "f1": "Up to 200 conversations per month",
-            "f2": "Full conversation intelligence suite",
-            "f3": "All export formats (PDF, Markdown, CSV)",
-            "f4": "Priority support with SLA",
-            "f5": "Fastest processing speed",
-            "f6": "Advanced analytics & insights",
-            "f7": "Multi-language support"
+            "f1": "Up to 30 analyses per day",
+            "f2": "Up to 10 team members",
+            "f3": "Comprehensive chat and organization-level analysis",
+            "f4": "PDF, Markdown, and CSV export",
+            "f5": "Integrations with Intercom & Telegram",
+            "f6": "Advanced FAQ extraction"
           }
         },
         "business": {
           "title": "Business",
-          "description": "For larger organizations with high volume",
+          "description": "For larger organizations with multiple teams",
           "features": {
-            "f1": "Up to 500 conversations per month",
-            "f2": "Enterprise-grade analysis",
-            "f3": "Custom export formats",
-            "f4": "Dedicated account manager",
-            "f5": "Custom integrations",
-            "f6": "Advanced reporting & API access"
+            "f1": "Up to 100 analyses per day",
+            "f2": "Up to 25 team members",
+            "f3": "Executive-level reporting and analytics",
+            "f4": "All export formats + API access",
+            "f5": "Direct integrations with WhatsApp, Zendesk, and Intercom",
+            "f6": "Dedicated account manager"
           }
         },
         "enterprise": {
           "title": "Enterprise",
           "description": "Custom solutions for large-scale operations",
           "features": {
-            "f1": "Unlimited conversations",
-            "f2": "Custom AI model training",
-            "f3": "White-label solutions",
-            "f4": "24/7 dedicated support",
-            "f5": "On-premise deployment options",
-            "f6": "Custom SLA & compliance"
+            "f1": "Unlimited daily analyses",
+            "f2": "Unlimited team members",
+            "f3": "All export formats",
+            "f4": "Custom integrations with any platform",
+            "f5": "White-label & On-Premise options",
+            "f6": "24/7 dedicated support"
           }
         }
       }
     }
   },
   "metadata": {
-    "title": "Repvix - AI-Powered Chat Analytics & Conversation Intelligence",
-    "description": "Transform WhatsApp, Discord, and Telegram conversations into comprehensive professional analyses. Get executive summaries, sentiment analysis, behavioral insights, and export-ready reports in seconds.",
-    "keywords": "chat analysis, conversation intelligence, WhatsApp analysis, Discord analytics, Telegram insights, AI chat analytics, sentiment analysis, behavioral analysis, conversation analytics, chat export, PDF reports, AI-powered insights, customer support analytics, team performance analytics"
+    "title": "Repvix – AI Chat Analysis for Customer Support & Sales Teams | Multilingual Conversation Insights",
+    "description": "Repvix analyzes WhatsApp, Telegram, and Discord conversations using advanced AI to deliver sentiment, behavioral, and performance insights. Create executive summaries, FAQs, and reports in six languages — all in seconds.",
+    "keywords": "AI chat analysis, conversation intelligence, WhatsApp analytics, Telegram chat insights, Discord analysis, customer support AI, sales conversation analytics, sentiment analysis, behavior tracking, multilingual AI, Repvix"
   },
   "locale": {
     "arabic": "Arabic",
@@ -459,7 +449,6 @@
     "name": "Name",
     "enterName": "Enter name",
     "enterEmail": "Enter email",
-    "emailAddress": "Email Address",
     "updateError": "Failed to update employee. Please try again.",
     "saving": "Saving...",
     "saveChanges": "Save Changes"
