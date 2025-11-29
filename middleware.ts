@@ -9,12 +9,21 @@ const intlMiddleware = createMiddleware(routing);
 export default clerkMiddleware((auth, request) => {
   const { pathname } = request.nextUrl;
 
-  // ✅ 1) لا تلمس أي شيء تحت /api (ومن ضمنه /api/webhooks/clerk)
-  if (pathname.startsWith("/api")) {
+  // ✅ 1. استثناء الملفات الثابتة تمامًا (يشمل sitemap, robots, manifest)
+  if (
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt" ||
+    pathname === "/manifest.json"
+  ) {
     return NextResponse.next();
   }
 
-  // ✅ 2) باقي المسارات تستخدم next-intl كالعادة
+  // ✅ 2. استثناء API وملفات Next.js
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+    return NextResponse.next();
+  }
+
+  // ✅ 3. تمرير باقي الطلبات إلى next-intl
   return intlMiddleware(request);
 });
 
