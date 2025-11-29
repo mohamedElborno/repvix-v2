@@ -1,15 +1,16 @@
 import { MetadataRoute } from "next";
 
-const baseUrl = process.env.VERCEL_URL
-  ? `https://repvix.com`
-  : "http://localhost:3000";
+const baseUrl =
+  process.env.VERCEL_ENV === "production"
+    ? "https://repvix.com"
+    : "http://localhost:3000";
 
 const locales = ["en", "ar", "fr", "tr", "es", "hi"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const currentDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const currentDate = new Date().toISOString();
 
-  const urls: MetadataRoute.Sitemap = locales.map((locale) => ({
+  return locales.map((locale) => ({
     url: `${baseUrl}/${locale}`,
     lastModified: currentDate,
     changeFrequency: "weekly",
@@ -20,6 +21,4 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ),
     },
   }));
-
-  return urls;
 }
