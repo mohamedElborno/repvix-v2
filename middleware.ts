@@ -12,6 +12,7 @@ export default clerkMiddleware((auth, request) => {
   // ✅ 1. استثناء الملفات الثابتة تمامًا (يشمل sitemap, robots, manifest)
   if (
     pathname === "/sitemap.xml" ||
+    pathname === "/sitemap" ||
     pathname === "/robots.txt" ||
     pathname === "/manifest.json"
   ) {
