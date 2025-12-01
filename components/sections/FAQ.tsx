@@ -68,7 +68,7 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative py-16 md:py-20 bg-background">
+    <section id="faq" className="relative py-16 md:py-20 bg-background scroll-mt-20">
       <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         <div className="text-center mb-10 md:mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-fuchsia-400 to-purple-500 dark:from-purple-300 dark:via-fuchsia-200 dark:to-purple-400">

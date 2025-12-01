@@ -18,5 +18,6 @@ export type CreateChatPayload = {
   employeeMemberId?: string; // The organization member (if we want to link it to a specific employee)
   channel?: string; // "whatsapp" | "telegram" | "manual" | ...
   customerIdentifier?: string; // The customer identifier / username / email...
+  customerName?: string; // The name of the customer if you want
   messages: NormalizedMessage[]; // The messages after normalization
 };

@@ -12,8 +12,7 @@ import type {
 } from "./ruleBasedFlags";
 
 /**
- * تمهيد: شكل البيانات الخاصة بالـ chat التي نحتاجها للـ AI فقط
- * (نستقبل IDs كسلاسل نصية حتى لا نعتمد على نوع Convex Id داخلياً)
+ * Metadata sent to GPT
  */
 export interface AiChatInputMetadata {
   chatId: string;
@@ -26,24 +25,20 @@ export interface AiChatInputMetadata {
 
   startedAt: number;
   endedAt: number | null;
+
+  /** user-provided customer name (absolute priority for GPT) */
+  customerName: string | null;
 }
 
-/**
- * شكل الرسالة كما سنمررها للدالة من Convex
- * (نستقبل textClean + textRaw + التوقيت + اسم المرسل)
- */
 export interface AiInputMessage {
   id: string;
   role: "customer" | "agent" | "system";
   senderName: string | null;
-  text: string; // textClean
-  originalText?: string | undefined; // textRaw (اختياري)
-  timestamp: number; // internalTimestamp
+  text: string;
+  originalText?: string | undefined;
+  timestamp: number;
 }
 
-/**
- * structureMetrics كما نحتاجه للـ AI (متطابق تقريباً مع structureMetrics في السكيما)
- */
 export interface AiStructureMetricsInput {
   totalMessages: number;
   customerMessageCount: number;
@@ -52,21 +47,17 @@ export interface AiStructureMetricsInput {
   turnCount: number;
   roundTripCount: number;
 
-  customerTalkRatio: number; // 0-1
-  agentTalkRatio: number; // 0-1
+  customerTalkRatio: number;
+  agentTalkRatio: number;
 
   avgCustomerCharsPerMessage?: number;
   avgAgentCharsPerMessage?: number;
   maxCustomerChars?: number;
   maxAgentChars?: number;
 
-  // ممكن نستغلها من ruleBasedMetrics.durationMs
   durationMs?: number;
 }
 
-/**
- * باراميترات بناء ChatAnalysisAiInput
- */
 export interface BuildChatAnalysisAiInputParams {
   analysisLanguage: SupportedLanguage;
   conversationLanguage: SupportedLanguage;
@@ -74,7 +65,7 @@ export interface BuildChatAnalysisAiInputParams {
   chat: AiChatInputMetadata;
   messages: AiInputMessage[];
 
-  channelType: ChannelType; // عادة من timeResult.channelType
+  channelType: ChannelType;
 
   timeResult: TimeRuleBasedResult;
   structureMetrics: AiStructureMetricsInput;
@@ -83,13 +74,6 @@ export interface BuildChatAnalysisAiInputParams {
   keywordMetrics: RuleBasedMetricsPatch;
 }
 
-/**
- * الدالة الرئيسية:
- * تحوّل:
- *  - chat + messages + rule-based
- * إلى
- *  - ChatAnalysisAiInput جاهز للإرسال للـ GPT كـ JSON واحد.
- */
 export function buildChatAnalysisAiInput(
   params: BuildChatAnalysisAiInputParams
 ): ChatAnalysisAiInput {
@@ -105,12 +89,29 @@ export function buildChatAnalysisAiInput(
     keywordMetrics,
   } = params;
 
-  // تأكيد الترتيب الزمني للرسائل (للامان)
+  // ----------------------------------------------------------------------
+  // 1) Normalize & enforce user-provided customerName
+  // ----------------------------------------------------------------------
+
+  let finalCustomerName: string | null = null;
+
+  if (chat.customerName && typeof chat.customerName === "string") {
+    const trimmed = chat.customerName.trim();
+    if (trimmed.length > 0) {
+      finalCustomerName = trimmed;
+    }
+  }
+
+  const customerNameSource = finalCustomerName ? "user_provided" : "none";
+
+  // ----------------------------------------------------------------------
+  // 2) Ensure chronological order
+  // ----------------------------------------------------------------------
+
   const sortedMessages = [...messages].sort(
     (a, b) => a.timestamp - b.timestamp
   );
 
-  // تحويل الرسائل إلى الشكل المتوقع من ChatAnalysisAiInput
   const aiMessages = sortedMessages.map((m, index) => ({
     id: m.id,
     role: m.role,
@@ -121,13 +122,16 @@ export function buildChatAnalysisAiInput(
     index,
   }));
 
-  // chatMetadata كما في aiTypes.ts
+  // ----------------------------------------------------------------------
+  // 3) Build metadata block
+  // ----------------------------------------------------------------------
+
   const chatMetadata = {
     chatId: chat.chatId,
     organizationId: chat.organizationId,
     sourceType: chat.sourceType,
     sourceChannel: chat.sourceChannel,
-    channelType, // من timeResult.channelType
+    channelType,
 
     status: chat.status,
     title: chat.title,
@@ -137,9 +141,16 @@ export function buildChatAnalysisAiInput(
 
     startedAt: chat.startedAt,
     endedAt: chat.endedAt,
+
+    /** highest-priority field passed to GPT */
+    customerName: finalCustomerName,
+    customerNameSource, // NEW
   };
 
-  // timeMetrics مأخوذ مباشرة من TimeRuleBasedResult
+  // ----------------------------------------------------------------------
+  // 4) Rule-based time metrics
+  // ----------------------------------------------------------------------
+
   const timeMetrics = {
     channelType,
     firstResponseMs: timeResult.firstResponseMs,
@@ -150,7 +161,10 @@ export function buildChatAnalysisAiInput(
     slaBreached: timeResult.slaBreached,
   };
 
-  // ruleBasedAnalysis كامل
+  // ----------------------------------------------------------------------
+  // 5) Rule-based metrics package
+  // ----------------------------------------------------------------------
+
   const ruleBasedAnalysis = {
     timeMetrics,
     structureMetrics,
@@ -162,6 +176,10 @@ export function buildChatAnalysisAiInput(
       priceNegotiationHits: keywordMetrics.priceNegotiationHits,
     },
   };
+
+  // ----------------------------------------------------------------------
+  // 6) Final AI Input JSON
+  // ----------------------------------------------------------------------
 
   const aiInput: ChatAnalysisAiInput = {
     version: "chat_analysis_v1",

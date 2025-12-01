@@ -23,7 +23,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="hero" className="relative overflow-hidden">
+    <section id="hero" className="relative overflow-hidden scroll-mt-20">
       {/* Repvix Logo - Right Side */}
 
       <div

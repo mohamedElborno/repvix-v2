@@ -35,6 +35,13 @@ interface MessageForStructure {
   internalTimestamp: number;
 }
 
+function normalizeTs(ts: number | null | undefined): number | undefined {
+  if (ts == null) return undefined;
+  // لو timestamp أقل من 1 تريليون → هذا يعني أنه seconds وليس ms
+  if (ts > 0 && ts < 1e12) return ts * 1000;
+  return ts;
+}
+
 /**
  * حساب بنية المحادثة (structureMetrics + ruleBasedMetrics)
  * بشكل Rule-based بالكامل.
@@ -218,7 +225,16 @@ export const analyzeSingleChat = action({
 
     const { chat, messages } = result;
 
-    if (!messages || messages.length === 0) {
+    // ---------------------------
+    // Normalize timestamps to ms
+    // ---------------------------
+    const normalizedMessages = messages.map((m: any) => ({
+      ...m,
+      internalTimestamp: normalizeTs(m.internalTimestamp),
+      externalTimestamp: normalizeTs(m.externalTimestamp),
+    }));
+
+    if (!normalizedMessages || normalizedMessages.length === 0) {
       throw new Error("Chat has no messages");
     }
 
@@ -231,11 +247,13 @@ export const analyzeSingleChat = action({
       orgDefaultLanguage: undefined,
     });
 
-    const timeMessages: TimeChatMessageDoc[] = messages.map((m: any) => ({
-      senderType: m.senderType,
-      internalTimestamp: m.internalTimestamp,
-      language: (m.language as any) ?? undefined,
-    }));
+    const timeMessages: TimeChatMessageDoc[] = normalizedMessages.map(
+      (m: any) => ({
+        senderType: m.senderType,
+        internalTimestamp: m.internalTimestamp,
+        language: (m.language as any) ?? undefined,
+      })
+    );
 
     const conversationLanguage: SupportedLanguage = chooseConversationLanguage({
       chatLanguage: (chat.language as string | null) ?? null,
@@ -251,13 +269,13 @@ export const analyzeSingleChat = action({
         language: (chat.language as any) ?? undefined,
       },
       timeMessages,
-      messages.filter((m: any) => m.senderType === "customer").length
+      normalizedMessages.filter((m: any) => m.senderType === "customer").length
     );
 
     // 4) حساب بنية المحادثة rule-based
     const { structureMetrics, ruleBasedMetrics } =
       computeStructureMetricsForAnalysis(
-        messages.map((m: any) => ({
+        normalizedMessages.map((m: any) => ({
           senderType: m.senderType as SenderRole,
           textClean: m.textClean as string,
           internalTimestamp: m.internalTimestamp as number,
@@ -266,7 +284,7 @@ export const analyzeSingleChat = action({
 
     // 5) حساب الفلاقز
     const { flags, metricsPatch } = computeRuleBasedFlags({
-      messages: messages.map((m: any) => ({
+      messages: normalizedMessages.map((m: any) => ({
         senderType: m.senderType,
         textClean: m.textClean,
         language: (m.language as any) ?? undefined,
@@ -290,8 +308,12 @@ export const analyzeSingleChat = action({
         title: (chat.title as string | null) ?? null,
         startedAt: chat.startedAt,
         endedAt: (chat.endedAt as number | null) ?? null,
+        customerName:
+          chat.customerIdentifier && typeof chat.customerIdentifier === "string"
+            ? chat.customerIdentifier.trim()
+            : null,
       },
-      messages: messages.map(
+      messages: normalizedMessages.map(
         (m): AiInputMessage => ({
           id: `${m._id}`,
           role: m.senderType, // "customer" | "agent" | "system"
@@ -372,6 +394,7 @@ export const analyzeSingleChat = action({
         processingTimeMs,
         tokenInputCount,
         tokenOutputCount,
+        chatStartedAt: chat.startedAt, // إضافة chat.startedAt لتعيين chatStartAtMs و chatStartHour
       }
     );
 

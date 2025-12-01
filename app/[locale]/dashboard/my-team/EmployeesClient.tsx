@@ -305,13 +305,15 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
     }
   };
 
+  // Always use English locale for dates to avoid hydration mismatch
   const formatDate = (timestamp: number) => {
     if (!timestamp) return "N/A";
-    return new Date(timestamp).toLocaleDateString(locale, {
+    return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    });
+      numberingSystem: "latn", // Force Latin numerals (0-9) instead of Arabic-Indic
+    }).format(new Date(timestamp));
   };
 
   if (!members || members.length === 0) {

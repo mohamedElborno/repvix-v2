@@ -93,6 +93,7 @@ export const storeChatAnalysis = internalMutation({
     processingTimeMs: v.optional(v.number()),
     tokenInputCount: v.optional(v.number()),
     tokenOutputCount: v.optional(v.number()),
+    chatStartedAt: v.optional(v.number()), // timestamp (ms) من chat.startedAt
   },
   handler: async (ctx, args): Promise<Id<"chatAnalyses">> => {
     const { aiOutput, ruleBased } = args;
@@ -113,6 +114,12 @@ export const storeChatAnalysis = internalMutation({
       {}) as RuleBasedMetricsPatch;
 
     const now = Date.now();
+
+    // حساب chatStartAtMs و chatStartHour من chatStartedAt
+    const chatStartAtMs = args.chatStartedAt ?? undefined;
+    const chatStartHour = args.chatStartedAt
+      ? new Date(args.chatStartedAt).getHours()
+      : undefined;
 
     const insertedId = await ctx.db.insert("chatAnalyses", {
       // ربط أساسي
@@ -331,8 +338,44 @@ export const storeChatAnalysis = internalMutation({
       tokenInputCount: args.tokenInputCount ?? undefined,
       tokenOutputCount: args.tokenOutputCount ?? undefined,
       isPartial: false,
+      chatStartAtMs,
+      chatStartHour,
     });
 
     return insertedId;
+  },
+});
+
+// =============================
+// 3) Query: getAnalysesForOrg
+// =============================
+
+export const getAnalysesForOrg = query({
+  args: {
+    organizationId: v.id("organizations"),
+    from: v.optional(v.number()),
+    to: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { organizationId, from, to } = args;
+
+    // Get all analyses for the organization
+    let analyses = await ctx.db
+      .query("chatAnalyses")
+      .withIndex("by_org_createdAt", (q) =>
+        q.eq("organizationId", organizationId)
+      )
+      .collect();
+
+    // Filter by date range if provided
+    if (from !== undefined) {
+      analyses = analyses.filter((a) => a.createdAt >= from);
+    }
+
+    if (to !== undefined) {
+      analyses = analyses.filter((a) => a.createdAt <= to);
+    }
+
+    return analyses;
   },
 });

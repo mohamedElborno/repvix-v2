@@ -54,12 +54,15 @@ interface ChatListItemProps {
 function formatDate(ts: number | null | undefined, locale: string) {
   if (!ts) return "";
   const date = new Date(ts);
-  return new Intl.DateTimeFormat(locale || "en-US", {
+  // Always use English locale for dates to avoid hydration mismatch
+  // and ensure consistent formatting with English numbers
+  return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    numberingSystem: "latn", // Force Latin numerals (0-9) instead of Arabic-Indic
   }).format(date);
 }
 
@@ -107,7 +110,8 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
     t
   );
 
-  const createdLabel = formatDate(chat.startedAt || chat.createdAt, locale);
+  // Always format dates in English to avoid hydration mismatch
+  const createdLabel = formatDate(chat.startedAt || chat.createdAt, "en-US");
   const msgCount = chat.messageCount ?? 0;
 
   const handleView = () => {

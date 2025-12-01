@@ -38,7 +38,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="howItWorks" className="relative py-16 md:py-20 bg-background">
+    <section id="howItWorks" className="relative py-16 md:py-20 bg-background scroll-mt-20">
       <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         <div className="text-center mb-12 md:mb-14">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 dark:from-purple-400 dark:via-fuchsia-300 dark:to-purple-500">

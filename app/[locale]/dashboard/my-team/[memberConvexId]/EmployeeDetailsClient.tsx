@@ -118,21 +118,24 @@ export default function EmployeeDetailsClient({
 
   /* ------------------------- UI HELPERS ------------------------- */
 
+  // Always use English locale for dates to avoid hydration mismatch
   const formatDate = (timestamp: number) =>
-    new Date(timestamp).toLocaleDateString(locale, {
+    new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
+      numberingSystem: "latn", // Force Latin numerals (0-9) instead of Arabic-Indic
+    }).format(new Date(timestamp));
 
   const formatDateTime = (timestamp: number) =>
-    new Date(timestamp).toLocaleString(locale, {
+    new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
+      numberingSystem: "latn", // Force Latin numerals (0-9) instead of Arabic-Indic
+    }).format(new Date(timestamp));
 
   const getRoleIcon = () => {
     if (employee.role === "owner") return <Crown className="w-4 h-4" />;

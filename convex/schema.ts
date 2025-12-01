@@ -165,6 +165,7 @@ export default defineSchema({
     analysisVersion: v.string(), // للتحكم في منطق التحليل
     createdAt: v.number(), // timestamp ms
     updatedAt: v.number(),
+    customerName: v.optional(v.string()),
 
     // 1) نتيجة المحادثة (Outcome)
     outcomeStatus: v.union(
@@ -492,8 +493,115 @@ export default defineSchema({
     tokenInputCount: v.optional(v.number()),
     tokenOutputCount: v.optional(v.number()),
     isPartial: v.optional(v.boolean()),
+
+    chatStartAtMs: v.optional(v.number()),
+    chatStartHour: v.optional(v.number()),
+    primaryAgentMemberIdSnapshot: v.optional(v.id("organizationMembers")),
   })
     .index("by_chat", ["chatId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_createdAt", ["organizationId", "createdAt"]),
+
+  // =============================
+  // Global Analyses
+  // =============================
+
+  globalAnalyses: defineTable({
+    // الأساسيات
+    organizationId: v.id("organizations"),
+    analysisLanguage: v.string(), // ar/en/tr/fr/es/hi
+    modelVersion: v.optional(v.string()), // مثل: "gpt-5-mini-2025-08"
+    analysisVersion: v.string(), // "v1"
+
+    createdAt: v.number(), // timestamp ms
+    updatedAt: v.number(),
+
+    // ---------------------------------------------------------
+    // 1) ملخص عام
+    // ---------------------------------------------------------
+    overallSummary: v.string(), // ملخص كامل للوضع العام
+
+    overallSentiment: v.union(
+      v.literal("very_negative"),
+      v.literal("negative"),
+      v.literal("neutral"),
+      v.literal("positive"),
+      v.literal("very_positive")
+    ),
+
+    customerSatisfactionScore: v.optional(v.number()), // 0–100
+
+    // ---------------------------------------------------------
+    // 2) الساعات الأكثر نشاطًا Peak Hours
+    // ---------------------------------------------------------
+    peakHours: v.optional(
+      v.array(
+        v.object({
+          hour: v.number(), // 0–23
+          count: v.number(),
+        })
+      )
+    ),
+
+    // ---------------------------------------------------------
+    // 3) المواضيع المتكررة
+    // ---------------------------------------------------------
+    commonTopics: v.optional(v.array(v.string())),
+    commonIssues: v.optional(v.array(v.string())),
+
+    // ---------------------------------------------------------
+    // 4) تحليل المخاطر Risk
+    // ---------------------------------------------------------
+    riskScore: v.optional(v.number()), // 0–100
+    churnRiskLevel: v.optional(
+      v.union(v.literal("low"), v.literal("medium"), v.literal("high"))
+    ),
+
+    // ---------------------------------------------------------
+    // 5) أداء الموظفين
+    // ---------------------------------------------------------
+    agentLeaderboard: v.optional(
+      v.array(
+        v.object({
+          agentId: v.string(), // نخزنه كنص لايد --- ولو تريد id("members") نغيره
+          score: v.number(), // 0–100
+          strengthSummary: v.string(),
+          improvementSummary: v.string(),
+        })
+      )
+    ),
+
+    // ---------------------------------------------------------
+    // 6) رؤى عملياتية + منتج
+    // ---------------------------------------------------------
+    operationalInsights: v.optional(v.array(v.string())), // مشاكل في الدعم، SLAs، structure
+    productInsights: v.optional(v.array(v.string())), // مشاكل بتخص المنتج
+
+    // ---------------------------------------------------------
+    // 7) توصيات Action Items
+    // ---------------------------------------------------------
+    improvementActions: v.optional(
+      v.array(
+        v.object({
+          priority: v.union(
+            v.literal("low"),
+            v.literal("medium"),
+            v.literal("high")
+          ),
+          title: v.string(),
+          description: v.string(),
+        })
+      )
+    ),
+
+    // ---------------------------------------------------------
+    // 8) المخرجات الخام من الـ AI (للمراجعة/الديبغ)
+    // ---------------------------------------------------------
+    aiRawOutput: v.optional(v.any()),
+
+    tokenInputCount: v.optional(v.number()),
+    tokenOutputCount: v.optional(v.number()),
+  })
     .index("by_org", ["organizationId"])
     .index("by_org_createdAt", ["organizationId", "createdAt"]),
 

@@ -59,20 +59,24 @@ export default function ChatViewClient({
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    // Always use English locale for dates to avoid hydration mismatch
+    return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      numberingSystem: "latn", // Force Latin numerals (0-9) instead of Arabic-Indic
     }).format(date);
   };
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    // Always use English locale for times to avoid hydration mismatch
+    return new Intl.DateTimeFormat("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      numberingSystem: "latn", // Force Latin numerals (0-9) instead of Arabic-Indic
     }).format(date);
   };
 
@@ -280,7 +284,7 @@ export default function ChatViewClient({
       </div>
 
       {/* Content Container */}
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto py-8">
         {activeTab === "messages" ? (
           <div className="space-y-4">
             {messages.length === 0 ? (

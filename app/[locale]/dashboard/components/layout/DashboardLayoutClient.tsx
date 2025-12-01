@@ -15,7 +15,7 @@ import Logo from "./Logo";
 import type { DashboardLayoutClientProps } from "../../types/dashboard";
 import { NavUser } from "../NavUser";
 import { useLocale, useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 export default function DashboardLayoutClient({
   children,
@@ -89,7 +89,7 @@ export default function DashboardLayoutClient({
         </SidebarBody>
       </Sidebar>
       <div className="flex flex-col w-full h-full overflow-y-auto p-2">
-        <div className="bg-white/5 rounded-2xl h-auto">
+        <div className="dark:bg-muted/20 bg-neutral-100/50 rounded-2xl h-auto">
           <DashboardNavbar onToggleSidebar={() => setOpen(!open)} />
           <div className="gap-4 p-4 md:gap-6 md:p-6">{children}</div>
         </div>

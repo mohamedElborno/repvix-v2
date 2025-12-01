@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sidebar } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import LocaleSwitcher from "./LocaleSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -118,6 +119,7 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
         <div
           className={`flex items-center gap-2 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
         >
+          <ThemeSwitcher />
           <LocaleSwitcher />
         </div>
       </div>
