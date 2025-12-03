@@ -1,6 +1,7 @@
 // src/lib/chat/parseWhatsapp.ts
 
 import { RawMessageInput } from "./normalize";
+import { findBestNameMatch } from "@/lib/helper/normalizeNameForMatch";
 
 /** Who is the sender? */
 export type SenderType = "customer" | "agent";
@@ -204,16 +205,30 @@ function determineSenderType(
 ): SenderType {
   const normalizedSender = normalizeName(senderName);
 
-  // 1) لو الاسم ضمن قائمة الـ agent
+  // 1) لو الاسم ضمن قائمة الـ agent (مطابقة مباشرة)
   const normalizedAgents = agentNames.map(normalizeName);
   if (normalizedAgents.includes(normalizedSender)) {
     return "agent";
+  }
+
+  // 1.5) محاولة مطابقة fuzzy للـ agent إذا لم تكن هناك مطابقة مباشرة
+  if (agentNames.length > 0) {
+    const bestAgentMatch = findBestNameMatch(senderName, agentNames);
+    if (bestAgentMatch) {
+      return "agent";
+    }
   }
 
   // 2) لو الاسم ضمن قائمة الـ customerNames (لو تم تمريرها)
   if (customerNames && customerNames.length > 0) {
     const normalizedCustomers = customerNames.map(normalizeName);
     if (normalizedCustomers.includes(normalizedSender)) {
+      return "customer";
+    }
+
+    // محاولة مطابقة fuzzy للـ customer أيضاً
+    const bestCustomerMatch = findBestNameMatch(senderName, customerNames);
+    if (bestCustomerMatch) {
       return "customer";
     }
   }
@@ -285,14 +300,17 @@ function parseWhatsappTimestamp(dateTimeRaw: string): number | undefined {
 
   // 4) Try to parse "dd/mm/yy hh:mm AM/PM" format manually
   // Pattern: "19/04/47 04:52 AM" or "19/04/47, 04:52 AM"
-  const manualParseMatch = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*,?\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  const manualParseMatch = s.match(
+    /(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*,?\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i
+  );
   if (manualParseMatch) {
     const day = parseInt(manualParseMatch[1], 10);
     const month = parseInt(manualParseMatch[2], 10) - 1; // JavaScript months are 0-indexed
     let year = parseInt(manualParseMatch[3], 10);
     let hour = parseInt(manualParseMatch[4], 10);
     const minute = parseInt(manualParseMatch[5], 10);
-    const ampm = manualParseMatch[6]?.toUpperCase() || (isAM ? "AM" : isPM ? "PM" : "");
+    const ampm =
+      manualParseMatch[6]?.toUpperCase() || (isAM ? "AM" : isPM ? "PM" : "");
 
     // Handle 2-digit years: if < 50, assume 20xx, else 19xx
     if (year < 100) {

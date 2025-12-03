@@ -39,25 +39,63 @@ export async function POST(req: Request) {
       );
     }
 
+    // Link the org from Clerk to the org in Convex (needed early to get members)
+    const convex = await getConvexServerClient();
+    const convexOrgId = await convex.query(api.orgs.getByClerkId, {
+      clerkOrgId: orgId,
+    });
+
+    if (!convexOrgId) {
+      return NextResponse.json(
+        { error: "Organization not found in Convex." },
+        { status: 400 }
+      );
+    }
+
+    // Get all organization members to use their names as possible agents
+    const orgMembers = await convex.query(api.orgs.getOrganizationMembers, {
+      clerkOrgId: orgId,
+    });
+
     // Get the user data from Clerk to use the name as a possible agent in WhatsApp
     const clerkUser = await currentUser();
 
     const possibleAgentNames: string[] = [];
+
+    // Add all organization members' names
+    for (const member of orgMembers) {
+      if (member.name) {
+        possibleAgentNames.push(member.name);
+      }
+    }
+
+    // Also add Clerk user data as fallback
     if (clerkUser) {
       const fullName = [clerkUser.firstName, clerkUser.lastName]
         .filter(Boolean)
         .join(" ")
         .trim();
-      if (fullName) possibleAgentNames.push(fullName);
+      if (fullName && !possibleAgentNames.includes(fullName)) {
+        possibleAgentNames.push(fullName);
+      }
 
-      if (clerkUser.username) possibleAgentNames.push(clerkUser.username);
+      if (
+        clerkUser.username &&
+        !possibleAgentNames.includes(clerkUser.username)
+      ) {
+        possibleAgentNames.push(clerkUser.username);
+      }
 
       const primaryEmail = clerkUser.emailAddresses?.[0]?.emailAddress;
       if (primaryEmail) {
         // The name can be written in WhatsApp without the domain
         const localPart = primaryEmail.split("@")[0];
-        possibleAgentNames.push(primaryEmail);
-        possibleAgentNames.push(localPart);
+        if (!possibleAgentNames.includes(primaryEmail)) {
+          possibleAgentNames.push(primaryEmail);
+        }
+        if (!possibleAgentNames.includes(localPart)) {
+          possibleAgentNames.push(localPart);
+        }
       }
     }
 
@@ -142,18 +180,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4) Link the org from Clerk to the org in Convex
-    const convex = await getConvexServerClient();
-    const convexOrgId = await convex.query(api.orgs.getByClerkId, {
-      clerkOrgId: orgId,
-    });
-
-    if (!convexOrgId) {
-      return NextResponse.json(
-        { error: "Organization not found in Convex." },
-        { status: 400 }
-      );
-    }
+    // 4) convexOrgId already obtained above, no need to query again
 
     // 5) Call the mutation to create the chat + messages
     const result = await convex.mutation(api.chats.createChatWithMessages, {
