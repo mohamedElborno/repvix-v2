@@ -35,7 +35,7 @@ export default function PricingPage() {
       title: "Basic",
       price: "4.99",
       popular: false,
-      variantId: 1101994,
+      variantId: "1101994",
       description: t("plans.basic.description"),
       features: {
         f1: t("plans.basic.features.f1"),
@@ -52,7 +52,7 @@ export default function PricingPage() {
       title: "Starter",
       price: "9.99",
       popular: true,
-      variantId: 1101995,
+      variantId: "1101995",
       description: t("plans.starter.description"),
       features: {
         f1: t("plans.starter.features.f1"),
@@ -69,7 +69,7 @@ export default function PricingPage() {
       title: "Pro",
       price: "24.99",
       popular: false,
-      variantId: 1101996,
+      variantId: "1101996",
       description: t("plans.pro.description"),
       features: {
         f1: t("plans.pro.features.f1"),
@@ -86,7 +86,7 @@ export default function PricingPage() {
       title: "Business",
       price: "49.99",
       popular: false,
-      variantId: 1102000,
+      variantId: "1102000",
       description: t("plans.business.description"),
       features: {
         f1: t("plans.business.features.f1"),
