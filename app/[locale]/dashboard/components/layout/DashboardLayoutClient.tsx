@@ -59,13 +59,13 @@ export default function DashboardLayoutClient({
         <IconCreditCard className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
-    {
+    /*     {
       label: t("settings") || "Settings",
       href: "/dashboard/settings",
       icon: (
         <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
-    },
+    }, */
   ];
   const [open, setOpen] = useState(false);
 

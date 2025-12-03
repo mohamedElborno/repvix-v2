@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ArrowRight, Star } from "lucide-react";
+import { Check, ArrowRight, Star, X, Info } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -20,87 +20,92 @@ export default function PricingPage() {
   const plans = [
     {
       id: "basic",
-      title: t("plans.basic.title"),
+      title: "Basic",
       price: "4.99",
       popular: false,
       variantId: 1095200,
       description: t("plans.basic.description"),
-      features: [
-        t("plans.basic.features.f1"),
-        t("plans.basic.features.f2"),
-        t("plans.basic.features.f3"),
-        t("plans.basic.features.f4"),
-        t("plans.basic.features.f5"),
-        t("plans.basic.features.f6"),
-      ],
+      features: {
+        f1: t("plans.basic.features.f1"),
+        f2: t("plans.basic.features.f2"),
+        f3: t("plans.basic.features.f3"),
+        f4: t("plans.basic.features.f4"),
+        f5: t("plans.basic.features.f5"),
+        f6: null,
+      },
+      isActive: true,
     },
     {
       id: "starter",
-      title: t("plans.starter.title"),
+      title: "Starter",
       price: "9.99",
       popular: true,
       variantId: 1095910,
       description: t("plans.starter.description"),
-      features: [
-        t("plans.starter.features.f1"),
-        t("plans.starter.features.f2"),
-        t("plans.starter.features.f3"),
-        t("plans.starter.features.f4"),
-        t("plans.starter.features.f5"),
-        t("plans.starter.features.f6"),
-        t("plans.starter.features.f7"),
-      ],
+      features: {
+        f1: t("plans.starter.features.f1"),
+        f2: t("plans.starter.features.f2"),
+        f3: t("plans.starter.features.f3"),
+        f4: t("plans.starter.features.f4"),
+        f5: t("plans.starter.features.f6"),
+        f6: t("plans.starter.features.f5"),
+      },
+      isActive: true,
     },
     {
       id: "pro",
-      title: t("plans.pro.title"),
+      title: "Pro",
       price: "24.99",
       popular: false,
       variantId: 1095912,
       description: t("plans.pro.description"),
-      features: [
-        t("plans.pro.features.f1"),
-        t("plans.pro.features.f2"),
-        t("plans.pro.features.f3"),
-        t("plans.pro.features.f4"),
-        t("plans.pro.features.f5"),
-        t("plans.pro.features.f6"),
-        t("plans.pro.features.f7"),
-      ],
+      features: {
+        f1: t("plans.pro.features.f1"),
+        f2: t("plans.pro.features.f2"),
+        f3: t("plans.pro.features.f3"),
+        f4: t("plans.pro.features.f4"),
+        f5: t("plans.pro.features.f5"),
+        f6: t("plans.pro.features.f6"),
+      },
+      isActive: false,
     },
     {
       id: "business",
-      title: t("plans.business.title"),
+      title: "Business",
       price: "49.99",
       popular: false,
       variantId: 1095909,
       description: t("plans.business.description"),
-      features: [
-        t("plans.business.features.f1"),
-        t("plans.business.features.f2"),
-        t("plans.business.features.f3"),
-        t("plans.business.features.f4"),
-        t("plans.business.features.f5"),
-        t("plans.business.features.f6"),
-      ],
+      features: {
+        f1: t("plans.business.features.f1"),
+        f2: t("plans.business.features.f2"),
+        f3: t("plans.business.features.f3"),
+        f4: t("plans.business.features.f4"),
+        f5: t("plans.business.features.f5"),
+        f6: t("plans.business.features.f6"),
+      },
+      isActive: false,
     },
-    {
+    /*     {
       id: "enterprise",
       title: t("plans.enterprise.title"),
       price: t("customPrice"),
       popular: false,
       variantId: 1111111,
       description: t("plans.enterprise.description"),
-      features: [
-        t("plans.enterprise.features.f1"),
-        t("plans.enterprise.features.f2"),
-        t("plans.enterprise.features.f3"),
-        t("plans.enterprise.features.f4"),
-        t("plans.enterprise.features.f5"),
-        t("plans.enterprise.features.f6"),
-      ],
-    },
+      features: {
+        f1: t("plans.enterprise.features.f1"),
+        f2: t("plans.enterprise.features.f2"),
+        f3: t("plans.enterprise.features.f3"),
+        f4: t("plans.enterprise.features.f4"),
+        f5: t("plans.enterprise.features.f5"),
+        f6: t("plans.enterprise.features.f6"),
+      },
+    }, */
   ];
+
+  // Get all unique feature keys across all plans
+  const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
 
   const checkout = async (variantId: number | null) => {
     if (!variantId) {
@@ -118,72 +123,127 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto pt-16 pb-28 px-4">
-      <div className="text-center mb-16">
-        <h1 className="text-5xl font-extrabold text-white mb-3">
+    <div className="w-full max-w-7xl mx-auto py-8">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-foreground mb-3">
           {t("title")}
         </h1>
-        <p className="text-white/60 text-lg">{t("subtitle")}</p>
+        <p className="text-muted-foreground text-lg">{t("subtitle")}</p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {plans.map((plan) => (
-          <Card
-            key={plan.id}
-            className={`relative p-8 bg-white/5 border-white/10 ${
-              plan.popular ? "ring-2 ring-purple-500" : ""
-            }`}
-          >
-            {plan.popular && (
-              <span className="absolute top-4 left-4 px-3 py-1 bg-purple-600 text-white text-xs rounded-full flex items-center gap-1">
-                <Star className="w-3 h-3" /> {t("popular")}
-              </span>
-            )}
+      <Card className="overflow-hidden border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-start p-4 font-semibold text-foreground min-w-[200px]">
+                  {t("feature") || "Feature"}
+                </th>
+                {plans.map((plan) => (
+                  <th
+                    key={plan.id}
+                    className={`text-center p-4 font-semibold text-foreground relative ${
+                      plan.popular ? "bg-purple-500/10" : ""
+                    }`}
+                  >
+                    {plan.popular && (
+                      <span className="absolute top-2 right-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full flex items-center gap-1">
+                        <Star className="w-3 h-3" /> {t("popular")}
+                      </span>
+                    )}
+                    <div className="mt-6">
+                      <div className="text-lg font-bold">{plan.title}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {plan.description}
+                      </div>
+                      <div className="mt-4">
+                        <span className="text-3xl font-bold text-foreground">
+                          {plan.price === t("customPrice")
+                            ? t("customPrice")
+                            : `$${plan.price}`}
+                        </span>
+                        {plan.price !== t("customPrice") && (
+                          <span className="text-muted-foreground text-sm">
+                            {" "}
+                            {t("perMonth")}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        onClick={() => checkout(plan.variantId)}
+                        disabled={currentPlan === plan.id}
+                        size="sm"
+                        className={`w-full mt-4 ${
+                          plan.popular
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : "bg-primary hover:bg-primary/90"
+                        } ${plan.isActive ? "" : "opacity-50 cursor-not-allowed"}`}
+                      >
+                        {plan.price === t("customPrice") ? (
+                          t("contactUs")
+                        ) : currentPlan === plan.id ? (
+                          t("currentPlan")
+                        ) : (
+                          <>
+                            {t("subscribeNow")}{" "}
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {featureKeys.map((key) => {
+                // Check if any plan has this feature
+                const hasAnyFeature = plans.some((p) => p.features[key]);
+                if (!hasAnyFeature) return null;
 
-            <h2 className="text-2xl font-semibold text-white">{plan.title}</h2>
-            <p className="text-white/60 mt-1">{plan.description}</p>
+                // Get the feature label (general title)
+                const featureLabel = t(`featureLabels.${key}`) || key;
 
-            <div className="mt-6">
-              <span className="text-4xl font-bold text-white">
-                {plan.price === t("customPrice")
-                  ? t("customPrice")
-                  : `$${plan.price}`}
-              </span>
-              {plan.price !== t("customPrice") && (
-                <span className="text-white/50 text-sm"> {t("perMonth")}</span>
-              )}
-            </div>
+                return (
+                  <tr
+                    key={key}
+                    className="border-b border-border hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="p-4 text-foreground font-medium align-top">
+                      {featureLabel}
+                    </td>
+                    {plans.map((plan) => (
+                      <td
+                        key={plan.id}
+                        className={`text-center p-4 align-top  ${
+                          plan.popular ? "bg-purple-500/5" : ""
+                        } ${plan.isActive ? "" : "opacity-50 cursor-not-allowed"}`}
+                      >
+                        {plan.features[key] ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <Check className="w-5 h-5 text-green-500" />
+                            <span className="text-xs text-muted-foreground max-w-[150px] wrap-break-word">
+                              {plan.features[key]}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full w-full">
+                            <X className="w-5 h-5 text-red-500 text-center" />
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-            <ul className="mt-6 space-y-3">
-              {plan.features.map((f, i) => (
-                <li key={i} className="flex items-center text-white/80">
-                  <Check className="w-4 h-4 text-green-400 mr-2" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            <Button
-              onClick={() => checkout(plan.variantId)}
-              disabled={currentPlan === plan.id}
-              className={`w-full mt-8 ${
-                plan.popular
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : "bg-purple-500/30 hover:bg-purple-500/40"
-              } text-white`}
-            >
-              {plan.price === t("customPrice") ? (
-                t("contactUs")
-              ) : currentPlan === plan.id ? (
-                t("currentPlan")
-              ) : (
-                <>
-                  {t("subscribeNow")} <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
-          </Card>
-        ))}
+      <div className="mt-6 flex items-start gap-3 p-4 bg-muted/50 border border-border rounded-lg">
+        <Info className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+        <p className="text-sm text-muted-foreground">{t("betaNote")}</p>
       </div>
     </div>
   );

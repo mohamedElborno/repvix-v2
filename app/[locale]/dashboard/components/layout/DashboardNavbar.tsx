@@ -33,22 +33,27 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
 
     // Remove locale from segments if present
     const segments = pathSegments.filter(
-      (seg) => !["ar", "en", "fr", "tr", "es", "hi"].includes(seg)
+      (seg) => !["ar", "en", "fr", "tr", "es", "hi", "ja"].includes(seg)
+    );
+
+    // Filter out "dashboard" from segments since we always add it first
+    const segmentsWithoutDashboard = segments.filter(
+      (seg) => seg !== "dashboard"
     );
 
     // Always start with Dashboard
     items.push({
       label: tBreadcrumb("dashboard"),
       href: `/${locale}/dashboard`,
-      isActive: segments.length === 1 && segments[0] === "dashboard",
+      isActive: segmentsWithoutDashboard.length === 0,
     });
 
-    // Add other segments
-    if (segments.length > 1) {
+    // Add other segments (excluding "dashboard")
+    if (segmentsWithoutDashboard.length > 0) {
       const currentPath: string[] = [];
-      segments.slice(1).forEach((segment, index) => {
+      segmentsWithoutDashboard.forEach((segment, index) => {
         currentPath.push(segment);
-        const isLast = index === segments.length - 2;
+        const isLast = index === segmentsWithoutDashboard.length - 1;
 
         let label = segment;
         if (segment === "analytics") label = tBreadcrumb("analytics");
@@ -61,9 +66,9 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
         else if (segment === "pricing") label = tBreadcrumb("pricing");
         else if (segment.match(/^[a-f0-9-]+$/)) {
           // UUID or similar - could be employee ID or chat ID
-          if (segments.includes("my-team")) {
+          if (segmentsWithoutDashboard.includes("my-team")) {
             label = tBreadcrumb("employee");
-          } else if (segments.includes("chats")) {
+          } else if (segmentsWithoutDashboard.includes("chats")) {
             label = tBreadcrumb("chat");
           } else {
             label = segment;
@@ -72,7 +77,7 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
 
         items.push({
           label,
-          href: `/${locale}/${segments[0]}/${currentPath.join("/")}`,
+          href: `/${locale}/dashboard/${currentPath.join("/")}`,
           isActive: isLast,
         });
       });

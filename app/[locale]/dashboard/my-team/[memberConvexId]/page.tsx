@@ -77,7 +77,7 @@ export default async function EmployeeDetailsPage(props: {
           clerkUserId,
           organizationId:
             organizationMember.organizationId as Id<"organizations">,
-          role: organizationMember.role,
+          role: organizationMember.role as "admin" | "member",
           joinedAt: organizationMember.joinedAt || 0,
           createdAt: organizationMember._creationTime || 0,
           lastActive:

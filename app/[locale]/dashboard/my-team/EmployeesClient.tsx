@@ -60,10 +60,10 @@ export default function EmployeesClient() {
   const [filterRole, setFilterRole] = useState("all");
   const [showInvite, setShowInvite] = useState(false);
 
-  const myRole = useMemo<"owner" | "admin" | "member" | undefined>(
+  const myRole = useMemo<"admin" | "member" | undefined>(
     () =>
       membership?.role
-        ? (membership?.role.replace("org:", "") as "owner" | "admin" | "member")
+        ? (membership?.role.replace("org:", "") as "admin" | "member")
         : undefined,
     [membership?.role]
   );
@@ -175,16 +175,15 @@ export default function EmployeesClient() {
                 {t("leaveOrganization")}
               </Button>
             )}
-            {myRole === "owner" ||
-              (myRole === "admin" && (
-                <Button
-                  className="bg-blue-600 text-white"
-                  onClick={() => setShowInvite(true)}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  {t("inviteMember")}
-                </Button>
-              ))}
+            {myRole === "admin" && (
+              <Button
+                className="bg-blue-600 text-white"
+                onClick={() => setShowInvite(true)}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {t("inviteMember")}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -213,12 +212,6 @@ export default function EmployeesClient() {
                   <span>{t("allRoles")}</span>
                 </div>
               </SelectItem>
-              <SelectItem value="owner">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-yellow-600" />
-                  <span>{t("roles.owner")}</span>
-                </div>
-              </SelectItem>
               <SelectItem value="admin">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-purple-600" />
@@ -245,29 +238,23 @@ export default function EmployeesClient() {
         />
 
         {/* INVITE DIALOG */}
-        {myRole === "owner" ||
-          (myRole === "admin" && (
-            <InviteEmployeeDialog
-              isOpen={showInvite}
-              onClose={() => setShowInvite(false)}
-              onSubmit={async (email: string, role: string) => {
-                const clerkRole =
-                  role === "owner"
-                    ? "org:owner"
-                    : role === "admin"
-                      ? "org:admin"
-                      : "org:member";
+        {myRole === "admin" && (
+          <InviteEmployeeDialog
+            isOpen={showInvite}
+            onClose={() => setShowInvite(false)}
+            onSubmit={async (email: string, role: string) => {
+              const clerkRole = role === "  admin" ? "org:admin" : "org:member";
 
-                await organization.inviteMember({
-                  emailAddress: email,
-                  role: clerkRole,
-                });
+              await organization.inviteMember({
+                emailAddress: email,
+                role: clerkRole,
+              });
 
-                toast.success(t("invitationSent"));
-                router.refresh();
-              }}
-            />
-          ))}
+              toast.success(t("invitationSent"));
+              router.refresh();
+            }}
+          />
+        )}
       </div>
     );
   })();
@@ -283,8 +270,6 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "owner":
-        return <Crown className="w-4 h-4" />;
       case "admin":
         return <Shield className="w-4 h-4" />;
       default:
@@ -294,8 +279,6 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "owner":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400";
       case "admin":
         return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400";
       case "member":
@@ -334,7 +317,6 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {members.map((member: any) => {
         const canClick =
-          myRole === "owner" ||
           myRole === "admin" ||
           (currentUserId && member.clerkUserId === currentUserId);
 
@@ -346,7 +328,7 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
             }`}
             onClick={() => {
               if (!canClick) return;
-              router.push(`/dashboard/my-team/${member._id}`);
+              router.push(`/${locale}/dashboard/my-team/${member._id}`);
             }}
           >
             <div className="flex items-start justify-between mb-4">
@@ -381,7 +363,9 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/dashboard/my-team/${member._id}`);
+                        router.push(
+                          `/${locale}/dashboard/my-team/${member._id}`
+                        );
                       }}
                     >
                       <UserIcon className="w-4 h-4 mr-2" />

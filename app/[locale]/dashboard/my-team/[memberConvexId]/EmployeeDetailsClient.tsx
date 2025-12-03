@@ -67,7 +67,7 @@ interface Employee {
   imageUrl: string;
   clerkUserId: string;
   organizationId: Id<"organizations">;
-  role: "owner" | "admin" | "member";
+  role: "admin" | "member";
   joinedAt: number;
   createdAt: number;
   lastActive: number;
@@ -97,21 +97,21 @@ export default function EmployeeDetailsClient({
 
   const [editedName, setEditedName] = useState(employee.name);
   const [editedEmail, setEditedEmail] = useState(employee.email);
-  const [selectedRole, setSelectedRole] = useState<
-    "owner" | "admin" | "member"
-  >(employee.role);
+  const [selectedRole, setSelectedRole] = useState<"admin" | "member">(
+    employee.role
+  );
 
   const myRole = membership?.role
-    ? (membership?.role.replace("org:", "") as "owner" | "admin" | "member")
+    ? (membership?.role.replace("org:", "") as "admin" | "member")
     : undefined;
 
   const isSelf = userId === clerkUserId;
 
   // تقدر تعدّل الدور فقط لو كنت owner أو admin وعلى عضو آخر غير نفسك
-  const canEditRole = (myRole === "owner" || myRole === "admin") && !isSelf;
+  const canEditRole = myRole === "admin" && !isSelf;
 
   // تقدر تحذف فقط لو كنت owner أو admin وعلى عضو آخر
-  const canDelete = (myRole === "owner" || myRole === "admin") && !isSelf;
+  const canDelete = myRole === "admin" && !isSelf;
   /* ------------------------- Convex Mutations ------------------------- */
   const updateMemberInfo = useMutation(api.orgMembers.updateMemberInfo);
   const removeMember = useMutation(api.orgs.removeMember);
@@ -138,15 +138,12 @@ export default function EmployeeDetailsClient({
     }).format(new Date(timestamp));
 
   const getRoleIcon = () => {
-    if (employee.role === "owner") return <Crown className="w-4 h-4" />;
     if (employee.role === "admin") return <Shield className="w-4 h-4" />;
     return <UserIcon className="w-4 h-4" />;
   };
 
   const getRoleColor = () => {
     switch (employee.role) {
-      case "owner":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
       case "admin":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300";
       default:
@@ -180,12 +177,7 @@ export default function EmployeeDetailsClient({
 
       // Sync with Clerk for role updates
       if (canEditRole && selectedRole !== employee.role) {
-        const clerkRole =
-          selectedRole === "owner"
-            ? "org:owner"
-            : selectedRole === "admin"
-              ? "org:admin"
-              : "org:member";
+        const clerkRole = selectedRole === "admin" ? "org:admin" : "org:member";
 
         await organization.updateMember({
           userId: clerkUserId,
@@ -219,7 +211,7 @@ export default function EmployeeDetailsClient({
         await removeMemberFromClerk(clerkUserId);
       } catch (_) {}
 
-      router.push("/dashboard/my-team");
+      router.push(`/${locale}/dashboard/my-team`);
     } catch (error) {
       console.error(error);
       alert(t("deleteError"));
@@ -237,7 +229,7 @@ export default function EmployeeDetailsClient({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push("/dashboard/my-team")}
+          onClick={() => router.push(`/${locale}/dashboard/my-team`)}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           {t("back")}
@@ -304,7 +296,7 @@ export default function EmployeeDetailsClient({
 
         <Button
           variant="outline"
-          onClick={() => router.push("/dashboard/my-team")}
+          onClick={() => router.push(`/${locale}/dashboard/my-team`)}
         >
           <MessageSquare className="w-4 h-4 mr-2" />
           {t("viewChats")}
@@ -347,7 +339,7 @@ export default function EmployeeDetailsClient({
                 <Select
                   value={selectedRole}
                   onValueChange={(value) =>
-                    setSelectedRole(value as "owner" | "admin" | "member")
+                    setSelectedRole(value as "admin" | "member")
                   }
                 >
                   <SelectTrigger>
@@ -355,13 +347,6 @@ export default function EmployeeDetailsClient({
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="owner">
-                      <div className="flex items-center gap-2">
-                        <Crown className="w-4 h-4" />
-                        {t("roles.owner")}
-                      </div>
-                    </SelectItem>
-
                     <SelectItem value="admin">
                       <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4" />

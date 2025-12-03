@@ -182,6 +182,18 @@
       "customPrice": "अनुकूलित",
       "subscribeNow": "अभी सदस्यता लें",
       "contactUs": "हमसे संपर्क करें",
+      "currentPlan": "वर्तमान योजना",
+      "willContactYou": "हम जल्द ही आपसे संपर्क करेंगे",
+      "feature": "विशेषता",
+      "featureLabels": {
+        "f1": "दैनिक विश्लेषण",
+        "f2": "टीम सदस्य",
+        "f3": "विश्लेषण प्रकार",
+        "f4": "निर्यात प्रारूप",
+        "f5": "समर्थन और एकीकरण",
+        "f6": "अतिरिक्त विशेषताएं"
+      },
+      "betaNote": "Pro, Business और Enterprise योजनाएं बीटा अवधि समाप्त होने के बाद सक्रिय की जाएंगी",
       "plans": {
         "basic": {
           "title": "बेसिक",
@@ -487,6 +499,10 @@
     "profileDescription": "अपनी प्रोफ़ाइल जानकारी अपडेट करें",
     "fullName": "पूरा नाम",
     "fullNamePlaceholder": "अपना पूरा नाम दर्ज करें",
+    "firstName": "पहला नाम",
+    "firstNamePlaceholder": "पहला नाम",
+    "lastName": "अंतिम नाम",
+    "lastNamePlaceholder": "अंतिम नाम",
     "username": "उपयोगकर्ता नाम",
     "usernamePlaceholder": "अपना उपयोगकर्ता नाम दर्ज करें",
     "usernameHint": "यह आपका अद्वितीय पहचानकर्ता होगा",
@@ -512,7 +528,17 @@
     "usernameExists": "उपयोगकर्ता नाम पहले से मौजूद है",
     "saving": "सहेजा जा रहा है...",
     "saveChanges": "परिवर्तन सहेजें",
-    "cancel": "रद्द करें"
+    "cancel": "रद्द करें",
+    "reverifyTitle": "सत्यापन आवश्यक",
+    "reverifyDescription": "कृपया अपनी प्रोफ़ाइल अपडेट करने से पहले अपनी पहचान सत्यापित करने के लिए अपना पासवर्ड दर्ज करें।",
+    "password": "पासवर्ड",
+    "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+    "reverifyPasswordRequired": "पासवर्ड आवश्यक है",
+    "reverifyError": "सत्यापन विफल। कृपया पुनः प्रयास करें।",
+    "verifying": "सत्यापित किया जा रहा है...",
+    "verify": "सत्यापित करें",
+    "account": "खाता",
+    "logout": "लॉग आउट"
   },
   "team": {
     "title": "मेरी टीम",
@@ -595,5 +621,26 @@
     "saving": "सहेजा जा रहा है...",
     "saveChanges": "परिवर्तन सहेजें",
     "leaveOrganization": "संगठन छोड़ें"
+  },
+  "billing": {
+    "title": "बिलिंग और सदस्यता",
+    "subtitle": "अपनी सदस्यता और बिलिंग जानकारी प्रबंधित करें",
+    "loading": "बिलिंग जानकारी लोड हो रही है...",
+    "currentPlan": "वर्तमान योजना",
+    "plan": "योजना",
+    "noPlan": "कोई सक्रिय योजना नहीं",
+    "manageSubscription": "सदस्यता प्रबंधित करें",
+    "currentUsage": "वर्तमान उपयोग",
+    "remainingAnalyses": "शेष विश्लेषण",
+    "allowedEmployees": "अनुमतित कर्मचारी",
+    "allowedIntegrations": "अनुमतित एकीकरण",
+    "notAvailable": "उपयोग जानकारी उपलब्ध नहीं",
+    "upgrade": "योजना अपग्रेड करें",
+    "upgradeDescription": "अधिक सुविधाएं और उच्च सीमाएं प्राप्त करने के लिए उच्च योजना में अपग्रेड करें।",
+    "viewPlans": "योजनाएं देखें",
+    "subscriptionManagement": "सदस्यता प्रबंधन",
+    "managePayment": "भुगतान विधियां प्रबंधित करें",
+    "cancelSubscription": "सदस्यता रद्द करें",
+    "portalDescription": "आपको अपनी सदस्यता और भुगतान विधियों को प्रबंधित करने के लिए हमारे बिलिंग पोर्टल पर पुनर्निर्देशित किया जाएगा।"
   }
 }

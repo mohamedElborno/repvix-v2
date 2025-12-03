@@ -196,6 +196,18 @@
       "customPrice": "Personnalisé",
       "subscribeNow": "Souscrire maintenant",
       "contactUs": "Nous contacter",
+      "currentPlan": "Plan actuel",
+      "willContactYou": "Nous vous contacterons bientôt",
+      "feature": "Fonctionnalité",
+      "featureLabels": {
+        "f1": "Analyses quotidiennes",
+        "f2": "Membres de l'équipe",
+        "f3": "Type d'analyse",
+        "f4": "Formats d'export",
+        "f5": "Support et intégrations",
+        "f6": "Fonctionnalités supplémentaires"
+      },
+      "betaNote": "Les plans Pro, Business et Enterprise seront activés après la fin de la période bêta",
       "plans": {
         "basic": {
           "title": "Basique",
@@ -487,6 +499,10 @@
     "profileDescription": "Mettez à jour les informations de votre profil",
     "fullName": "Nom complet",
     "fullNamePlaceholder": "Entrez votre nom complet",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Prénom",
+    "lastName": "Nom",
+    "lastNamePlaceholder": "Nom",
     "username": "Nom d'utilisateur",
     "usernamePlaceholder": "Entrez votre nom d'utilisateur",
     "usernameHint": "Ce sera votre identifiant unique",
@@ -512,7 +528,17 @@
     "usernameExists": "Le nom d'utilisateur existe déjà",
     "saving": "Enregistrement...",
     "saveChanges": "Enregistrer les modifications",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "reverifyTitle": "Vérification requise",
+    "reverifyDescription": "Veuillez entrer votre mot de passe pour vérifier votre identité avant de mettre à jour votre profil.",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "reverifyPasswordRequired": "Le mot de passe est requis",
+    "reverifyError": "La vérification a échoué. Veuillez réessayer.",
+    "verifying": "Vérification...",
+    "verify": "Vérifier",
+    "account": "Compte",
+    "logout": "Se déconnecter"
   },
   "team": {
     "title": "Mon équipe",
@@ -595,5 +621,26 @@
     "saving": "Enregistrement...",
     "saveChanges": "Enregistrer les modifications",
     "leaveOrganization": "Quitter l'organisation"
+  },
+  "billing": {
+    "title": "Facturation et Abonnement",
+    "subtitle": "Gérez vos informations d'abonnement et de facturation",
+    "loading": "Chargement des informations de facturation...",
+    "currentPlan": "Plan Actuel",
+    "plan": "Plan",
+    "noPlan": "Aucun plan actif",
+    "manageSubscription": "Gérer l'Abonnement",
+    "currentUsage": "Utilisation Actuelle",
+    "remainingAnalyses": "Analyses Restantes",
+    "allowedEmployees": "Employés Autorisés",
+    "allowedIntegrations": "Intégrations Autorisées",
+    "notAvailable": "Informations d'utilisation non disponibles",
+    "upgrade": "Mettre à Niveau",
+    "upgradeDescription": "Passez à un plan supérieur pour obtenir plus de fonctionnalités et des limites plus élevées.",
+    "viewPlans": "Voir les Plans",
+    "subscriptionManagement": "Gestion de l'Abonnement",
+    "managePayment": "Gérer les Méthodes de Paiement",
+    "cancelSubscription": "Annuler l'Abonnement",
+    "portalDescription": "Vous serez redirigé vers notre portail de facturation pour gérer votre abonnement et vos méthodes de paiement."
   }
 }

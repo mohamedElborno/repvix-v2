@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -32,6 +32,7 @@ export function NavUser() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const locale = useLocale();
+  const t = useTranslations("profile");
   const logoutUser = async () => {
     await signOut({ redirectUrl: `/${locale}/sign-in` });
   };
@@ -99,7 +100,7 @@ export function NavUser() {
                 onClick={() => router.push(`/${locale}/dashboard/profile`)}
               >
                 <IconUserCircle />
-                Account
+                {t("account")}
               </DropdownMenuItem>
               {/*               <DropdownMenuItem>
                 <IconCreditCard />
@@ -113,7 +114,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logoutUser}>
               <IconLogout />
-              Log out
+              {t("logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

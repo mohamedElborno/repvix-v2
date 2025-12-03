@@ -166,6 +166,18 @@
       "customPrice": "Özel",
       "subscribeNow": "Abone Ol",
       "contactUs": "Bize Ulaş",
+      "currentPlan": "Mevcut Plan",
+      "willContactYou": "Yakında sizinle iletişime geçeceğiz",
+      "feature": "Özellik",
+      "featureLabels": {
+        "f1": "Günlük Analizler",
+        "f2": "Ekip Üyeleri",
+        "f3": "Analiz Türü",
+        "f4": "Dışa Aktarma Formatları",
+        "f5": "Destek ve Entegrasyonlar",
+        "f6": "Ek Özellikler"
+      },
+      "betaNote": "Pro, Business ve Enterprise planları beta dönemi sona erdikten sonra etkinleştirilecektir",
       "plans": {
         "basic": {
           "title": "Temel",
@@ -462,6 +474,10 @@
     "profileDescription": "Profil bilgilerinizi güncelleyin",
     "fullName": "Ad Soyad",
     "fullNamePlaceholder": "Adınızı ve soyadınızı girin",
+    "firstName": "Ad",
+    "firstNamePlaceholder": "Ad",
+    "lastName": "Soyad",
+    "lastNamePlaceholder": "Soyad",
     "username": "Kullanıcı adı",
     "usernamePlaceholder": "Kullanıcı adınızı girin",
     "usernameHint": "Bu sizin benzersiz tanımlayıcınız olacak",
@@ -487,7 +503,17 @@
     "usernameExists": "Kullanıcı adı zaten mevcut",
     "saving": "Kaydediliyor...",
     "saveChanges": "Değişiklikleri Kaydet",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "reverifyTitle": "Doğrulama Gerekli",
+    "reverifyDescription": "Profilinizi güncellemeden önce kimliğinizi doğrulamak için lütfen şifrenizi girin.",
+    "password": "Şifre",
+    "passwordPlaceholder": "Şifrenizi girin",
+    "reverifyPasswordRequired": "Şifre gerekli",
+    "reverifyError": "Doğrulama başarısız oldu. Lütfen tekrar deneyin.",
+    "verifying": "Doğrulanıyor...",
+    "verify": "Doğrula",
+    "account": "Hesap",
+    "logout": "Çıkış Yap"
   },
   "team": {
     "title": "Ekibim",
@@ -570,6 +596,27 @@
     "saving": "Kaydediliyor...",
     "saveChanges": "Değişiklikleri Kaydet",
     "leaveOrganization": "Organizasyondan Ayrıl"
+  },
+  "billing": {
+    "title": "Faturalandırma ve Abonelik",
+    "subtitle": "Abonelik ve faturalandırma bilgilerinizi yönetin",
+    "loading": "Faturalandırma bilgileri yükleniyor...",
+    "currentPlan": "Mevcut Plan",
+    "plan": "Plan",
+    "noPlan": "Aktif plan yok",
+    "manageSubscription": "Aboneliği Yönet",
+    "currentUsage": "Mevcut Kullanım",
+    "remainingAnalyses": "Kalan Analizler",
+    "allowedEmployees": "İzin Verilen Çalışanlar",
+    "allowedIntegrations": "İzin Verilen Entegrasyonlar",
+    "notAvailable": "Kullanım bilgileri mevcut değil",
+    "upgrade": "Planı Yükselt",
+    "upgradeDescription": "Daha fazla özellik ve daha yüksek limitler için daha yüksek bir plana yükseltin.",
+    "viewPlans": "Planları Görüntüle",
+    "subscriptionManagement": "Abonelik Yönetimi",
+    "managePayment": "Ödeme Yöntemlerini Yönet",
+    "cancelSubscription": "Aboneliği İptal Et",
+    "portalDescription": "Aboneliğinizi ve ödeme yöntemlerinizi yönetmek için faturalandırma portalımıza yönlendirileceksiniz."
   },
   "header": {
     "hero": "Ana Sayfa",

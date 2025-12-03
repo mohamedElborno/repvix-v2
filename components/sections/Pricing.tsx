@@ -12,7 +12,7 @@ export default function Pricing() {
   const plans = [
     {
       id: "basic",
-      title: t("plans.basic.title"),
+      title: "Basic",
       price: "4.99",
       popular: false,
       description: t("plans.basic.description"),
@@ -26,7 +26,7 @@ export default function Pricing() {
     },
     {
       id: "starter",
-      title: t("plans.starter.title"),
+      title: "Starter",
       price: "9.99",
       popular: true,
       description: t("plans.starter.description"),
@@ -41,7 +41,7 @@ export default function Pricing() {
     },
     {
       id: "pro",
-      title: t("plans.pro.title"),
+      title: "Pro",
       price: "24.99",
       popular: false,
       description: t("plans.pro.description"),
@@ -56,7 +56,7 @@ export default function Pricing() {
     },
     {
       id: "business",
-      title: t("plans.business.title"),
+      title: "Business",
       price: "49.99",
       popular: false,
       description: t("plans.business.description"),
@@ -87,7 +87,10 @@ export default function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="relative py-16 md:py-20 bg-background scroll-mt-20">
+    <section
+      id="pricing"
+      className="relative py-16 md:py-20 bg-background scroll-mt-20"
+    >
       <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-fuchsia-400 to-purple-500 dark:from-purple-300 dark:via-fuchsia-200 dark:to-purple-400 mb-3">

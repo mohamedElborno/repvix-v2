@@ -182,6 +182,18 @@
       "customPrice": "Custom",
       "subscribeNow": "Subscribe Now",
       "contactUs": "Contact Us",
+      "currentPlan": "Current Plan",
+      "willContactYou": "We will contact you soon",
+      "feature": "Feature",
+      "featureLabels": {
+        "f1": "Daily Analyses",
+        "f2": "Team Members",
+        "f3": "Analysis Type",
+        "f4": "Export Formats",
+        "f5": "Support & Integrations",
+        "f6": "Additional Features"
+      },
+      "betaNote": "Pro, Business, and Enterprise plans will be activated after the beta period ends",
       "plans": {
         "basic": {
           "title": "Basic",
@@ -270,7 +282,6 @@
     "high": "High",
     "noData": "No data available",
     "riskScore": "Risk Score",
-    "peakHours": "Peak Hours",
     "noPeakHoursData": "No peak hours data available yet. More conversations are needed to generate statistics.",
     "agentLeaderboard": "Agent Leaderboard",
     "noAgentData": "No agent performance data available yet. More conversations are needed to generate statistics.",
@@ -487,6 +498,10 @@
     "profileDescription": "Update your profile information",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Enter your full name",
+    "firstName": "First name",
+    "firstNamePlaceholder": "First name",
+    "lastName": "Last name",
+    "lastNamePlaceholder": "Last name",
     "username": "Username",
     "usernamePlaceholder": "Enter your username",
     "usernameHint": "This will be your unique identifier",
@@ -512,7 +527,17 @@
     "usernameExists": "Username already exists",
     "saving": "Saving...",
     "saveChanges": "Save Changes",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "reverifyTitle": "Verification Required",
+    "reverifyDescription": "Please enter your password to verify your identity before updating your profile.",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "reverifyPasswordRequired": "Password is required",
+    "reverifyError": "Verification failed. Please try again.",
+    "verifying": "Verifying...",
+    "verify": "Verify",
+    "account": "Account",
+    "logout": "Log out"
   },
   "team": {
     "title": "My Team",
@@ -595,5 +620,26 @@
     "saving": "Saving...",
     "saveChanges": "Save Changes",
     "leaveOrganization": "Leave Organization"
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "subtitle": "Manage your subscription and billing information",
+    "loading": "Loading billing information...",
+    "currentPlan": "Current Plan",
+    "plan": "Plan",
+    "noPlan": "No active plan",
+    "manageSubscription": "Manage Subscription",
+    "currentUsage": "Current Usage",
+    "remainingAnalyses": "Remaining Analyses",
+    "allowedEmployees": "Allowed Employees",
+    "allowedIntegrations": "Allowed Integrations",
+    "notAvailable": "Usage information not available",
+    "upgrade": "Upgrade Plan",
+    "upgradeDescription": "Upgrade to a higher plan to get more features and higher limits.",
+    "viewPlans": "View Plans",
+    "subscriptionManagement": "Subscription Management",
+    "managePayment": "Manage Payment Methods",
+    "cancelSubscription": "Cancel Subscription",
+    "portalDescription": "You will be redirected to our billing portal to manage your subscription and payment methods."
   }
 }

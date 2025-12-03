@@ -182,6 +182,18 @@
       "customPrice": "مخصص",
       "subscribeNow": "اشترك الآن",
       "contactUs": "تواصل معنا",
+      "currentPlan": "الخطة الحالية",
+      "willContactYou": "سنتواصل معك قريباً",
+      "feature": "الميزة",
+      "featureLabels": {
+        "f1": "التحليلات اليومية",
+        "f2": "أعضاء الفريق",
+        "f3": "نوع التحليل",
+        "f4": "صيغ التصدير",
+        "f5": "الدعم والتكاملات",
+        "f6": "ميزات إضافية"
+      },
+      "betaNote": "سيتم تفعيل خطط Pro و Business و Enterprise بعد انتهاء فترة البيتا",
       "plans": {
         "basic": {
           "title": "الأساسية",
@@ -487,6 +499,10 @@
     "profileDescription": "قم بتحديث معلومات ملفك الشخصي",
     "fullName": "الاسم الكامل",
     "fullNamePlaceholder": "أدخل اسمك الكامل",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "الاسم الأول",
+    "lastName": "الاسم الأخير",
+    "lastNamePlaceholder": "الاسم الأخير",
     "username": "اسم المستخدم",
     "usernamePlaceholder": "أدخل اسم المستخدم",
     "usernameHint": "سيكون هذا هو المعرف الفريد الخاص بك",
@@ -512,7 +528,17 @@
     "usernameExists": "اسم المستخدم موجود بالفعل",
     "saving": "جاري الحفظ...",
     "saveChanges": "حفظ التغييرات",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "reverifyTitle": "التحقق مطلوب",
+    "reverifyDescription": "يرجى إدخال كلمة المرور للتحقق من هويتك قبل تحديث ملفك الشخصي.",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "reverifyPasswordRequired": "كلمة المرور مطلوبة",
+    "reverifyError": "فشل التحقق. يرجى المحاولة مرة أخرى.",
+    "verifying": "جاري التحقق...",
+    "verify": "تحقق",
+    "account": "الحساب",
+    "logout": "تسجيل الخروج"
   },
   "team": {
     "title": "فريقي",
@@ -595,5 +621,26 @@
     "saving": "جارٍ الحفظ...",
     "saveChanges": "حفظ التغييرات",
     "leaveOrganization": "مغادرة المؤسسة"
+  },
+  "billing": {
+    "title": "الفواتير والاشتراك",
+    "subtitle": "إدارة معلومات الاشتراك والفواتير",
+    "loading": "جاري تحميل معلومات الفواتير...",
+    "currentPlan": "الخطة الحالية",
+    "plan": "الخطة",
+    "noPlan": "لا توجد خطة نشطة",
+    "manageSubscription": "إدارة الاشتراك",
+    "currentUsage": "الاستخدام الحالي",
+    "remainingAnalyses": "التحليلات المتبقية",
+    "allowedEmployees": "الموظفون المسموحون",
+    "allowedIntegrations": "التكاملات المسموحة",
+    "notAvailable": "معلومات الاستخدام غير متاحة",
+    "upgrade": "ترقية الخطة",
+    "upgradeDescription": "قم بالترقية إلى خطة أعلى للحصول على ميزات أكثر وحدود أعلى.",
+    "viewPlans": "عرض الخطط",
+    "subscriptionManagement": "إدارة الاشتراك",
+    "managePayment": "إدارة طرق الدفع",
+    "cancelSubscription": "إلغاء الاشتراك",
+    "portalDescription": "سيتم توجيهك إلى بوابة الفواتير لإدارة اشتراكك وطرق الدفع."
   }
 }

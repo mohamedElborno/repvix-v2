@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useReverification } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,14 +16,36 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconCamera, IconUser, IconMail } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 export default function ProfileClient() {
   const t = useTranslations("profile");
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Use Clerk's reverification hook
+  const performReverifiedAction = useReverification(
+    async (updates: {
+      firstName?: string;
+      lastName?: string;
+      username?: string;
+    }) => {
+      if (!user) return;
+      await user.update(updates);
+      await user.reload();
+      toast.success(t("saveSuccess"));
+    }
+  );
+
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     bio: "",
     location: "",
@@ -138,13 +160,10 @@ export default function ProfileClient() {
       // Initialize with Clerk user data
       const firstName = user.firstName || "";
       const lastName = user.lastName || "";
-      const fullName =
-        firstName && lastName
-          ? `${firstName} ${lastName}`
-          : user.fullName || firstName || lastName || "";
 
       setFormData({
-        fullName,
+        firstName,
+        lastName,
         phone: user.primaryPhoneNumber?.phoneNumber || "",
         bio: (user.publicMetadata?.bio as string) || "",
         location: (user.publicMetadata?.location as string) || "",
@@ -240,18 +259,22 @@ export default function ProfileClient() {
       }
 
       // Update Clerk user profile
+      // Note: publicMetadata cannot be updated from client-side for security reasons
+      // It must be updated from server-side using Clerk's backend API
       const updates: {
         firstName?: string;
         lastName?: string;
         username?: string;
-        publicMetadata?: Record<string, any>;
       } = {};
 
-      // Split full name into first and last name
-      const nameParts = formData.fullName.trim().split(/\s+/);
-      if (nameParts.length > 0) {
-        updates.firstName = nameParts[0];
-        updates.lastName = nameParts.slice(1).join(" ") || nameParts[0];
+      // Update first name
+      if (formData.firstName.trim()) {
+        updates.firstName = formData.firstName.trim();
+      }
+
+      // Update last name
+      if (formData.lastName.trim()) {
+        updates.lastName = formData.lastName.trim();
       }
 
       // Update username if provided
@@ -259,18 +282,9 @@ export default function ProfileClient() {
         updates.username = formData.username;
       }
 
-      // Update public metadata (bio, location)
-      updates.publicMetadata = {
-        ...user.publicMetadata,
-        bio: formData.bio || undefined,
-        location: formData.location || undefined,
-      };
-
-      // Update user in Clerk
-      await user.update(updates);
-
-      // Reload user data to reflect changes
-      await user.reload();
+      // Update user in Clerk (only firstName, lastName, and username)
+      // Use reverification hook to handle reverification automatically
+      await performReverifiedAction(updates);
 
       // Update phone if changed
       if (
@@ -286,8 +300,6 @@ export default function ProfileClient() {
           console.warn("Phone update skipped:", error);
         }
       }
-
-      toast.success(t("saveSuccess"));
     } catch (error: any) {
       console.error("Error saving profile:", error);
 
@@ -351,8 +363,7 @@ export default function ProfileClient() {
                   alt={t("avatarAlt") || "Avatar"}
                 />
                 <AvatarFallback className="text-lg">
-                  {formData.fullName?.charAt(0) ||
-                    user.firstName?.charAt(0) ||
+                  {(formData.firstName || user.firstName)?.charAt(0) ||
                     user.emailAddresses[0]?.emailAddress?.charAt(0) ||
                     "U"}
                 </AvatarFallback>
@@ -383,17 +394,32 @@ export default function ProfileClient() {
               </div>
             </div>
 
-            {/* Full Name */}
-            <div className="space-y-2">
-              <Label htmlFor="fullName">{t("fullName") || "Full Name"}</Label>
-              <Input
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                placeholder={t("fullNamePlaceholder") || "Enter your full name"}
-                required
-              />
+            {/* First Name and Last Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">
+                  {t("firstName") || "First Name"}
+                </Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  placeholder={t("firstNamePlaceholder") || "First name"}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">{t("lastName") || "Last Name"}</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder={t("lastNamePlaceholder") || "Last name"}
+                  required
+                />
+              </div>
             </div>
 
             {/* Username */}
