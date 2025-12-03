@@ -131,6 +131,7 @@
     "keyMetrics": "المؤشرات الرئيسية",
     "yourChats": "محادثاتك",
     "noChats": "لا توجد محادثات بعد",
+    "allChatsLoaded": "تم تحميل جميع المحادثات",
     "noResults": "لم يتم العثور على نتائج",
     "tryDifferentSearch": "جرّب كلمات بحث مختلفة",
     "uploadFirstChat": "ابدأ برفع أول محادثة لتحصل على التحليل",
@@ -340,7 +341,9 @@
     "systemMessages": "رسائل النظام:",
     "dateRange": "النطاق الزمني",
     "failedToImportChat": "فشل استيراد المحادثة",
-    "failedToUploadChat": "فشل رفع المحادثة"
+    "failedToUploadChat": "فشل رفع المحادثة",
+    "count": "العدد",
+    "score": "النقاط"
   },
   "metadata": {
     "title": "ريبفيكس – تحليل المحادثات بالذكاء الاصطناعي لفرق الدعم والمبيعات | رؤى متعددة اللغات",
@@ -353,7 +356,8 @@
     "french": "الفرنسية",
     "turkish": "التركية",
     "spanish": "الإسبانية",
-    "hindi": "الهندية"
+    "hindi": "الهندية",
+    "japanese": "اليابانية"
   },
   "chat": {
     "back": "رجوع",
@@ -475,6 +479,41 @@
     "codeResent": "تمت إعادة إرسال رمز التحقق! تحقق من بريدك.",
     "errorOccurred": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
+  "profile": {
+    "title": "الملف الشخصي",
+    "subtitle": "إدارة معلومات ملفك الشخصي",
+    "loading": "جاري التحميل...",
+    "profileInfo": "معلومات الملف الشخصي",
+    "profileDescription": "قم بتحديث معلومات ملفك الشخصي",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "أدخل اسمك الكامل",
+    "username": "اسم المستخدم",
+    "usernamePlaceholder": "أدخل اسم المستخدم",
+    "usernameHint": "سيكون هذا هو المعرف الفريد الخاص بك",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "عنوان البريد الإلكتروني",
+    "emailHint": "لا يمكن تغيير البريد الإلكتروني",
+    "phone": "الهاتف",
+    "phonePlaceholder": "أدخل رقم هاتفك",
+    "location": "الموقع",
+    "locationPlaceholder": "أدخل موقعك",
+    "bio": "نبذة",
+    "bioPlaceholder": "أخبرنا عن نفسك",
+    "avatarAlt": "الصورة الشخصية",
+    "changeImage": "تغيير الصورة",
+    "uploading": "جاري الرفع...",
+    "imageFormats": "JPG, PNG, GIF حتى 2MB",
+    "invalidImageFile": "ملف صورة غير صالح",
+    "imageSizeError": "يجب أن يكون حجم الصورة أقل من 2MB",
+    "uploadSuccess": "تم رفع الصورة بنجاح",
+    "uploadError": "فشل رفع الصورة",
+    "saveSuccess": "تم حفظ الملف الشخصي بنجاح!",
+    "saveError": "فشل حفظ الملف الشخصي",
+    "usernameExists": "اسم المستخدم موجود بالفعل",
+    "saving": "جاري الحفظ...",
+    "saveChanges": "حفظ التغييرات",
+    "cancel": "إلغاء"
+  },
   "team": {
     "title": "فريقي",
     "subtitle": "إدارة أعضاء الفريق وأدوارهم",
@@ -554,6 +593,7 @@
     "enterEmail": "أدخل البريد الإلكتروني",
     "updateError": "فشل تحديث بيانات الموظف. حاول مجددًا.",
     "saving": "جارٍ الحفظ...",
-    "saveChanges": "حفظ التغييرات"
+    "saveChanges": "حفظ التغييرات",
+    "leaveOrganization": "مغادرة المؤسسة"
   }
 }

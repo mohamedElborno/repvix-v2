@@ -78,7 +78,8 @@ export const storeChatAnalysis = internalMutation({
       v.literal("tr"),
       v.literal("fr"),
       v.literal("es"),
-      v.literal("hi")
+      v.literal("hi"),
+      v.literal("ja")
     ),
     conversationLanguage: v.union(
       v.literal("ar"),
@@ -86,7 +87,8 @@ export const storeChatAnalysis = internalMutation({
       v.literal("tr"),
       v.literal("fr"),
       v.literal("es"),
-      v.literal("hi")
+      v.literal("hi"),
+      v.literal("ja")
     ),
     aiOutput: v.any(), // نضمن النوع في TypeScript
     ruleBased: v.any(), // timeResult + structureMetrics + ruleBasedMetrics + flags + keywordMetrics
@@ -94,6 +96,7 @@ export const storeChatAnalysis = internalMutation({
     tokenInputCount: v.optional(v.number()),
     tokenOutputCount: v.optional(v.number()),
     chatStartedAt: v.optional(v.number()), // timestamp (ms) من chat.startedAt
+    primaryAgentMemberId: v.optional(v.id("organizationMembers")), // الموظف المسؤول عن المحادثة
   },
   handler: async (ctx, args): Promise<Id<"chatAnalyses">> => {
     const { aiOutput, ruleBased } = args;
@@ -116,9 +119,10 @@ export const storeChatAnalysis = internalMutation({
     const now = Date.now();
 
     // حساب chatStartAtMs و chatStartHour من chatStartedAt
+    // نستخدم getUTCHours() للحصول على ساعة موحدة بغض النظر عن timezone السيرفر
     const chatStartAtMs = args.chatStartedAt ?? undefined;
     const chatStartHour = args.chatStartedAt
-      ? new Date(args.chatStartedAt).getHours()
+      ? new Date(args.chatStartedAt).getUTCHours()
       : undefined;
 
     const insertedId = await ctx.db.insert("chatAnalyses", {
@@ -131,6 +135,7 @@ export const storeChatAnalysis = internalMutation({
         (aiOutput as ChatAnalysisAiOutput).analysisVersion ?? "v1",
       createdAt: now,
       updatedAt: now,
+      primaryAgentMemberIdSnapshot: args.primaryAgentMemberId, // حفظ الموظف المسؤول عن المحادثة
 
       // 1) نتيجة المحادثة (Outcome)
       outcomeStatus: (aiOutput as ChatAnalysisAiOutput).outcome.outcomeStatus,

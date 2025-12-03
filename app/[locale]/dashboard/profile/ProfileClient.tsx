@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,29 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  IconCamera,
-  IconUser,
-  IconMail,
-  IconPhone,
-  IconMapPin,
-} from "@tabler/icons-react";
+import { IconCamera, IconUser, IconMail } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-
-interface ProfileClientProps {
-  userId: string;
-}
-
-export default function ProfileClient({ userId }: ProfileClientProps) {
+export default function ProfileClient() {
   const t = useTranslations("profile");
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
-  // Get profile from Convex
-  /*   const profile = useQuery({query: api.profiles.getProfile, args: {userId}});
-  const updateProfile = useMutation(api.profiles.updateProfile); */
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -47,39 +30,135 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
     username: "",
   });
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [dominantColor, setDominantColor] = useState("#6366f1"); // Default indigo color
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Update form data when profile loads
-  useEffect(
-    () => {
-      /*     if (profile) {
+  // Function to convert RGB to hex
+  const rgbToHex = (r: number, g: number, b: number): string => {
+    return `#${[r, g, b]
+      .map((x) => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      })
+      .join("")}`;
+  };
+
+  // Function to convert hex to rgba
+  const hexToRgba = (hex: string, alpha: number): string => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result) return `rgba(99, 102, 241, ${alpha})`;
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Function to extract dominant color from image
+  const extractDominantColor = (imageUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      // Skip if no image URL
+      if (!imageUrl) {
+        resolve("#6366f1");
+        return;
+      }
+
+      const img = new Image();
+      // Try with CORS, but don't fail if it doesn't work
+      img.crossOrigin = "anonymous";
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve("#6366f1"); // Default indigo
+            return;
+          }
+
+          // Limit canvas size for performance
+          const maxSize = 200;
+          const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Sample pixels
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          const colorCounts: Record<string, number> = {};
+          let maxCount = 0;
+          let dominantR = 99;
+          let dominantG = 102;
+          let dominantB = 241;
+
+          // Sample pixels (every 4th pixel for performance)
+          for (let i = 0; i < data.length; i += 16) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const a = data[i + 3];
+
+            // Skip transparent pixels
+            if (a < 128) continue;
+
+            // Quantize colors to reduce variations
+            const qr = Math.floor(r / 10) * 10;
+            const qg = Math.floor(g / 10) * 10;
+            const qb = Math.floor(b / 10) * 10;
+            const colorKey = `${qr},${qg},${qb}`;
+
+            colorCounts[colorKey] = (colorCounts[colorKey] || 0) + 1;
+
+            if (colorCounts[colorKey] > maxCount) {
+              maxCount = colorCounts[colorKey];
+              dominantR = qr;
+              dominantG = qg;
+              dominantB = qb;
+            }
+          }
+
+          const hexColor = rgbToHex(dominantR, dominantG, dominantB);
+          console.log("Extracted dominant color:", hexColor);
+          resolve(hexColor);
+        } catch (error) {
+          console.error("Error extracting color:", error);
+          resolve("#6366f1"); // Default indigo
+        }
+      };
+      img.onerror = () => {
+        resolve("#6366f1"); // Default indigo
+      };
+      img.src = imageUrl;
+    });
+  };
+
+  // Update form data when user loads
+  useEffect(() => {
+    if (user) {
+      // Initialize with Clerk user data
+      const firstName = user.firstName || "";
+      const lastName = user.lastName || "";
+      const fullName =
+        firstName && lastName
+          ? `${firstName} ${lastName}`
+          : user.fullName || firstName || lastName || "";
+
       setFormData({
-        fullName: profile.fullName || "",
-        phone: "", // Phone is stored in Clerk, not in profile
-        bio: profile.bio || "",
-        location: profile.location || "",
-        username: profile.username || "",
-      });
-      setAvatarUrl(profile.avatarUrl || "");
-    } else if (user) {
-      // Initialize with Clerk user data if no profile exists
-      setFormData({
-        fullName:
-          user.firstName && user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user.fullName || "",
+        fullName,
         phone: user.primaryPhoneNumber?.phoneNumber || "",
-        bio: "",
-        location: "",
+        bio: (user.publicMetadata?.bio as string) || "",
+        location: (user.publicMetadata?.location as string) || "",
         username: user.username || "",
       });
-      setAvatarUrl(user.imageUrl || "");
-    } */
-    },
-    [
-      /* profile, user */
-    ]
-  );
+      const imageUrl = user.imageUrl || "";
+      setAvatarUrl(imageUrl);
+
+      // Extract dominant color from user's profile image
+      if (imageUrl) {
+        extractDominantColor(imageUrl).then(setDominantColor);
+      }
+    }
+  }, [user]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -99,45 +178,53 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error(t("invalidImageFile") || "Invalid image file");
+      toast.error(t("invalidImageFile"));
       return;
     }
 
     // Validate file size (2MB)
     if (file.size > 2 * 1024 * 1024) {
-      toast.error(t("imageSizeError") || "Image size must be less than 2MB");
+      toast.error(t("imageSizeError"));
+      return;
+    }
+
+    if (!user) {
+      toast.error(t("saveError"));
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // TODO: Upload to Clerk or your file storage service
-      // For now, we'll use Clerk's user image update
-      // You can integrate with Clerk's file upload or use a service like Cloudinary
-
-      // Create a data URL for preview (temporary solution)
+      // Create a data URL for immediate preview
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
         setAvatarUrl(result);
-        toast.success(t("uploadSuccess") || "Image uploaded successfully");
       };
       reader.readAsDataURL(file);
 
-      // TODO: Upload to actual storage and get URL
-      // Example with Clerk (if you have file upload configured):
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // const response = await fetch("/api/upload-avatar", {
-      //   method: "POST",
-      //   body: formData,
-      // });
-      // const data = await response.json();
-      // setAvatarUrl(data.url);
-    } catch (error) {
+      // Upload image to Clerk immediately
+      await user.setProfileImage({ file });
+
+      // Reload user data to get the new image URL
+      await user.reload();
+
+      // Update avatar URL with the new Clerk image URL
+      const newImageUrl = user.imageUrl || "";
+      setAvatarUrl(newImageUrl);
+
+      // Extract dominant color from new image
+      if (newImageUrl) {
+        extractDominantColor(newImageUrl).then(setDominantColor);
+      }
+
+      toast.success(t("uploadSuccess"));
+    } catch (error: any) {
       console.error("Error uploading image:", error);
-      toast.error(t("uploadError") || "Failed to upload image");
+      toast.error(error?.errors?.[0]?.message || t("uploadError"));
+      // Reset to original image on error
+      setAvatarUrl(user.imageUrl || "");
     } finally {
       setIsUploading(false);
     }
@@ -152,24 +239,69 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
         throw new Error("User not found");
       }
 
-      /*       await updateProfile({
-        userId: user.id,
-        fullName: formData.fullName,
-        username: formData.username || undefined,
-        avatarUrl: avatarUrl || undefined,
+      // Update Clerk user profile
+      const updates: {
+        firstName?: string;
+        lastName?: string;
+        username?: string;
+        publicMetadata?: Record<string, any>;
+      } = {};
+
+      // Split full name into first and last name
+      const nameParts = formData.fullName.trim().split(/\s+/);
+      if (nameParts.length > 0) {
+        updates.firstName = nameParts[0];
+        updates.lastName = nameParts.slice(1).join(" ") || nameParts[0];
+      }
+
+      // Update username if provided
+      if (formData.username) {
+        updates.username = formData.username;
+      }
+
+      // Update public metadata (bio, location)
+      updates.publicMetadata = {
+        ...user.publicMetadata,
         bio: formData.bio || undefined,
         location: formData.location || undefined,
-      }); */
+      };
 
-      toast.success(t("saveSuccess") || "Profile saved successfully!");
+      // Update user in Clerk
+      await user.update(updates);
+
+      // Reload user data to reflect changes
+      await user.reload();
+
+      // Update phone if changed
+      if (
+        formData.phone &&
+        formData.phone !== user.primaryPhoneNumber?.phoneNumber
+      ) {
+        // Note: Phone number updates require verification in Clerk
+        // This is a simplified version - you may want to add phone verification
+        try {
+          await user.createPhoneNumber({ phoneNumber: formData.phone });
+        } catch (error) {
+          // Phone might already exist or need verification
+          console.warn("Phone update skipped:", error);
+        }
+      }
+
+      toast.success(t("saveSuccess"));
     } catch (error: any) {
       console.error("Error saving profile:", error);
 
       // Handle specific errors
-      if (error?.message?.includes("Username already exists")) {
-        toast.error(t("usernameExists") || "Username already exists");
+      if (
+        error?.errors?.[0]?.message?.includes("username") ||
+        error?.message?.includes("username") ||
+        error?.message?.includes("Username")
+      ) {
+        toast.error(t("usernameExists"));
+      } else if (error?.errors?.[0]?.message) {
+        toast.error(error.errors[0].message);
       } else {
-        toast.error(t("saveError") || "Failed to save profile");
+        toast.error(t("saveError"));
       }
     } finally {
       setIsLoading(false);
@@ -180,32 +312,33 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 min-h-[calc(100vh-120px)]">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {t("title") || "Profile"}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          {t("subtitle") || "Manage your profile information"}
-        </p>
+        <h1 className="text-3xl font-bold text-foreground">{t("title")}</h1>
+        <p className="text-muted-foreground mt-2">{t("subtitle")}</p>
       </div>
 
-      <Card>
+      <Card
+        className="bg-card border-border transition-all duration-300"
+        style={{
+          boxShadow: `0 10px 40px -10px ${hexToRgba(dominantColor, 0.4)}, 0 0 0 1px ${hexToRgba(dominantColor, 0.2)}`,
+        }}
+      >
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <IconUser className="h-5 w-5" />
-            {t("profileInfo") || "Profile Information"}
+            {t("profileInfo")}
           </CardTitle>
-          <CardDescription>
-            {t("profileDescription") || "Update your profile information"}
+          <CardDescription className="text-muted-foreground">
+            {t("profileDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -244,8 +377,8 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
                   onChange={handleAvatarUpload}
                   className="hidden"
                 />
-                <p className="text-xs text-gray-500">
-                  {t("imageFormats") || "JPG, PNG, GIF up to 2MB"}
+                <p className="text-xs text-muted-foreground">
+                  {t("imageFormats")}
                 </p>
               </div>
             </div>
@@ -273,8 +406,8 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
                 onChange={handleInputChange}
                 placeholder={t("usernamePlaceholder") || "Enter your username"}
               />
-              <p className="text-xs text-gray-500">
-                {t("usernameHint") || "This will be your unique identifier"}
+              <p className="text-xs text-muted-foreground">
+                {t("usernameHint")}
               </p>
             </div>
 
@@ -290,16 +423,14 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
                 type="email"
                 value={user.emailAddresses[0]?.emailAddress || ""}
                 disabled
-                className="bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
-                placeholder={t("emailPlaceholder") || "Email address"}
+                className="bg-muted cursor-not-allowed"
+                placeholder={t("emailPlaceholder")}
               />
-              <p className="text-xs text-gray-500">
-                {t("emailHint") || "Email cannot be changed"}
-              </p>
+              <p className="text-xs text-muted-foreground">{t("emailHint")}</p>
             </div>
 
             {/* Phone */}
-            <div className="space-y-2">
+            {/*             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center gap-2">
                 <IconPhone className="h-4 w-4" />
                 {t("phone") || "Phone"}
@@ -312,10 +443,10 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
                 onChange={handleInputChange}
                 placeholder={t("phonePlaceholder") || "Enter your phone number"}
               />
-            </div>
+            </div> */}
 
             {/* Location */}
-            <div className="space-y-2">
+            {/*          <div className="space-y-2">
               <Label htmlFor="location" className="flex items-center gap-2">
                 <IconMapPin className="h-4 w-4" />
                 {t("location") || "Location"}
@@ -327,21 +458,21 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
                 onChange={handleInputChange}
                 placeholder={t("locationPlaceholder") || "Enter your location"}
               />
-            </div>
+            </div> */}
 
             {/* Bio */}
-            <div className="space-y-2">
+            {/*             <div className="space-y-2">
               <Label htmlFor="bio">{t("bio") || "Bio"}</Label>
               <textarea
                 id="bio"
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                placeholder={t("bioPlaceholder") || "Tell us about yourself"}
-                className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                placeholder={t("bioPlaceholder")}
+                className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 rows={4}
               />
-            </div>
+            </div> */}
 
             {/* Save Buttons */}
             <div className="flex justify-end gap-2 pt-4">
@@ -353,9 +484,7 @@ export default function ProfileClient({ userId }: ProfileClientProps) {
                 {t("cancel") || "Cancel"}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading
-                  ? t("saving") || "Saving..."
-                  : t("saveChanges") || "Save Changes"}
+                {isLoading ? t("saving") : t("saveChanges")}
               </Button>
             </div>
           </form>

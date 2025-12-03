@@ -4,9 +4,9 @@ import { useTranslations } from "next-intl";
 import {
   Heart,
   TrendingUp,
-  Clock,
-  CheckCircle2,
-  Target,
+  AlertTriangle,
+  Shield,
+  Award,
   MessageSquare,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -14,10 +14,15 @@ import { Card } from "@/components/ui/card";
 interface KPIData {
   customerSatisfaction: number | null;
   avgSentiment: number | null;
-  avgResponseTime: number | null;
-  resolutionEfficiency: number | null;
-  satisfactionProbability: number | null;
-  toneDominance: string | null;
+  riskScore: number | null;
+  churnRiskLevel: "low" | "medium" | "high" | null;
+  topAgent: {
+    agentId: string;
+    score: number;
+    strengthSummary: string;
+  } | null;
+  commonTopics: string[];
+  commonIssues: string[];
 }
 
 interface KPICardsProps {
@@ -41,6 +46,17 @@ export default function KPICards({ data }: KPICardsProps) {
     return t("neutral") || "Neutral";
   };
 
+  const getChurnRiskLabel = (level: string | null): string => {
+    if (!level) return "N/A";
+    const labels: Record<string, string> = {
+      low: t("churnRisk") + " - " + (t("low") || "Low"),
+      medium: t("churnRisk") + " - " + (t("medium") || "Medium"),
+      high: t("churnRisk") + " - " + (t("high") || "High"),
+    };
+    return labels[level] || "N/A";
+  };
+
+  // Build cards array with only the most important metrics
   const cards = [
     {
       title: t("customerSatisfaction") || "Customer Satisfaction",
@@ -50,12 +66,9 @@ export default function KPICards({ data }: KPICardsProps) {
           ? `${data.customerSatisfaction.toFixed(1)}%`
           : "N/A",
       icon: Heart,
-      color: "text-pink-400",
-      bgColor: "bg-pink-500/10",
-      borderColor: "border-pink-500/20",
     },
     {
-      title: t("avgSentiment") || "Average Sentiment",
+      title: t("sentiment") || "Overall Sentiment",
       value:
         data.avgSentiment !== null
           ? getSentimentLabel(data.avgSentiment)
@@ -63,50 +76,44 @@ export default function KPICards({ data }: KPICardsProps) {
       subtitle:
         data.avgSentiment !== null ? data.avgSentiment.toFixed(2) : undefined,
       icon: TrendingUp,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/10",
-      borderColor: "border-blue-500/20",
     },
     {
-      title: t("avgResponseTime") || "Average Response Time",
-      value: formatResponseTime(data.avgResponseTime),
-      icon: Clock,
-      color: "text-cyan-400",
-      bgColor: "bg-cyan-500/10",
-      borderColor: "border-cyan-500/20",
-    },
-    {
-      title: t("resolutionEfficiency") || "Resolution Efficiency",
+      title: t("riskScore") || "Risk Score",
       value:
-        data.resolutionEfficiency !== null &&
-        data.resolutionEfficiency !== undefined
-          ? `${(data.resolutionEfficiency * 100).toFixed(1)}%`
+        data.riskScore !== null && data.riskScore !== undefined
+          ? `${data.riskScore.toFixed(1)}%`
           : "N/A",
-      icon: CheckCircle2,
-      color: "text-green-400",
-      bgColor: "bg-green-500/10",
-      borderColor: "border-green-500/20",
+      icon: AlertTriangle,
     },
     {
-      title: t("satisfactionProbability") || "Satisfaction Probability",
-      value:
-        data.satisfactionProbability !== null &&
-        data.satisfactionProbability !== undefined
-          ? `${data.satisfactionProbability.toFixed(1)}%`
-          : "N/A",
-      icon: Target,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10",
-      borderColor: "border-purple-500/20",
+      title: t("churnRisk") || "Churn Risk",
+      value: getChurnRiskLabel(data.churnRiskLevel),
+      icon: Shield,
     },
-    {
-      title: t("toneDominance") || "Team Tone",
-      value: data.toneDominance || "N/A",
-      icon: MessageSquare,
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/10",
-      borderColor: "border-orange-500/20",
-    },
+    ...(data.topAgent
+      ? [
+          {
+            title: t("agentLeaderboard") || "Top Agent",
+            value: `${data.topAgent.score.toFixed(0)}%`,
+            subtitle:
+              data.topAgent.strengthSummary?.slice(0, 50) + "..." || undefined,
+            icon: Award,
+          },
+        ]
+      : []),
+    ...(data.commonTopics.length > 0
+      ? [
+          {
+            title: t("commonTopics") || "Common Topics",
+            value: data.commonTopics.slice(0, 2).join(", ") || "N/A",
+            subtitle:
+              data.commonTopics.length > 2
+                ? `+${data.commonTopics.length - 2} more`
+                : undefined,
+            icon: MessageSquare,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -116,22 +123,26 @@ export default function KPICards({ data }: KPICardsProps) {
         return (
           <Card
             key={index}
-            className={`${card.bgColor} ${card.borderColor} border p-6 hover:shadow-lg transition-all duration-300`}
+            className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 shadow-sm shadow-purple-500/10 hover:shadow-lg hover:shadow-purple-500/20 hover:border-purple-500/30 hover:bg-card transition-all duration-300 group"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-sm text-gray-400 mb-2">{card.title}</p>
-                <p className="text-2xl font-bold text-white mb-1">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  {card.title}
+                </p>
+                <p className="text-2xl font-bold text-foreground mb-1">
                   {card.value}
                 </p>
                 {card.subtitle && (
-                  <p className="text-xs text-gray-500">
-                    Score: {card.subtitle}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {card.subtitle}
                   </p>
                 )}
               </div>
-              <div className={`${card.color} ${card.bgColor} p-3 rounded-lg`}>
-                <Icon className="w-6 h-6" />
+              <div className="flex-shrink-0">
+                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 flex items-center justify-center group-hover:from-purple-500/30 group-hover:to-purple-600/20 transition-all duration-300">
+                  <Icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
               </div>
             </div>
           </Card>

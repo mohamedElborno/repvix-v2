@@ -16,7 +16,8 @@ export const runFullGlobalAnalysis = action({
       v.literal("tr"),
       v.literal("fr"),
       v.literal("es"),
-      v.literal("hi")
+      v.literal("hi"),
+      v.literal("ja")
     ),
   },
   handler: async (
@@ -44,7 +45,8 @@ export const analyzeGlobalChats = internalAction({
       v.literal("tr"),
       v.literal("fr"),
       v.literal("es"),
-      v.literal("hi")
+      v.literal("hi"),
+      v.literal("ja")
     ),
     from: v.optional(v.number()),
     to: v.optional(v.number()),

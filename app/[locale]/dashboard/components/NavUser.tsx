@@ -24,14 +24,16 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const router = useRouter();
   const { signOut } = useAuth();
   const { user } = useUser();
+  const locale = useLocale();
   const logoutUser = async () => {
-    await signOut({ redirectUrl: "/sign-in" });
+    await signOut({ redirectUrl: `/${locale}/sign-in` });
   };
 
   return (
@@ -43,7 +45,7 @@ export function NavUser() {
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage
                   src={user?.imageUrl}
-                  alt={user?.emailAddresses[0].emailAddress}
+                  alt={user?.emailAddresses[0]?.emailAddress || "User"}
                 />
                 <AvatarFallback className="rounded-lg">
                   {user?.fullName?.charAt(0) ||
@@ -94,7 +96,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={() => router.push("/dashboard/profile")}
+                onClick={() => router.push(`/${locale}/dashboard/profile`)}
               >
                 <IconUserCircle />
                 Account

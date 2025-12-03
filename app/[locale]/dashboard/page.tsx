@@ -3,14 +3,13 @@ import { ChatListItemData } from "./components/ChatListItem";
 import DashboardClient from "./components/pages/DashboardClient";
 import { getConvexServerClient } from "@/lib/convex";
 import { api } from "@/convex/_generated/api";
+import { redirect } from "next/navigation";
 
 export default async function ProtectedPage() {
   const { userId, orgId } = await auth();
 
   if (!userId) {
-    // redirect to sign-in أو أي شيء حسب منطقك
-    // redirect("/sign-in");
-    throw new Error("Unauthorized");
+    redirect("/sign-in");
   }
 
   const convex = await getConvexServerClient();
@@ -23,10 +22,16 @@ export default async function ProtectedPage() {
     });
 
     if (convexOrgId) {
-      initialChats = await convex.query(api.chats.listForDashboard, {
+      // Load only first 8 chats initially, rest will be loaded via infinite scroll
+      const result = await convex.query(api.chats.listForDashboard, {
         organizationId: convexOrgId,
-        limit: 50,
+        paginationOpts: {
+          numItems: 8,
+          cursor: null,
+        },
       });
+      // Handle paginated result
+      initialChats = result?.page || [];
     }
   }
 

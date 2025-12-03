@@ -74,7 +74,7 @@ export default function DashboardLayoutClient({
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            <Link href={`/${locale}`}>
+            <Link href={`/`}>
               <Logo open={open} />
             </Link>
             <div className="mt-8 flex flex-col gap-2">

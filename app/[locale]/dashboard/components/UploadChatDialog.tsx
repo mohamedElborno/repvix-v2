@@ -68,7 +68,12 @@ export default function UploadChatDialog({
 
       if (!response.ok) {
         // The backend must return { error: "..."} in case of failure
-        throw new Error(data.error || data.details || "Failed to import chat");
+        throw new Error(
+          data.error ||
+            data.details ||
+            t("failedToImportChat") ||
+            "Failed to import chat"
+        );
       }
 
       // Optional: if the backend calculates WhatsApp statistics
@@ -89,7 +94,11 @@ export default function UploadChatDialog({
       router.push(`/dashboard/chats/${data.chatId}`);
     } catch (err) {
       console.error("Error uploading chat:", err);
-      setError(err instanceof Error ? err.message : "Failed to upload chat");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("failedToUploadChat") || "Failed to upload chat"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +144,7 @@ export default function UploadChatDialog({
     if (textFile) {
       processFile(textFile);
     } else {
-      setError("Please drop a .txt file");
+      setError(t("pleaseDropTxtFile") || "Please drop a .txt file");
     }
   };
 
@@ -144,29 +153,32 @@ export default function UploadChatDialog({
       const text = await navigator.clipboard.readText();
       setRawText(text);
       if (!title) {
-        setTitle("Pasted Chat");
+        setTitle(t("pastedChat") || "Pasted Chat");
       }
     } catch (_error) {
-      setError("Failed to read from clipboard. Please paste manually (Ctrl+V)");
+      setError(
+        t("failedToReadClipboard") ||
+          "Failed to read from clipboard. Please paste manually (Ctrl+V)"
+      );
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-white/10 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <div className="bg-card border border-border rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className="text-2xl font-bold text-white/90">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-2xl font-bold text-foreground">
             {t("uploadNewChat")}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
             disabled={isLoading}
           >
-            <X className="w-5 h-5 text-white/60" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
@@ -176,62 +188,77 @@ export default function UploadChatDialog({
             {/* WhatsApp Instructions */}
             <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <h4 className="text-blue-400 font-medium mb-2">
-                📱 How to Export WhatsApp Chats
+                📱 {t("howToExportWhatsApp") || "How to Export WhatsApp Chats"}
               </h4>
               <div className="text-xs text-blue-400/70 space-y-2">
                 <div className="bg-blue-500/5 p-2 rounded border border-blue-500/10">
                   <p className="font-medium text-blue-300 mb-1">
-                    🚀 Quick Method (Recommended):
+                    🚀 {t("quickMethod") || "Quick Method (Recommended):"}
                   </p>
-                  <p>1. Export chat from WhatsApp</p>
-                  <p>2. Open the .txt file</p>
-                  <p>3. Copy all content (Ctrl+A, Ctrl+C)</p>
-                  <p>4. Paste here in the text area below</p>
+                  <p>1. {t("exportStep1") || "Export chat from WhatsApp"}</p>
+                  <p>2. {t("exportStep2") || "Open the .txt file"}</p>
+                  <p>
+                    3. {t("exportStep3") || "Copy all content (Ctrl+A, Ctrl+C)"}
+                  </p>
+                  <p>
+                    4. {t("exportStep4") || "Paste here in the text area below"}
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                   <div>
                     <p>
-                      <strong>From Phone:</strong>
+                      <strong>{t("fromPhone") || "From Phone:"}</strong>
                     </p>
                     <p>
-                      Open chat → Tap name → Export chat → Choose &quot;Without
-                      media&quot;
+                      {t("fromPhoneSteps") ||
+                        'Open chat → Tap name → Export chat → Choose "Without media"'}
                     </p>
                   </div>
                   <div>
                     <p>
-                      <strong>From WhatsApp Web:</strong>
+                      <strong>
+                        {t("fromWhatsAppWeb") || "From WhatsApp Web:"}
+                      </strong>
                     </p>
-                    <p>Open chat → Click ⋮ → Export chat → Download</p>
+                    <p>
+                      {t("fromWhatsAppWebSteps") ||
+                        "Open chat → Click ⋮ → Export chat → Download"}
+                    </p>
                   </div>
                 </div>
                 <p className="text-blue-300 font-medium">
-                  💡 Tip: You can also drag & drop the .txt file directly here!
+                  💡{" "}
+                  {t("dragDropTip") ||
+                    "Tip: You can also drag & drop the .txt file directly here!"}
                 </p>
               </div>
             </div>
             {/* Title Input */}
             <div>
-              <Label htmlFor="title" className="text-white/80 mb-2">
+              <Label htmlFor="title" className="text-foreground mb-2">
                 {t("chatTitle")}
               </Label>
               {/* Customer Name Input */}
-              <div>
-                <Label htmlFor="customerName" className="text-white/80 mb-2">
-                  اسم العميل في واتساب (اختياري لكن يُفضَّل)
+              <div className="mb-4">
+                <Label htmlFor="customerName" className="text-foreground mb-2">
+                  {t("customerNameLabel") ||
+                    "Customer Name in WhatsApp (Optional but Recommended)"}
                 </Label>
                 <Input
                   id="customerName"
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="مثال: [phone number] أو اسم العميل كما يظهر في واتساب"
-                  className="bg-white/5 border-white/10 text-white placeholder-white/40"
+                  placeholder={
+                    t("customerNamePlaceholder") ||
+                    "Example: [phone number] or customer name as it appears in WhatsApp"
+                  }
+                  className="bg-background border-border text-foreground placeholder-muted-foreground"
                   disabled={isLoading}
                 />
-                <p className="text-xs text-white/40 mt-1">
-                  سنحاول تقريب الاسم الذي أدخلته مع الأسماء الموجودة في المحادثة
-                  حتى لو كان فيه أخطاء بسيطة أو اختلاف بسيط في الكتابة.
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("customerNameHint") ||
+                    "We will try to match the name you entered with the names in the conversation, even if there are minor errors or slight differences in spelling."}
                 </p>
               </div>
 
@@ -241,14 +268,14 @@ export default function UploadChatDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t("chatTitlePlaceholder")}
-                className="bg-white/5 border-white/10 text-white placeholder-white/40"
+                className="bg-background border-border text-foreground placeholder-muted-foreground"
                 disabled={isLoading}
               />
             </div>
 
             {/* File Upload */}
             <div>
-              <Label className="text-white/80 mb-2">
+              <Label className="text-foreground mb-2">
                 {t("uploadFile")} {t("optional")}
               </Label>
               <div className="relative">
@@ -262,13 +289,15 @@ export default function UploadChatDialog({
                 />
                 <label
                   htmlFor="file-upload"
-                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-white/10 rounded-lg hover:border-purple-500/50 cursor-pointer transition-colors"
+                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg hover:border-purple-500/50 cursor-pointer transition-colors"
                 >
-                  <Upload className="w-5 h-5 text-white/60" />
-                  <span className="text-white/60">{t("selectFile")}</span>
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {t("selectFile")}
+                  </span>
                 </label>
               </div>
-              <p className="text-xs text-white/40 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 {t("supportedFormats")} - WhatsApp exports (.txt)
               </p>
             </div>
@@ -276,7 +305,7 @@ export default function UploadChatDialog({
             {/* Text Area with Drag & Drop */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="rawText" className="text-white/80">
+                <Label htmlFor="rawText" className="text-foreground">
                   {t("chatContent")}
                 </Label>
                 <Button
@@ -284,16 +313,16 @@ export default function UploadChatDialog({
                   onClick={handlePasteFromClipboard}
                   variant="outline"
                   size="sm"
-                  className="bg-white/5 border-white/10 hover:bg-white/10 text-white text-xs"
+                  className="bg-muted border-border hover:bg-muted/80 text-foreground text-xs"
                 >
-                  📋 Paste from Clipboard
+                  📋 {t("pasteFromClipboard") || "Paste from Clipboard"}
                 </Button>
               </div>
               <div
                 className={`relative border-2 border-dashed rounded-lg transition-colors ${
                   isDragOver
                     ? "border-purple-500 bg-purple-500/10"
-                    : "border-white/10"
+                    : "border-border"
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -305,7 +334,7 @@ export default function UploadChatDialog({
                   onChange={(e) => setRawText(e.target.value)}
                   placeholder={t("chatContentPlaceholder")}
                   rows={12}
-                  className="w-full p-3 bg-white/5 border-0 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                  className="w-full p-3 bg-background border-0 rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                   disabled={isLoading}
                 />
                 {isDragOver && (
@@ -313,7 +342,8 @@ export default function UploadChatDialog({
                     <div className="text-center">
                       <Upload className="w-8 h-8 text-purple-400 mx-auto mb-2" />
                       <p className="text-purple-400 font-medium">
-                        Drop your WhatsApp .txt file here
+                        {t("dropFileHere") ||
+                          "Drop your WhatsApp .txt file here"}
                       </p>
                     </div>
                   </div>
@@ -327,37 +357,46 @@ export default function UploadChatDialog({
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-green-400 font-medium">
-                    WhatsApp Chat Detected
+                    {t("whatsAppChatDetected") || "WhatsApp Chat Detected"}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-green-400/70">Total Messages:</span>
+                    <span className="text-green-400/70">
+                      {t("totalMessages") || "Total Messages:"}
+                    </span>
                     <span className="text-green-400 ml-2 font-medium">
                       {whatsAppStats.totalMessages}
                     </span>
                   </div>
                   <div>
-                    <span className="text-green-400/70">Participants:</span>
+                    <span className="text-green-400/70">
+                      {t("participants") || "Participants:"}
+                    </span>
                     <span className="text-green-400 ml-2 font-medium">
                       {whatsAppStats.totalParticipants}
                     </span>
                   </div>
                   <div>
-                    <span className="text-green-400/70">Regular Messages:</span>
+                    <span className="text-green-400/70">
+                      {t("regularMessages") || "Regular Messages:"}
+                    </span>
                     <span className="text-green-400 ml-2 font-medium">
                       {whatsAppStats.regularMessages}
                     </span>
                   </div>
                   <div>
-                    <span className="text-green-400/70">System Messages:</span>
+                    <span className="text-green-400/70">
+                      {t("systemMessages") || "System Messages:"}
+                    </span>
                     <span className="text-green-400 ml-2 font-medium">
                       {whatsAppStats.systemMessages}
                     </span>
                   </div>
                 </div>
                 <div className="mt-3 text-xs text-green-400/70">
-                  Date Range: {whatsAppStats.dateRange.start} -{" "}
+                  {t("dateRange") || "Date Range"}:{" "}
+                  {whatsAppStats.dateRange.start} -{" "}
                   {whatsAppStats.dateRange.end}
                 </div>
               </div>
@@ -373,12 +412,12 @@ export default function UploadChatDialog({
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
           <Button
             type="button"
             onClick={onClose}
             variant="outline"
-            className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+            className="bg-muted border-border hover:bg-muted/80 text-foreground"
             disabled={isLoading}
           >
             {t("cancel")}

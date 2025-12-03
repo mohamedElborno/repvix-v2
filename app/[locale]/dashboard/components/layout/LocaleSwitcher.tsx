@@ -21,6 +21,7 @@ export default function LocaleSwitcher() {
     { code: "tr", name: t("turkish") },
     { code: "es", name: t("spanish") },
     { code: "hi", name: t("hindi") },
+    { code: "ja", name: t("japanese") },
   ];
 
   const switchLocale = (newLocale: string) => {

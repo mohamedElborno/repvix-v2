@@ -20,10 +20,12 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useLocale } from "next-intl";
 
 export function SiteHeader() {
   const t = useTranslations("header");
   const pathname = usePathname();
+  const locale = useLocale();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
 
@@ -40,17 +42,17 @@ export function SiteHeader() {
 
   const protectedLinks = [
     {
-      href: "/dashboard",
+      href: `/${locale}/dashboard`,
       label: t("dashboard") || "Dashboard",
       icon: LayoutDashboard,
     },
     {
-      href: "/protected/analytics",
+      href: `/${locale}/dashboard/analytics`,
       label: t("analytics") || "Analytics",
       icon: BarChart3,
     },
     {
-      href: "/protected/settings",
+      href: `/${locale}/dashboard/settings`,
       label: t("settings") || "Settings",
       icon: Settings,
     },
@@ -101,19 +103,19 @@ export function SiteHeader() {
         {/* Buttons - Right side */}
         <div className="flex items-center gap-2 pointer-events-auto p-1 xl:p-2">
           {user ? (
-            <Link href="/dashboard">
+            <Link href={`/${locale}/dashboard`}>
               <Button className="hidden xl:block rounded-full hover:scale-[1.04] transition-all duration-300 cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                 {t("dashboard")}
               </Button>
             </Link>
           ) : (
             <>
-              <Link href="/sign-up">
+              <Link href={`/${locale}/sign-up`}>
                 <Button className="hidden xl:block rounded-full hover:scale-[1.04] transition-all duration-300 cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                   {t("signUp")}
                 </Button>
               </Link>
-              <Link href="/sign-in">
+              <Link href={`/${locale}/sign-in`}>
                 <Button className="hidden xl:block rounded-full bg-purple-600 hover:bg-purple-600/80 hover:scale-[1.04] transition-all duration-300 cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                   {t("signIn")}
                 </Button>
@@ -186,15 +188,15 @@ export function SiteHeader() {
 
             {user ? (
               <Button className="rounded-full w-full cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
-                <Link href="/dashboard">{t("dashboard")}</Link>
+                <Link href={`/${locale}/dashboard`}>{t("dashboard")}</Link>
               </Button>
             ) : (
               <div className="flex flex-col w-full items-center gap-2">
                 <Button className="rounded-full cursor-pointer w-full text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
-                  <Link href="/sign-up">{t("signUp")}</Link>
+                  <Link href={`/${locale}/sign-up`}>{t("signUp")}</Link>
                 </Button>
                 <Button className="rounded-full bg-purple-600 cursor-pointer w-full text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
-                  <Link href="/sign-in">{t("signIn")}</Link>
+                  <Link href={`/${locale}/sign-in`}>{t("signIn")}</Link>
                 </Button>
               </div>
             )}

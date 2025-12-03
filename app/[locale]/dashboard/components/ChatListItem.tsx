@@ -5,9 +5,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Trash2, Eye, Calendar } from "lucide-react";
+import { MessageSquare, Trash2, Eye, Calendar, User, Bot } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import clsx from "clsx";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -103,6 +105,11 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Fetch first 2 messages for preview
+  const previewMessages = useQuery(api.chats.getFirstTwoMessages, {
+    chatId: chat._id,
+  });
+
   const statusLabel = getStatusLabel(chat.status, t);
   const sourceLabel = getSourceLabel(
     chat.sourceType,
@@ -134,27 +141,27 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
     <>
       <Card
         className={clsx(
-          "relative overflow-hidden p-5 border backdrop-blur-md rounded-2xl bg-gradient-to-br transition-all duration-500 ease-out group cursor-pointer",
-          // ألوان بسيطة مرتبطة بالحالة
+          "relative overflow-hidden p-4 border backdrop-blur-xl rounded-2xl bg-card/80 transition-all duration-500 ease-out group cursor-pointer",
+          // ألوان رسمية مرتبطة بالحالة مع دعم الثيمات
           chat.status === "open"
-            ? "from-emerald-500/10 to-teal-500/5 border-emerald-400/10 hover:bg-emerald-500/10 group-hover:shadow-emerald-500/20"
-            : "from-slate-600/10 to-slate-900/5 border-slate-500/10 hover:bg-slate-600/10 group-hover:shadow-slate-500/20",
-          "hover:scale-[1.015] hover:border-white/10",
-          "before:absolute before:inset-0 before:opacity-0 hover:before:opacity-10 before:transition-opacity before:duration-500 before:bg-gradient-to-br before:from-white/10 before:to-transparent"
+            ? "border-primary/20 hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10"
+            : "border-border/50 hover:border-border group-hover:shadow-lg",
+          "hover:scale-[1.02] hover:bg-card/90",
+          "before:absolute before:inset-0 before:opacity-0 hover:before:opacity-5 before:transition-opacity before:duration-500 before:bg-gradient-to-br before:from-primary/10 before:to-transparent"
         )}
         onClick={handleView}
       >
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-700" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-        <div className="flex items-start gap-3 relative z-10">
-          <div className="p-2.5 bg-white/10 rounded-xl shrink-0 backdrop-blur-sm">
-            <MessageSquare className="w-4 h-4 text-white/80" />
+        <div className="flex items-start gap-2.5 relative z-10">
+          <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg shrink-0 backdrop-blur-sm border border-primary/20">
+            <MessageSquare className="w-3.5 h-3.5 text-primary dark:text-primary-foreground" />
           </div>
 
           <div className="flex-1 min-w-0">
             {/* العنوان */}
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-semibold text-white/90 truncate">
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="text-sm font-semibold text-foreground truncate">
                 {chat.title ||
                   t("chats.untitledChat", { default: "Untitled chat" })}
               </h3>
@@ -162,10 +169,10 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
               {/* شارة الحالة Open / Closed */}
               <span
                 className={clsx(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border",
+                  "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium border shrink-0",
                   chat.status === "open"
-                    ? "bg-emerald-500/10 border-emerald-400/30 text-emerald-200"
-                    : "bg-slate-700/40 border-slate-400/30 text-slate-200"
+                    ? "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+                    : "bg-muted border-border text-muted-foreground"
                 )}
               >
                 {statusLabel}
@@ -173,19 +180,19 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
             </div>
 
             {/* التاريخ + المصدر */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/60 mb-2">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-muted-foreground mb-2">
               <span className="inline-flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
+                <Calendar className="w-2.5 h-2.5" />
                 {createdLabel}
               </span>
 
-              <span className="w-1 h-1 rounded-full bg-white/30" />
+              <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
 
               <span className="truncate">{sourceLabel}</span>
 
               {chat.language && (
                 <>
-                  <span className="w-1 h-1 rounded-full bg-white/30" />
+                  <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
                   <span className="uppercase tracking-wide">
                     {chat.language}
                   </span>
@@ -194,7 +201,7 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
 
               {msgCount > 0 && (
                 <>
-                  <span className="w-1 h-1 rounded-full bg-white/30" />
+                  <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
                   <span>
                     {t("chats.messageCount", {
                       count: msgCount,
@@ -205,24 +212,79 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
 
               {chat.customerIdentifier && (
                 <>
-                  <span className="w-1 h-1 rounded-full bg-white/30" />
-                  <span className="truncate max-w-[140px]">
+                  <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                  <span className="truncate max-w-[120px]">
                     {chat.customerIdentifier}
                   </span>
                 </>
               )}
             </div>
 
-            {/* لا يوجد preview حالياً؛ لاحقاً ممكن نضيفه من التحليل أو من أول رسالة */}
-            <p className="text-sm text-white/80 leading-5 line-clamp-2">
-              {t("chats.noPreviewShort", {
-                default: "No preview yet. Analysis will appear here later.",
-              })}
-            </p>
+            {/* عرض أول رسالتين مع fade effect */}
+            {previewMessages && previewMessages.length > 0 ? (
+              <div className="relative">
+                <div className="space-y-1.5 mb-2 max-h-[100px] overflow-hidden">
+                  {previewMessages.slice(0, 2).map((message) => (
+                    <div
+                      key={
+                        message._id ||
+                        message.externalMessageId ||
+                        message.internalTimestamp
+                      }
+                      className={clsx(
+                        "relative p-2 rounded-lg backdrop-blur-md border transition-all duration-300",
+                        message.senderType === "customer"
+                          ? "bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/30 ml-0"
+                          : "bg-muted/50 border-border/50 mr-0"
+                      )}
+                    >
+                      <div className="flex items-start gap-1.5">
+                        <div
+                          className={clsx(
+                            "p-1 rounded-md shrink-0",
+                            message.senderType === "customer"
+                              ? "bg-primary/20 dark:bg-primary/30"
+                              : "bg-muted"
+                          )}
+                        >
+                          {message.senderType === "customer" ? (
+                            <User className="w-2.5 h-2.5 text-primary dark:text-primary-foreground" />
+                          ) : (
+                            <Bot className="w-2.5 h-2.5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
+                              {message.senderType === "customer"
+                                ? message.senderName ||
+                                  t("chats.customer", { default: "Customer" })
+                                : message.senderName ||
+                                  t("chats.agent", { default: "Agent" })}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-foreground/90 leading-snug line-clamp-1">
+                            {message.textClean || message.textRaw}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Gradient fade overlay */}
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground leading-4 line-clamp-1 italic mb-2">
+                {t("chats.noPreviewShort", {
+                  default: "No preview available yet.",
+                })}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-end gap-2 relative z-10">
+        <div className="mt-2.5 flex items-center justify-end gap-2 relative z-10">
           <Button
             onClick={(e) => {
               e.stopPropagation();
@@ -230,9 +292,9 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
             }}
             variant="outline"
             size="sm"
-            className="bg-white/10 border-white/10 hover:bg-white/20 text-white transition-all"
+            className="h-7 px-2.5 text-xs bg-muted/50 border-border hover:bg-muted text-foreground transition-all"
           >
-            <Eye className="w-4 h-4 mr-2" />
+            <Eye className="w-3 h-3 mr-1.5" />
             {t("view")}
           </Button>
 
@@ -244,9 +306,9 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
             disabled={isDeleting}
             variant="outline"
             size="sm"
-            className="bg-red-500/15 border-red-500/30 hover:bg-red-500/25 text-red-400 transition-all"
+            className="h-7 w-7 p-0 bg-destructive/10 border-destructive/30 hover:bg-destructive/20 text-destructive transition-all"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3 h-3" />
           </Button>
         </div>
       </Card>
@@ -257,21 +319,21 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
           className="fixed inset-0 z-[200] flex items-center justify-center p-4"
           onClick={() => setConfirmOpen(false)}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-background/80 dark:bg-black/60 backdrop-blur-sm" />
 
           <div
-            className="relative z-[201] w-full max-w-sm rounded-xl border border-white/10 bg-neutral-900/90 p-5 text-white shadow-2xl"
+            className="relative z-[201] w-full max-w-sm rounded-xl border border-border bg-card/95 backdrop-blur-xl p-5 text-foreground shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-md bg-red-500/15">
-                <Trash2 className="w-4 h-4 text-red-400" />
+              <div className="p-2.5 rounded-md bg-destructive/10">
+                <Trash2 className="w-4 h-4 text-destructive" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold mb-1">
                   {t("confirmDelete")}
                 </h3>
-                <p className="text-xs text-white/70">
+                <p className="text-xs text-muted-foreground">
                   {t("thisActionCannotBeUndone") ||
                     "This action cannot be undone."}
                 </p>
@@ -282,7 +344,7 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-white/10 border-white/10 hover:bg-white/20 text-white"
+                className="bg-muted/50 border-border hover:bg-muted text-foreground"
                 onClick={() => setConfirmOpen(false)}
                 disabled={isDeleting}
               >
@@ -292,7 +354,7 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-red-500/20 border-red-500/30 hover:bg-red-500/30 text-red-200"
+                className="bg-destructive/10 border-destructive/30 hover:bg-destructive/20 text-destructive"
                 disabled={isDeleting}
                 onClick={async () => {
                   if (isDeleting) return;

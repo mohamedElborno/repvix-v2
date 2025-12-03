@@ -4,7 +4,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { almarai } from "@/lib/fonts";
+import { almarai, eczar } from "@/lib/fonts";
 import { Toaster } from "sonner";
 import "../globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -148,7 +148,11 @@ export default async function RootLayout({
         </head>
         <body
           className={`${
-            locale === "ar" ? almarai.className : "font-sans"
+            locale === "ar"
+              ? almarai.className
+              : locale === "hi"
+                ? eczar.className
+                : "font-sans"
           } antialiased bg-background text-foreground`}
         >
           <ThemeProvider

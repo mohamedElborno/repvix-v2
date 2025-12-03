@@ -200,7 +200,8 @@ export const analyzeSingleChat = action({
         v.literal("tr"),
         v.literal("fr"),
         v.literal("es"),
-        v.literal("hi")
+        v.literal("hi"),
+        v.literal("ja")
       )
     ),
   },
@@ -395,6 +396,8 @@ export const analyzeSingleChat = action({
         tokenInputCount,
         tokenOutputCount,
         chatStartedAt: chat.startedAt, // إضافة chat.startedAt لتعيين chatStartAtMs و chatStartHour
+        primaryAgentMemberId:
+          chat.primaryAgentMemberId ?? chat.createdByMemberId, // استخدام primaryAgentMemberId أو createdByMemberId كبديل
       }
     );
 

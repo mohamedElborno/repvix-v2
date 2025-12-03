@@ -1,6 +1,13 @@
 // src/lib/chat/aiTypes.ts
 
-export type AiSupportedLanguage = "ar" | "en" | "tr" | "fr" | "es" | "hi";
+export type AiSupportedLanguage =
+  | "ar"
+  | "en"
+  | "tr"
+  | "fr"
+  | "es"
+  | "hi"
+  | "ja";
 
 export interface AiInputMessage {
   id: string | null; // chatMessages._id لو متوفر، وإلا null

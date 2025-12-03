@@ -6,6 +6,7 @@ import { CHAT_ANALYSIS_PROMPT_TR } from "./prompts/chat_analysis_prompt_tr";
 import { CHAT_ANALYSIS_PROMPT_FR } from "./prompts/chat_analysis_prompt_fr";
 import { CHAT_ANALYSIS_PROMPT_ES } from "./prompts/chat_analysis_prompt_es";
 import { CHAT_ANALYSIS_PROMPT_HI } from "./prompts/chat_analysis_prompt_hi";
+import { CHAT_ANALYSIS_PROMPT_JA } from "./prompts/chat_analysis_prompt_ja";
 
 export function getChatAnalysisSystemPrompt(
   analysisLanguage: AiSupportedLanguage
@@ -23,6 +24,8 @@ export function getChatAnalysisSystemPrompt(
       return CHAT_ANALYSIS_PROMPT_ES;
     case "hi":
       return CHAT_ANALYSIS_PROMPT_HI;
+    case "ja":
+      return CHAT_ANALYSIS_PROMPT_JA;
     default:
       return CHAT_ANALYSIS_PROMPT_EN;
   }

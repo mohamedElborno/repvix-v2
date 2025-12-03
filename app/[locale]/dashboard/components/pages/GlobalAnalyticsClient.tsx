@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useOrganization } from "@clerk/nextjs";
 import { useQuery, useAction } from "convex/react";
@@ -13,24 +13,17 @@ import {
   BarChart3,
   RefreshCw,
   Sparkles,
-  Brain,
   Target,
   Heart,
   CheckCircle2,
   Lightbulb,
   MessageSquare,
   Activity,
-  Clock,
-  AlertTriangle,
   Users,
   Calendar,
   AlertCircle,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp,
   Shield,
   Zap,
-  TrendingDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,14 +31,17 @@ import {
   Bar,
   Cell,
   XAxis,
-  YAxis,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Legend,
+  LineChart,
+  Line,
+  LabelList,
 } from "recharts";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 // Type based on schema.ts
 type GlobalAnalysis = {
@@ -197,6 +193,7 @@ export default function GlobalAnalyticsClient() {
     { code: "tr", name: "Türkçe" },
     { code: "es", name: "Español" },
     { code: "hi", name: "हिन्दी" },
+    { code: "ja", name: "日本語" },
   ];
 
   const handleGenerate = async (forceRegenerate = false) => {
@@ -219,7 +216,14 @@ export default function GlobalAnalyticsClient() {
       );
       await runFull({
         organizationId: convexOrgId,
-        language: selectedLanguage as "ar" | "en" | "tr" | "fr" | "es" | "hi",
+        language: selectedLanguage as
+          | "ar"
+          | "en"
+          | "tr"
+          | "fr"
+          | "es"
+          | "hi"
+          | "ja",
       });
       toast.success(
         t("analysisGenerated") || "Analysis generated successfully!",
@@ -237,29 +241,78 @@ export default function GlobalAnalyticsClient() {
     }
   };
 
-  // Prepare peak hours data for chart
-  const peakHoursData = analysis?.peakHours
-    ? analysis.peakHours
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 8)
-        .map((item) => ({
-          name: `${item.hour}:00`,
-          value: item.count,
-          fill: "#8b5cf6",
-        }))
-    : [];
+  // Prepare peak hours data for chart - show all 24 hours
+  const peakHoursData = useMemo(() => {
+    const hoursData: Array<{ name: string; count: number }> = [];
 
-  // Prepare agent leaderboard data
-  const agentLeaderboardData = analysis?.agentLeaderboard
-    ? analysis.agentLeaderboard
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5)
-        .map((agent, index) => ({
-          name: agent.agentId || `Agent ${index + 1}`,
-          value: agent.score,
+    // Initialize all 24 hours with count 0
+    for (let hour = 0; hour < 24; hour++) {
+      const peakHour = analysis?.peakHours?.find((ph) => ph.hour === hour);
+      hoursData.push({
+        name: `${hour}:00`,
+        count: peakHour?.count || 0,
+      });
+    }
+
+    return hoursData;
+  }, [analysis?.peakHours]);
+
+  // Chart config for peak hours
+  const peakHoursChartConfig = useMemo(() => {
+    return {
+      count: {
+        label: t("count") || "Count",
+        color: "hsl(142, 71%, 45%)",
+      },
+    } satisfies ChartConfig;
+  }, [t]);
+
+  // Get organization members to map agent IDs to names
+  const organizationMembers = useQuery(
+    api.orgs.getOrganizationMembers,
+    organization?.id ? { clerkOrgId: organization.id } : "skip"
+  );
+
+  // Create a map of member ID to name
+  const memberIdToName = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (organizationMembers) {
+      organizationMembers.forEach((member) => {
+        map[member._id] = member.name || "Unknown";
+      });
+    }
+    return map;
+  }, [organizationMembers]);
+
+  // Prepare agent leaderboard data for BarChart
+  const agentLeaderboardData = useMemo(() => {
+    if (!analysis?.agentLeaderboard || !organizationMembers) return [];
+
+    return analysis.agentLeaderboard
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((agent, index) => {
+        const agentName =
+          agent.agentId && agent.agentId !== "unknown"
+            ? memberIdToName[agent.agentId] || `Agent ${index + 1}`
+            : `Agent ${index + 1}`;
+        return {
+          name: agentName,
+          score: agent.score,
           fill: CHART_COLORS[index % CHART_COLORS.length],
-        }))
-    : [];
+        };
+      });
+  }, [analysis?.agentLeaderboard, memberIdToName, organizationMembers]);
+
+  // Chart config for agent leaderboard
+  const agentChartConfig = useMemo(() => {
+    return {
+      score: {
+        label: t("score") || "Score",
+        color: "hsl(270, 70%, 60%)",
+      },
+    } satisfies ChartConfig;
+  }, [t]);
   return (
     <div className="min-h-[calc(100vh-110px)]">
       {/* Header */}
@@ -438,168 +491,156 @@ export default function GlobalAnalyticsClient() {
               </div>
             </div>
 
-            {/* Outcomes Chart & Metrics Chart */}
-            {((peakHoursData && peakHoursData.length > 0) ||
-              (agentLeaderboardData && agentLeaderboardData.length > 0)) && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                {/* Peak Hours Chart */}
-                {peakHoursData && peakHoursData.length > 0 ? (
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 via-emerald-500/10 to-green-600/20 dark:from-green-600/30 dark:via-emerald-500/20 dark:to-green-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
-                    <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
-                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 flex items-center justify-center shadow-lg shadow-green-500/30 shrink-0">
-                          <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-blue-600 to-cyan-600 dark:from-white dark:via-blue-200 dark:to-cyan-200 bg-clip-text text-transparent">
-                          {t("peakHours") || "Peak Hours"}
-                        </h2>
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              {/* Peak Hours Chart */}
+              {peakHoursData && peakHoursData.length > 0 && (
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 via-emerald-500/10 to-green-600/20 dark:from-green-600/30 dark:via-emerald-500/20 dark:to-green-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                  <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 flex items-center justify-center shadow-lg shadow-green-500/30 shrink-0">
+                        <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={peakHoursData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#ffffff10"
-                          />
-                          <XAxis
-                            dataKey="name"
-                            stroke="hsl(var(--muted-foreground))"
-                            tick={{
-                              fill: "hsl(var(--muted-foreground))",
-                              fontSize: 12,
-                            }}
-                          />
-                          <YAxis
-                            stroke="hsl(var(--muted-foreground))"
-                            tick={{
-                              fill: "hsl(var(--muted-foreground))",
-                              fontSize: 12,
-                            }}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "hsl(var(--card))",
-                              border: "1px solid hsl(var(--border))",
-                              borderRadius: "8px",
-                              color: "hsl(var(--foreground))",
-                            }}
-                          />
-                          <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                            {peakHoursData.map((_entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={CHART_COLORS[index % CHART_COLORS.length]}
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
+                      <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-blue-600 to-cyan-600 dark:from-white dark:via-blue-200 dark:to-cyan-200 bg-clip-text text-transparent">
+                        {t("peakHours") || "Peak Hours"}
+                      </h2>
                     </div>
+                    <ChartContainer
+                      config={peakHoursChartConfig}
+                      className="h-[250px] w-full py-4"
+                    >
+                      <LineChart
+                        accessibilityLayer
+                        data={peakHoursData}
+                        margin={{
+                          top: 20,
+                          left: 12,
+                          right: 12,
+                        }}
+                      >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                        />
+                        <ChartTooltip
+                          cursor={false}
+                          content={<ChartTooltipContent indicator="line" />}
+                        />
+                        <Line
+                          dataKey="count"
+                          type="natural"
+                          stroke="var(--color-count)"
+                          strokeWidth={2}
+                          dot={{
+                            fill: "var(--color-count)",
+                          }}
+                          activeDot={{
+                            r: 6,
+                          }}
+                        >
+                          <LabelList
+                            position="top"
+                            offset={12}
+                            className="fill-foreground"
+                            fontSize={12}
+                          />
+                        </Line>
+                      </LineChart>
+                    </ChartContainer>
                   </div>
-                ) : (
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 via-emerald-500/10 to-green-600/20 dark:from-green-600/30 dark:via-emerald-500/20 dark:to-green-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
-                    <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
-                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 flex items-center justify-center shadow-lg shadow-green-500/30 shrink-0">
-                          <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-blue-600 to-cyan-600 dark:from-white dark:via-blue-200 dark:to-cyan-200 bg-clip-text text-transparent">
-                          {t("peakHours") || "Peak Hours"}
-                        </h2>
-                      </div>
-                      <div className="bg-muted/50 rounded-xl p-6 border border-border text-center">
-                        <p className="text-muted-foreground text-sm">
-                          {t("noPeakHoursData") ||
-                            "No peak hours data available yet. More conversations are needed to generate statistics."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
+              )}
 
-                {/* Agent Leaderboard Chart */}
-                {agentLeaderboardData.length > 0 ? (
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-500/10 to-purple-600/20 dark:from-purple-600/30 dark:via-pink-500/20 dark:to-purple-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
-                    <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
-                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
-                          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-pink-600 dark:from-white dark:via-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
-                          {t("agentLeaderboard") || "Agent Leaderboard"}
-                        </h2>
+              {/* Agent Leaderboard Chart - LineChart */}
+              {agentLeaderboardData && agentLeaderboardData.length > 0 ? (
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-500/10 to-purple-600/20 dark:from-purple-600/30 dark:via-pink-500/20 dark:to-purple-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                  <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={agentLeaderboardData} layout="vertical">
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="hsl(var(--border))"
-                          />
-                          <XAxis
-                            type="number"
-                            domain={[0, 100]}
-                            stroke="hsl(var(--muted-foreground))"
-                            tick={{
-                              fill: "hsl(var(--muted-foreground))",
-                              fontSize: 12,
-                            }}
-                          />
-                          <YAxis
-                            type="category"
-                            dataKey="name"
-                            stroke="hsl(var(--muted-foreground))"
-                            tick={{
-                              fill: "hsl(var(--muted-foreground))",
-                              fontSize: 12,
-                            }}
-                            width={100}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "hsl(var(--card))",
-                              border: "1px solid hsl(var(--border))",
-                              borderRadius: "8px",
-                              color: "hsl(var(--foreground))",
-                            }}
+                      <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-pink-600 dark:from-white dark:via-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
+                        {t("agentLeaderboard") || "Agent Leaderboard"}
+                      </h2>
+                    </div>
+                    <ChartContainer
+                      config={agentChartConfig}
+                      className="h-[250px] w-full"
+                    >
+                      <BarChart
+                        accessibilityLayer
+                        data={agentLeaderboardData}
+                        margin={{
+                          top: 20,
+                        }}
+                      >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          tickMargin={10}
+                          axisLine={false}
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                        />
+                        <ChartTooltip
+                          cursor={false}
+                          content={<ChartTooltipContent hideLabel />}
+                        />
+                        <Bar
+                          dataKey="score"
+                          fill="var(--color-score)"
+                          radius={8}
+                          maxBarSize={40}
+                        >
+                          {agentLeaderboardData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                          <LabelList
+                            position="top"
+                            offset={12}
+                            className="fill-foreground"
+                            fontSize={12}
                             formatter={(value: number) => `${value}%`}
                           />
-                          <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                            {agentLeaderboardData.map((_entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={CHART_COLORS[index % CHART_COLORS.length]}
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
+                        </Bar>
+                      </BarChart>
+                    </ChartContainer>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-500/10 to-purple-600/20 dark:from-purple-600/30 dark:via-pink-500/20 dark:to-purple-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                  <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-pink-600 dark:from-white dark:via-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
+                        {t("agentLeaderboard") || "Agent Leaderboard"}
+                      </h2>
+                    </div>
+                    <div className="bg-muted/50 rounded-xl p-6 border border-border text-center">
+                      <p className="text-muted-foreground text-sm">
+                        {t("noAgentData") ||
+                          "No agent performance data available yet. More conversations are needed to generate statistics."}
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-500/10 to-purple-600/20 dark:from-purple-600/30 dark:via-pink-500/20 dark:to-purple-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
-                    <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
-                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
-                          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-pink-600 dark:from-white dark:via-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
-                          {t("agentLeaderboard") || "Agent Leaderboard"}
-                        </h2>
-                      </div>
-                      <div className="bg-muted/50 rounded-xl p-6 border border-border text-center">
-                        <p className="text-muted-foreground text-sm">
-                          {t("noAgentData") ||
-                            "No agent performance data available yet. More conversations are needed to generate statistics."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
             {/* Common Topics */}
             {analysis.commonTopics && analysis.commonTopics.length > 0 && (
@@ -711,7 +752,10 @@ export default function GlobalAnalyticsClient() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="text-sm font-semibold text-foreground">
-                                  {agent.agentId || `Agent ${index + 1}`}
+                                  {agent.agentId && agent.agentId !== "unknown"
+                                    ? memberIdToName[agent.agentId] ||
+                                      `Agent ${index + 1}`
+                                    : `Agent ${index + 1}`}
                                 </h4>
                                 <span className="text-lg font-bold text-purple-500 dark:text-purple-400">
                                   {Math.round(agent.score)}%

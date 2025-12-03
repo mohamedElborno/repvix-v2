@@ -5,6 +5,7 @@ import {
   Reem_Kufi,
   Be_Vietnam_Pro,
   Inria_Serif,
+  Eczar,
 } from "next/font/google";
 
 export const geist = Inter({
@@ -39,5 +40,11 @@ export const beVietnamPro = Be_Vietnam_Pro({
 export const inriaSerif = Inria_Serif({
   subsets: ["latin"],
   weight: ["300", "400", "700"],
+  display: "swap",
+});
+
+export const eczar = Eczar({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });

@@ -277,11 +277,43 @@ function parseWhatsappTimestamp(dateTimeRaw: string): number | undefined {
   s = s.replace(/[\u200e\u200f]/g, "").trim();
 
   // 3) Convert AM/PM to AM/PM approximately
+  const isAM = /\bص\b|\bصباحًا?\b|\bصباحا?\b/gi.test(s);
+  const isPM = /\bم\b|\bمساءً?\b|\bمساءا?\b/gi.test(s);
   s = s
     .replace(/\bص\b|\bصباحًا?\b|\bصباحا?\b/gi, "AM")
     .replace(/\bم\b|\bمساءً?\b|\bمساءا?\b/gi, "PM");
 
-  // Now try to parse in several formats
+  // 4) Try to parse "dd/mm/yy hh:mm AM/PM" format manually
+  // Pattern: "19/04/47 04:52 AM" or "19/04/47, 04:52 AM"
+  const manualParseMatch = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*,?\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (manualParseMatch) {
+    const day = parseInt(manualParseMatch[1], 10);
+    const month = parseInt(manualParseMatch[2], 10) - 1; // JavaScript months are 0-indexed
+    let year = parseInt(manualParseMatch[3], 10);
+    let hour = parseInt(manualParseMatch[4], 10);
+    const minute = parseInt(manualParseMatch[5], 10);
+    const ampm = manualParseMatch[6]?.toUpperCase() || (isAM ? "AM" : isPM ? "PM" : "");
+
+    // Handle 2-digit years: if < 50, assume 20xx, else 19xx
+    if (year < 100) {
+      year = year < 50 ? 2000 + year : 1900 + year;
+    }
+
+    // Handle AM/PM
+    if (ampm === "PM" && hour < 12) {
+      hour += 12;
+    } else if (ampm === "AM" && hour === 12) {
+      hour = 0;
+    }
+
+    // Create date object
+    const date = new Date(year, month, day, hour, minute);
+    if (!Number.isNaN(date.getTime())) {
+      return date.getTime();
+    }
+  }
+
+  // 5) Fallback: try standard Date.parse() with various formats
   const candidates: string[] = [];
 
   candidates.push(s);

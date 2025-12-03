@@ -5,6 +5,7 @@ import { GLOBAL_ANALYSIS_PROMPT_TR } from "./global_analysis_prompt_tr";
 import { GLOBAL_ANALYSIS_PROMPT_FR } from "./global_analysis_prompt_fr";
 import { GLOBAL_ANALYSIS_PROMPT_ES } from "./global_analysis_prompt_es";
 import { GLOBAL_ANALYSIS_PROMPT_HI } from "./global_analysis_prompt_hi";
+import { GLOBAL_ANALYSIS_PROMPT_JA } from "./global_analysis_prompt_ja";
 
 export function getGlobalAnalysisSystemPrompt(
   language: AiSupportedLanguage
@@ -22,6 +23,8 @@ export function getGlobalAnalysisSystemPrompt(
       return GLOBAL_ANALYSIS_PROMPT_ES;
     case "hi":
       return GLOBAL_ANALYSIS_PROMPT_HI;
+    case "ja":
+      return GLOBAL_ANALYSIS_PROMPT_JA;
     default:
       return GLOBAL_ANALYSIS_PROMPT_EN;
   }

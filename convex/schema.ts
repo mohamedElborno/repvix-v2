@@ -140,6 +140,23 @@ export default defineSchema({
     .index("by_chat", ["chatId"])
     .index("by_chat_timestamp", ["chatId", "internalTimestamp"]),
 
+  // جدول جديد لحفظ الـ embeddings
+  messageEmbeddings: defineTable({
+    chatId: v.id("chats"),
+    messageId: v.id("chatMessages"),
+
+    // embedding عبارة عن array<number>
+    embedding: v.array(v.number()),
+
+    // محتوى النص نفسه – مفيد لتسهيل البحث نفسه
+    text: v.string(),
+
+    // لو أردت دعمه لاحقاً
+    metadata: v.optional(v.any()),
+  })
+    .index("by_chat", ["chatId"])
+    .index("by_msg", ["messageId"]),
+
   // =============================
   // Chat Chunks
   // =============================

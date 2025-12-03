@@ -9,5 +9,5 @@ export default async function ProfilePage() {
     redirect("/sign-in");
   }
 
-  return <ProfileClient userId={userId} />;
+  return <ProfileClient />;
 }

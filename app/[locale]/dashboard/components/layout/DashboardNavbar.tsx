@@ -39,7 +39,7 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
     // Always start with Dashboard
     items.push({
       label: tBreadcrumb("dashboard"),
-      href: "/dashboard",
+      href: `/${locale}/dashboard`,
       isActive: segments.length === 1 && segments[0] === "dashboard",
     });
 
@@ -72,7 +72,7 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
 
         items.push({
           label,
-          href: `/${segments[0]}/${currentPath.join("/")}`,
+          href: `/${locale}/${segments[0]}/${currentPath.join("/")}`,
           isActive: isLast,
         });
       });

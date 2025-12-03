@@ -33,8 +33,8 @@ You receive a single JSON object with this shape:
 
 {
   "version": "chat_analysis_v1",
-  "analysisLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi",
-  "conversationLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi",
+  "analysisLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi" | "ja",
+  "conversationLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi" | "ja",
 
   "chatMetadata": {
     "chatId": string,
@@ -47,8 +47,8 @@ You receive a single JSON object with this shape:
     "status": "open" | "closed",
     "title": string | null,
 
-    "conversationLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi",
-    "analysisLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi",
+    "conversationLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi" | "ja",
+    "analysisLanguage": "ar" | "en" | "tr" | "fr" | "es" | "hi" | "ja",
 
     "startedAt": number,   // timestamp (ms)
     "endedAt": number|null // timestamp (ms) or null

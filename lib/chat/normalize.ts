@@ -11,6 +11,7 @@ export type LanguageCode =
   | "fr" // French
   | "es" // Spanish
   | "hi" // Hindi
+  | "ja" // Japanese
   | "unknown";
 
 export type SenderType = "customer" | "agent";
@@ -184,8 +185,11 @@ function detectLanguage(
   // Turkish characters
   if (/[çğıöşüÇĞİÖŞÜ]/.test(trimmed)) return "tr";
 
+  // Japanese characters
+  if (/[\u3000-\u303F]/.test(trimmed)) return "ja";
+
   // No strong indicators → use the default language
-  if (["ar", "en", "tr", "fr", "es", "hi"].includes(defaultLanguage)) {
+  if (["ar", "en", "tr", "fr", "es", "hi", "ja"].includes(defaultLanguage)) {
     return defaultLanguage;
   }
 

@@ -18,7 +18,7 @@ export interface ChatDoc {
 }
 
 // Supported languages
-export type SupportedLanguage = "ar" | "en" | "tr" | "fr" | "es" | "hi";
+export type SupportedLanguage = "ar" | "en" | "tr" | "fr" | "es" | "hi" | "ja";
 
 // Channel type
 export type ChannelType = "live_chat" | "messaging" | "email_like";
@@ -99,6 +99,7 @@ export function chooseConversationLanguage(options: {
   if ((counts["ar"] ?? 0) > 0) return "ar";
   if ((counts["hi"] ?? 0) > 0) return "hi";
   if ((counts["tr"] ?? 0) >= 3) return "tr";
+  if ((counts["ja"] ?? 0) > 0) return "ja";
 
   // في باقي الحالات (en/fr/es) لا نعتمد كشف اللغة ونعود للـ analysisLanguage
   return analysisLanguage;
@@ -112,7 +113,15 @@ function normalizeToSupportedLanguage(
 ): SupportedLanguage | undefined {
   if (!lang) return undefined;
   const lower = lang.toLowerCase();
-  const supported: SupportedLanguage[] = ["ar", "en", "tr", "fr", "es", "hi"];
+  const supported: SupportedLanguage[] = [
+    "ar",
+    "en",
+    "tr",
+    "fr",
+    "es",
+    "hi",
+    "ja",
+  ];
   return supported.includes(lower as SupportedLanguage)
     ? (lower as SupportedLanguage)
     : undefined;
