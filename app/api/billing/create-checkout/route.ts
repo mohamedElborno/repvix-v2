@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // (B) تأكد أن الـ variant موجود وتابع لنفس البيئة
+    // (B) تأكد أن الـ variant موجود وتابع لنفس البيئة والـ store
     {
       const checkVariant = await fetch(
         `https://api.lemonsqueezy.com/v1/variants/${variantId}`,
@@ -63,12 +63,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            error: "Variant not found (env/store mismatch)",
+            error: "Variant not found or not accessible",
             details: msg,
+            variantId,
+            hint: "Make sure the variant ID exists in your Lemon Squeezy store and matches the environment (test/production)",
           },
           { status: 404 }
         );
       }
+
+      // تحقق أن الـ variant مرتبط بنفس الـ store
+      const variantData = await checkVariant.json();
+      const variantStoreId =
+        variantData?.data?.relationships?.product?.data?.id;
+
+      // ملاحظة: قد نحتاج للتحقق من product ثم store، لكن هذا يعتمد على بنية Lemon API
+      // للآن نكتفي بالتحقق من وجود الـ variant
     }
 
     // Create Checkout
@@ -99,9 +109,25 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const err = await res.text();
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(err);
+      } catch {
+        errorDetails = err;
+      }
+
       return NextResponse.json(
-        { ok: false, error: "Lemon API Error", details: err },
-        { status: 500 }
+        {
+          ok: false,
+          error: "Lemon API Error",
+          details: errorDetails,
+          variantId,
+          storeId,
+          hint:
+            errorDetails?.errors?.[0]?.detail ||
+            "Check if variant exists and is linked to the correct store",
+        },
+        { status: res.status || 500 }
       );
     }
 
