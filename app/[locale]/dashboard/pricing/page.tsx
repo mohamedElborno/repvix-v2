@@ -146,7 +146,7 @@ export default function PricingPage() {
     if (d.ok && d.url) {
       window.location.href = d.url;
     } else {
-      alert(d.error || "حدث خطأ أثناء إنشاء جلسة الدفع");
+      toast.error(d.error || "حدث خطأ أثناء إنشاء جلسة الدفع");
     }
   };
 
