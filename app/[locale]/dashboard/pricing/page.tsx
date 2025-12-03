@@ -137,11 +137,12 @@ export default function PricingPage() {
       },
       body: JSON.stringify({
         variantId,
+        storeId: process.env.LEMON_STORE_ID,
         organizationId: convexOrgId,
         clerkUserId: user.id,
       }),
     });
-
+    console.log("res", res);
     const d = await res.json();
     if (d.ok && d.url) {
       window.location.href = d.url;
