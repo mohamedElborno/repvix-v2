@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import "../globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 export function generateStaticParams() {
   return routing.locales.map((locale: string) => ({ locale }));
@@ -168,6 +169,7 @@ export default async function RootLayout({
               </ConvexClientProvider>
             </NextIntlClientProvider>
           </ThemeProvider>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
