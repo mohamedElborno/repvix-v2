@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = process.env.LEMON_API_KEY;
+    const apiKey = process.env.LEMON_SECRET_KEY;
     const storeId = process.env.LEMON_STORE_ID;
 
     if (!apiKey || !storeId) {
