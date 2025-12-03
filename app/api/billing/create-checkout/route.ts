@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.LEMON_SECRET_KEY;
     const storeId = process.env.LEMON_STORE_ID;
-
+    console.log("apiKey", apiKey);
+    console.log("storeId", storeId);
     if (!apiKey || !storeId) {
       return NextResponse.json(
         { ok: false, error: "Missing Lemon Squeezy API credentials" },
