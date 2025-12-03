@@ -110,7 +110,7 @@ export function limitsForTier(tier: PlanTier): PlanLimits {
 }
 
 export const LEMON_VARIANT_TO_TIER: Record<string, PlanTier> = {
-  "1128280": "basic",
+  "1101994": "basic",
   "1101995": "starter",
   "1101996": "pro",
   "1102000": "business",

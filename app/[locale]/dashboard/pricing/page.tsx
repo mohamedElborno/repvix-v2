@@ -35,7 +35,7 @@ export default function PricingPage() {
       title: "Basic",
       price: "4.99",
       popular: false,
-      variantId: "1128280",
+      variantId: "1101994",
       description: t("plans.basic.description"),
       features: {
         f1: t("plans.basic.features.f1"),
