@@ -19,18 +19,19 @@ export const getByClerkId = query({
 /**
  * Convert Clerk role format (e.g., "org:admin") to Convex role format (e.g., "admin")
  */
-function normalizeRole(clerkRole: string): "owner" | "admin" | "member" {
+function normalizeRole(clerkRole: string): "admin" | "member" {
   // Remove "org:" prefix if present
   const normalized = clerkRole.replace(/^org:/, "").toLowerCase();
 
   // Map to valid roles
-  if (normalized === "owner" || normalized === "org:owner") {
-    return "owner";
-  }
-  if (normalized === "admin" || normalized === "org:admin") {
+  if (normalized === "admin") {
     return "admin";
   }
-  // Default to "member"
+  if (normalized === "member") {
+    return "member";
+  }
+
+  // Default to "member" for unknown roles
   return "member";
 }
 export const syncOrganization = mutation({
@@ -207,11 +208,7 @@ export const updateMemberRole = mutation({
   args: {
     organizationId: v.id("organizations"),
     clerkUserId: v.string(), // مُعرِّف الموظف الذي سيتم تعديل بياناته
-    newRole: v.union(
-      v.literal("owner"),
-      v.literal("admin"),
-      v.literal("member")
-    ),
+    newRole: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
     // 1. 🔒 التحقق الأمني: يجب أن يكون المستخدم الحالي مديرًا أو مالكًا.
@@ -227,22 +224,24 @@ export const updateMemberRole = mutation({
     if (!membership) throw new Error("العضو غير موجود في هذه المنظمة.");
 
     // 3. 🔒 منع تغيير دور Owner الوحيد
-    if (membership.role === "owner" && args.newRole !== "owner") {
-      const allOwners = await ctx.db
+    if (membership.role === "admin" && args.newRole !== "admin") {
+      const allAdmins = await ctx.db
         .query("organizationMembers")
         .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
-        .filter((q) => q.eq(q.field("role"), "owner"))
+        .filter((q) => q.eq(q.field("role"), "admin"))
         .collect();
 
-      if (allOwners.length === 1) {
+      if (allAdmins.length === 1) {
         throw new Error(
-          "Cannot change role of the last owner. At least one owner is required."
+          "Cannot change role of the last admin. At least one admin is required."
         );
       }
     }
 
     // 4. تطبيق التعديل على Convex
-    await ctx.db.patch(membership._id, { role: args.newRole });
+    await ctx.db.patch(membership._id, {
+      role: args.newRole as "admin" | "member",
+    });
 
     // 5. ملاحظة مهمة: تحديث Clerk (يجب أن يتم هذا في الـ Frontend أو Webhook)
     // لا يمكن لدوال Convex تعديل Clerk مباشرة.
@@ -261,8 +260,8 @@ export const removeMember = mutation({
 
     await requireAdmin(ctx, orgId);
 
-    if (target.role === "owner") {
-      throw new Error("Cannot remove owner. Transfer ownership first.");
+    if (target.role === "admin") {
+      throw new Error("Cannot remove admin. Transfer admin first.");
     }
 
     await ctx.db.delete(target._id);

@@ -226,6 +226,23 @@ export const analyzeSingleChat = action({
 
     const { chat, messages } = result;
 
+    // 2) التحقق من حدود الخطة قبل المتابعة
+    const canAnalyze = await ctx.runQuery(api.featureGate.canPerformAnalysis, {
+      organizationId: chat.organizationId,
+    });
+
+    if (!canAnalyze.allowed) {
+      if (canAnalyze.reason === "no_plan") {
+        throw new Error("لا يمكن إجراء التحليل. يرجى الاشتراك في خطة أولاً.");
+      } else if (canAnalyze.reason === "limit_exceeded") {
+        throw new Error(
+          `تم تجاوز الحد اليومي للتحليلات. الحد المسموح: ${canAnalyze.dailyLimit}، المستخدم اليوم: ${canAnalyze.usedToday}. يرجى المحاولة غداً أو ترقية خطتك.`
+        );
+      } else {
+        throw new Error("لا يمكن إجراء التحليل في الوقت الحالي.");
+      }
+    }
+
     // ---------------------------
     // Normalize timestamps to ms
     // ---------------------------

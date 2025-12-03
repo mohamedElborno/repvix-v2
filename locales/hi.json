@@ -428,7 +428,10 @@
     "agentTalkRatio": "एजेंट बोलने का %",
     "customerTalkRatio": "ग्राहक बोलने का %",
     "complexity": "जटिलता",
-    "clarityScore": "स्पष्टता स्कोर"
+    "clarityScore": "स्पष्टता स्कोर",
+    "dailyLimitExceeded": "दैनिक सीमा पार हो गई",
+    "unlimitedAnalyses": "असीमित विश्लेषण",
+    "remainingAnalyses": "आज शेष"
   },
   "signUp": {
     "title": "अपना खाता बनाएं",

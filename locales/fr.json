@@ -428,7 +428,10 @@
     "agentTalkRatio": "% Parole de l’agent",
     "customerTalkRatio": "% Parole du client",
     "complexity": "Complexité",
-    "clarityScore": "Score de clarté"
+    "clarityScore": "Score de clarté",
+    "dailyLimitExceeded": "Limite quotidienne dépassée",
+    "unlimitedAnalyses": "Analyses illimitées",
+    "remainingAnalyses": "Restant aujourd'hui"
   },
   "signUp": {
     "title": "Créez votre compte",

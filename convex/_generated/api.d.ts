@@ -9,11 +9,18 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as billing from "../billing.js";
+import type * as billingCheckout from "../billingCheckout.js";
+import type * as billingPlan from "../billingPlan.js";
+import type * as billingRead from "../billingRead.js";
 import type * as chatAnalysis from "../chatAnalysis.js";
 import type * as chatAnalysisData from "../chatAnalysisData.js";
 import type * as chats from "../chats.js";
+import type * as featureGate from "../featureGate.js";
 import type * as globalAnalysis from "../globalAnalysis.js";
 import type * as globalChatAnalysis from "../globalChatAnalysis.js";
+import type * as http from "../http.js";
+import type * as lib_guard from "../lib/guard.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as messages from "../messages.js";
 import type * as orgMembers from "../orgMembers.js";
@@ -27,11 +34,18 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  billing: typeof billing;
+  billingCheckout: typeof billingCheckout;
+  billingPlan: typeof billingPlan;
+  billingRead: typeof billingRead;
   chatAnalysis: typeof chatAnalysis;
   chatAnalysisData: typeof chatAnalysisData;
   chats: typeof chats;
+  featureGate: typeof featureGate;
   globalAnalysis: typeof globalAnalysis;
   globalChatAnalysis: typeof globalChatAnalysis;
+  http: typeof http;
+  "lib/guard": typeof lib_guard;
   "lib/plans": typeof lib_plans;
   messages: typeof messages;
   orgMembers: typeof orgMembers;

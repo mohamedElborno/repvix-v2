@@ -35,11 +35,10 @@ export const getOrganizationMemberById = query({
       throw new Error("Unauthorized.");
     }
 
-    const isOwnerOrAdmin =
-      userMembership.role === "owner" || userMembership.role === "admin";
+    const isAdmin = userMembership.role === "admin";
     const isSelf = organizationMember.clerkUserId === user.subject;
 
-    if (!isOwnerOrAdmin && !isSelf) {
+    if (!isAdmin && !isSelf) {
       throw new Error("Unauthorized: insufficient permissions.");
     }
 
@@ -55,9 +54,7 @@ export const updateMemberInfo = mutation({
     memberId: v.id("organizationMembers"),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    role: v.optional(
-      v.union(v.literal("owner"), v.literal("admin"), v.literal("member"))
-    ),
+    role: v.optional(v.union(v.literal("admin"), v.literal("member"))),
   },
   handler: async (ctx, args) => {
     const target = await ctx.db.get(args.memberId);
@@ -81,41 +78,22 @@ export const updateMemberInfo = mutation({
     }
 
     const callerRole = callerMembership.role;
-    const isCallerAdmin = callerRole === "admin" || callerRole === "owner";
-    const isCallerOwner = callerRole === "owner";
+    const isCallerAdmin = callerRole === "admin";
     const isSelf = caller.subject === target.clerkUserId;
 
     // ---------------------------------------------------------------------
-    // 1) تعديل الدور (role) → يتطلب أن يكون Caller = Admin أو Owner
+    // 1) تعديل الدور (role) → يتطلب أن يكون Caller = Admin
     // ---------------------------------------------------------------------
     if (args.role !== undefined && args.role !== target.role) {
       if (!isCallerAdmin) {
-        throw new Error("Only admins or owners can change member roles.");
-      }
-
-      // منع تغيير آخر Owner في المنظمة
-      if (target.role === "owner" && args.role !== "owner") {
-        const owners = await ctx.db
-          .query("organizationMembers")
-          .withIndex("by_org", (q) => q.eq("organizationId", orgId))
-          .filter((q) => q.eq(q.field("role"), "owner"))
-          .collect();
-
-        if (owners.length === 1) {
-          throw new Error("Cannot change role of the last owner.");
-        }
-      }
-
-      // منع ترقية النفس إلى Owner إذا لم يكن Owner أصلاً
-      if (args.role === "owner" && !isCallerOwner && isSelf) {
-        throw new Error("Only owners can promote themselves to owner.");
+        throw new Error("Only admins can change member roles.");
       }
     }
 
     // ---------------------------------------------------------------------
     // 2) تعديل الاسم أو الإيميل → مسموح فقط في حال:
     //    * المستخدم يعدّل نفسه
-    //    * أو Caller = Admin/Owner
+    //    * أو Caller = Admin
     // ---------------------------------------------------------------------
     if (!isSelf && !isCallerAdmin) {
       throw new Error("Insufficient permissions to update another member.");
@@ -124,7 +102,7 @@ export const updateMemberInfo = mutation({
     const updates: {
       name?: string;
       email?: string;
-      role?: "owner" | "admin" | "member";
+      role?: "admin" | "member";
     } = {};
 
     if (args.name !== undefined) updates.name = args.name || undefined;
@@ -146,7 +124,7 @@ export const addMemberFromInvite = mutation({
     name: v.string(),
     email: v.string(),
     imageUrl: v.optional(v.string()),
-    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member")),
+    role: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
     // هذا يُستدعى من webhook عن طريق server client

@@ -403,7 +403,10 @@
     "agentTalkRatio": "Temsilci Konuşma %",
     "customerTalkRatio": "Müşteri Konuşma %",
     "complexity": "Karmaşıklık",
-    "clarityScore": "Netlik Puanı"
+    "clarityScore": "Netlik Puanı",
+    "dailyLimitExceeded": "Günlük limit aşıldı",
+    "unlimitedAnalyses": "Sınırsız analizler",
+    "remainingAnalyses": "Bugün kalan"
   },
   "login": {
     "title": "Repvix’e Giriş Yap",

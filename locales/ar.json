@@ -428,7 +428,10 @@
     "agentTalkRatio": "نسبة حديث الموظف",
     "customerTalkRatio": "نسبة حديث العميل",
     "complexity": "التعقيد",
-    "clarityScore": "درجة الوضوح"
+    "clarityScore": "درجة الوضوح",
+    "dailyLimitExceeded": "تم تجاوز الحد اليومي",
+    "unlimitedAnalyses": "تحليلات غير محدودة",
+    "remainingAnalyses": "المتبقي اليوم"
   },
   "signUp": {
     "title": "إنشاء حساب جديد",

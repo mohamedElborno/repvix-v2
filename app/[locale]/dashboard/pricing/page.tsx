@@ -5,13 +5,25 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 
 export default function PricingPage() {
   const t = useTranslations("dashboard.pricing");
+  const { organization } = useOrganization();
+  const { user } = useUser();
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
 
+  // Get Convex organization ID from Clerk org ID
+  const convexOrgId = useQuery(
+    api.orgs.getByClerkId,
+    organization?.id ? { clerkOrgId: organization.id } : "skip"
+  );
+
   useEffect(() => {
-    fetch("/api/billing/portal")
+    fetch("/api/billing/current")
       .then((r) => r.json())
       .then((d) => setCurrentPlan(d.plan))
       .catch(() => {});
@@ -23,7 +35,7 @@ export default function PricingPage() {
       title: "Basic",
       price: "4.99",
       popular: false,
-      variantId: 1095200,
+      variantId: 1101994,
       description: t("plans.basic.description"),
       features: {
         f1: t("plans.basic.features.f1"),
@@ -40,7 +52,7 @@ export default function PricingPage() {
       title: "Starter",
       price: "9.99",
       popular: true,
-      variantId: 1095910,
+      variantId: 1101995,
       description: t("plans.starter.description"),
       features: {
         f1: t("plans.starter.features.f1"),
@@ -57,7 +69,7 @@ export default function PricingPage() {
       title: "Pro",
       price: "24.99",
       popular: false,
-      variantId: 1095912,
+      variantId: 1101996,
       description: t("plans.pro.description"),
       features: {
         f1: t("plans.pro.features.f1"),
@@ -74,7 +86,7 @@ export default function PricingPage() {
       title: "Business",
       price: "49.99",
       popular: false,
-      variantId: 1095909,
+      variantId: 1102000,
       description: t("plans.business.description"),
       features: {
         f1: t("plans.business.features.f1"),
@@ -107,19 +119,35 @@ export default function PricingPage() {
   // Get all unique feature keys across all plans
   const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
 
-  const checkout = async (variantId: number | null) => {
+  const checkout = async (variantId: string | null) => {
     if (!variantId) {
-      alert(t("willContactYou"));
+      toast.error(t("willContactYou"));
       return;
     }
 
-    const res = await fetch("/api/billing/checkout", {
+    if (!convexOrgId || !user?.id) {
+      toast.error(t("willContactYou"));
+      return;
+    }
+
+    const res = await fetch("/api/billing/create-checkout", {
       method: "POST",
-      body: JSON.stringify({ variantId }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        variantId,
+        organizationId: convexOrgId,
+        clerkUserId: user.id,
+      }),
     });
 
     const d = await res.json();
-    if (d.url) window.location.href = d.url;
+    if (d.ok && d.url) {
+      window.location.href = d.url;
+    } else {
+      alert(d.error || "حدث خطأ أثناء إنشاء جلسة الدفع");
+    }
   };
 
   return (
@@ -170,7 +198,7 @@ export default function PricingPage() {
                         )}
                       </div>
                       <Button
-                        onClick={() => checkout(plan.variantId)}
+                        onClick={() => checkout(String(plan.variantId))}
                         disabled={currentPlan === plan.id}
                         size="sm"
                         className={`w-full mt-4 ${

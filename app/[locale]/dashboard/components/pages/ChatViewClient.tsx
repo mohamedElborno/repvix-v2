@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 
 // Convex types
-import type { Doc } from "@/convex/_generated/dataModel";
-import { useAction } from "convex/react";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { useAction, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 interface ChatViewClientProps {
@@ -41,6 +41,15 @@ export default function ChatViewClient({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const analyzeSingleChat = useAction(api.chatAnalysis.analyzeSingleChat);
+
+  // التحقق من إمكانية إجراء التحليل
+  // Note: feature.gate will be available after Convex regenerates API types
+  const canAnalyze = useQuery(
+    api.featureGate.canPerformAnalysis,
+    chat.organizationId
+      ? { organizationId: chat.organizationId as Id<"organizations"> }
+      : "skip"
+  );
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
@@ -186,7 +195,11 @@ export default function ChatViewClient({
               <button
                 type="button"
                 onClick={handleAnalyzeChat}
-                disabled={isAnalyzing}
+                disabled={
+                  isAnalyzing ||
+                  !canAnalyze?.allowed ||
+                  canAnalyze?.reason === "limit_exceeded"
+                }
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 disabled:from-muted disabled:to-muted text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 border border-purple-400/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <Brain className="w-4 h-4" />
@@ -196,6 +209,28 @@ export default function ChatViewClient({
                     : t("analyzeChat") || "Analyze chat"}
                 </span>
               </button>
+
+              {/* عرض معلومات الحدود */}
+              {canAnalyze && !isAnalyzing && (
+                <div className="text-xs text-muted-foreground max-w-xs text-right">
+                  {canAnalyze.reason === "limit_exceeded" ? (
+                    <span className="text-destructive">
+                      {t("dailyLimitExceeded") ||
+                        `تم تجاوز الحد اليومي (${canAnalyze.usedToday}/${canAnalyze.dailyLimit})`}
+                    </span>
+                  ) : canAnalyze.reason === "unlimited" ? (
+                    <span className="text-green-600 dark:text-emerald-400">
+                      {t("unlimitedAnalyses") || "تحليلات غير محدودة"}
+                    </span>
+                  ) : canAnalyze.remaining !== "unlimited" &&
+                    typeof canAnalyze.remaining === "number" ? (
+                    <span>
+                      {t("remainingAnalyses")}: {canAnalyze.remaining}/
+                      {canAnalyze.dailyLimit}
+                    </span>
+                  ) : null}
+                </div>
+              )}
 
               {analysisError && (
                 <span className="text-xs text-destructive max-w-xs text-right">

@@ -427,7 +427,10 @@
     "agentTalkRatio": "Agent Talk %",
     "customerTalkRatio": "Customer Talk %",
     "complexity": "Complexity",
-    "clarityScore": "Clarity Score"
+    "clarityScore": "Clarity Score",
+    "dailyLimitExceeded": "Daily limit exceeded",
+    "unlimitedAnalyses": "Unlimited analyses",
+    "remainingAnalyses": "Remaining today"
   },
   "signUp": {
     "title": "Create your account",

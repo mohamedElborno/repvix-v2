@@ -15,6 +15,38 @@ export default defineSchema({
     name: v.string(),
     createdBy: v.string(),
     createdAt: v.number(),
+
+    planTier: v.optional(
+      v.union(
+        v.literal("basic"),
+        v.literal("starter"),
+        v.literal("pro"),
+        v.literal("business")
+      )
+    ),
+    billingStatus: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("trial"),
+        v.literal("active"),
+        v.literal("past_due"),
+        v.literal("cancelled"),
+        v.literal("expired")
+      )
+    ),
+    activeSubscriptionId: v.optional(v.id("subscriptions")),
+    renewsAt: v.optional(v.number()),
+
+    limits: v.optional(
+      v.object({
+        members: v.optional(v.number()),
+        dailyAnalyses: v.optional(v.number()),
+        exports: v.optional(v.array(v.string())),
+        integrations: v.optional(v.array(v.string())),
+        features: v.optional(v.any()),
+        support: v.optional(v.string()),
+      })
+    ),
   }).index("by_clerkOrgId", ["clerkOrgId"]),
 
   // =============================
@@ -27,7 +59,7 @@ export default defineSchema({
     email: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     // Add "org:admin" and "org:member" and "org:basic_member" to match Clerk default roles
-    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member")),
+    role: v.union(v.literal("admin"), v.literal("member")),
     joinedAt: v.number(),
   })
     .index("by_org", ["organizationId"])
@@ -156,19 +188,6 @@ export default defineSchema({
   })
     .index("by_chat", ["chatId"])
     .index("by_msg", ["messageId"]),
-
-  // =============================
-  // Chat Chunks
-  // =============================
-  chatChunks: defineTable({
-    chatId: v.id("chats"),
-    chunkIndex: v.number(),
-    text: v.string(),
-    embedding: v.optional(v.any()), // vector embedding
-    createdAt: v.number(),
-  })
-    .index("by_chat", ["chatId"])
-    .index("by_chat_index", ["chatId", "chunkIndex"]),
 
   // =============================
   // Chat Analyses (per chat)
@@ -623,81 +642,6 @@ export default defineSchema({
     .index("by_org_createdAt", ["organizationId", "createdAt"]),
 
   // =============================
-  // Chat FAQs
-  // =============================
-  chatFaqs: defineTable({
-    chatId: v.id("chats"),
-    question: v.string(),
-    answer: v.optional(v.string()),
-    confidence: v.optional(v.number()),
-    createdAt: v.number(),
-  }).index("by_chat", ["chatId"]),
-
-  // =============================
-  // Employee Global Analysis
-  // =============================
-  employeeGlobalAnalysis: defineTable({
-    employeeId: v.id("employees"),
-    totalChats: v.number(), // default 0
-    totalMessages: v.number(), // default 0
-    avgSentimentScore: v.optional(v.number()),
-    avgClarityScore: v.optional(v.number()),
-    avgEmpathyRatio: v.optional(v.number()),
-    avgAssertiveness: v.optional(v.number()),
-    avgResponseTimeSec: v.optional(v.number()),
-    avgResolutionEfficiency: v.optional(v.number()),
-    avgCompatibilityScore: v.optional(v.number()),
-    avgSatisfactionProbability: v.optional(v.number()),
-    behavioralTrends: v.optional(v.any()), // JSON object
-    topStrengths: v.optional(v.any()), // JSON array
-    topWeaknesses: v.optional(v.any()), // JSON array
-    keyRecommendations: v.optional(v.any()), // JSON array
-    avgIntentAlignment: v.optional(v.number()),
-    avgResponseDelaySec: v.optional(v.number()),
-    temporalPatterns: v.optional(v.any()), // JSON object
-    negotiationInsights: v.optional(v.any()), // JSON object
-    avgRootCauseConsistency: v.optional(v.number()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    lastUpdated: v.number(),
-  }).index("by_employee", ["employeeId"]),
-
-  // =============================
-  // User Global Analysis
-  // =============================
-  userGlobalAnalysis: defineTable({
-    userId: v.string(), // Clerk user id
-    totalChats: v.number(), // default 0
-    totalMessages: v.number(), // default 0
-    dateRangeStart: v.optional(v.number()),
-    dateRangeEnd: v.optional(v.number()),
-    overallSummary: v.optional(v.string()),
-    commonTopics: v.optional(v.any()), // JSON object
-    overallSentiment: v.optional(v.string()),
-    peakHours: v.optional(v.any()), // JSON object
-    commonIssues: v.optional(v.any()), // JSON object
-    customerSatisfactionScore: v.optional(v.number()),
-    avgResponseTime: v.optional(v.number()), // in seconds
-    resolutionRate: v.optional(v.number()),
-    avgSentimentScore: v.optional(v.number()),
-    avgEmpathyRatio: v.optional(v.number()),
-    avgResolutionEfficiency: v.optional(v.number()),
-    topTopics: v.optional(v.any()), // JSON array
-    globalFaqSummary: v.optional(v.any()), // JSON array
-    behavioralInsights: v.optional(v.any()), // JSON object
-    performanceTrends: v.optional(v.any()), // JSON object
-    teamRecommendations: v.optional(v.any()), // JSON array
-    avgIntentAlignment: v.optional(v.number()),
-    avgResponseDelaySec: v.optional(v.number()),
-    temporalDynamics: v.optional(v.any()), // JSON object
-    negotiationTrends: v.optional(v.any()), // JSON object
-    rootCauseTrends: v.optional(v.any()), // JSON object
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    lastUpdated: v.number(),
-  }).index("by_user", ["userId"]),
-
-  // =============================
   // Global FAQs
   // =============================
   globalFaqs: defineTable({
@@ -715,31 +659,6 @@ export default defineSchema({
     .index("by_question", ["question"]),
 
   // =============================
-  // Organization Usage
-  // =============================
-  organizationUsage: defineTable({
-    organizationId: v.id("organizations"),
-    periodStart: v.number(), // timestamp
-    periodEnd: v.number(), // timestamp
-    analysesUsed: v.number(), // default 0
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_org", ["organizationId"])
-    .index("by_org_period", ["organizationId", "periodStart"]),
-
-  // =============================
-  // Usage Limits
-  // =============================
-  usageLimits: defineTable({
-    organizationId: v.id("organizations"),
-    analyses: v.number(), // default 50
-    employees: v.number(), // default 1
-    integrations: v.number(), // default 1
-    updatedAt: v.number(),
-  }).index("by_org", ["organizationId"]),
-
-  // =============================
   // Profiles (optional - if you want to store user profiles)
   // =============================
   profiles: defineTable({
@@ -754,4 +673,55 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_username", ["username"]),
+
+  webhookEvents: defineTable({
+    eventName: v.string(),
+    lemonId: v.string(),
+    payload: v.any(),
+    receivedAt: v.number(),
+    processed: v.boolean(),
+  }).index("by_lemonId", ["lemonId"]),
+
+  billingCustomers: defineTable({
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(), // صاحب الشراء الأول (اختياري)
+    lemonCustomerId: v.string(), // customer id من ليمون
+    email: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_lemon", ["lemonCustomerId"]),
+
+  subscriptions: defineTable({
+    organizationId: v.id("organizations"),
+    lemonSubscriptionId: v.string(), // id
+    productId: v.optional(v.string()),
+    variantId: v.optional(v.string()),
+    status: v.string(), // active|paused|cancelled|expired|on_trial...
+    planName: v.optional(v.string()),
+    currentPeriodEnd: v.optional(v.number()), // ms
+    renewsAt: v.optional(v.number()),
+    canceledAt: v.optional(v.number()),
+    trialEndsAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_sub", ["lemonSubscriptionId"]),
+
+  invoices: defineTable({
+    organizationId: v.id("organizations"),
+    lemonInvoiceId: v.string(),
+    subscriptionId: v.optional(v.id("subscriptions")),
+    amountCents: v.number(),
+    currency: v.string(),
+    status: v.string(), // paid|open|void|uncollectible|payment_failed...
+    issuedAt: v.number(),
+    paidAt: v.optional(v.number()),
+    meta: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_invoice", ["lemonInvoiceId"]),
 });

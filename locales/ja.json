@@ -427,7 +427,10 @@
     "agentTalkRatio": "エージェント発言比率（%）",
     "customerTalkRatio": "顧客発言比率（%）",
     "complexity": "複雑さ",
-    "clarityScore": "明確さスコア"
+    "clarityScore": "明確さスコア",
+    "dailyLimitExceeded": "1日の制限を超過しました",
+    "unlimitedAnalyses": "無制限の分析",
+    "remainingAnalyses": "今日の残り"
   },
   "signUp": {
     "title": "アカウントを作成",

@@ -31,7 +31,7 @@ export async function requireAdmin(
   orgId: Id<"organizations">
 ) {
   const m = await requireOrgMembership(ctx, orgId);
-  if (m.role !== "owner" && m.role !== "admin") {
+  if (m.role !== "admin") {
     throw new Error("Insufficient permissions");
   }
   return m;
