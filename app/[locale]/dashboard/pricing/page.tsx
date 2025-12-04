@@ -9,7 +9,7 @@ import { useOrganization, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
-import { useMutation } from "convex/react";
+import { useAction } from "convex/react";
 
 export default function PricingPage() {
   const t = useTranslations("dashboard.pricing");
@@ -118,7 +118,7 @@ export default function PricingPage() {
   const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
   console.log("currentPlan", billing);
 
-  const createCheckout = useMutation(api.billing.createCheckoutSession);
+  const createCheckout = useAction(api.billing.createCheckoutSession);
 
   const checkout = async (variantId: string) => {
     if (!variantId || !convexOrgId || !user?.id) {
@@ -131,7 +131,6 @@ export default function PricingPage() {
         organizationId: convexOrgId,
         clerkUserId: user.id,
         variantId,
-        userEmail: user?.emailAddresses[0]?.emailAddress ?? null,
       });
 
       // 1) حالة الترقيــة UPGRADE
@@ -141,8 +140,8 @@ export default function PricingPage() {
       }
 
       // 2) حالة الاشتراك الجديد NEW CHECKOUT
-      if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
+      if (result.url) {
+        window.location.href = result.url;
         return;
       }
 

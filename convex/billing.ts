@@ -1,8 +1,9 @@
 // convex/billing.ts
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 import { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
 
 function getTier(variantId?: string | null) {
   if (!variantId) return null;
@@ -133,6 +134,45 @@ export const getCurrentPlan = query({
       billingStatus: org.billingStatus ?? null,
       activeSubscriptionId: org.activeSubscriptionId ?? null,
     };
+  },
+});
+
+// ===========================================================
+// Get Organization For Checkout (internal helper)
+// ===========================================================
+export const getOrganizationForCheckout = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const org = await ctx.db.get(organizationId);
+    if (!org) return null;
+    return {
+      activeSubscriptionId: org.activeSubscriptionId ?? null,
+      planTier: org.planTier ?? null,
+      customerPortalUrl: org.customerPortalUrl ?? null,
+    };
+  },
+});
+
+// ===========================================================
+// Get Billing Customer (internal helper)
+// ===========================================================
+export const getBillingCustomer = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const billingCustomer = await ctx.db
+      .query("billingCustomers")
+      .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+      .first();
+    return billingCustomer
+      ? {
+          email: billingCustomer.email ?? null,
+          lemonCustomerId: billingCustomer.lemonCustomerId ?? null,
+        }
+      : null;
   },
 });
 
@@ -600,107 +640,133 @@ export const handleEvent = mutation({
   },
 });
 
-export const createCheckoutSession = mutation({
+export const createCheckoutSession = action({
   args: {
     organizationId: v.id("organizations"),
     clerkUserId: v.string(),
     variantId: v.string(),
-    userEmail: v.string(),
   },
-  handler: async (ctx, args) => {
-    const org = await ctx.db.get(args.organizationId);
+  handler: async (
+    ctx,
+    args
+  ): Promise<{ ok: true; upgrade: boolean; url: string }> => {
+    // Read organization data using query
+    const org: {
+      activeSubscriptionId: Id<"subscriptions"> | null;
+      planTier: "basic" | "starter" | "pro" | "business" | null;
+      customerPortalUrl: string | null;
+    } | null = await ctx.runQuery(api.billing.getOrganizationForCheckout, {
+      organizationId: args.organizationId,
+    });
+
     if (!org) throw new Error("Organization not found");
 
     const activeSub = org.activeSubscriptionId;
     const currentTier = org.planTier ?? null;
     const desiredTier = getTier(args.variantId);
 
-    // لديه اشتراك حالي → نسمح فقط بالـ Upgrade
+    // Has subscription? → only upgrades allowed
     if (activeSub && currentTier) {
       const allowed = isUpgrade(currentTier, desiredTier);
-
       if (!allowed) {
-        throw new Error(
-          "You already have an active subscription. You cannot repurchase the same or lower plan."
-        );
+        throw new Error("You already have this or a higher subscription.");
       }
 
       if (org.customerPortalUrl) {
         return { ok: true, upgrade: true, url: org.customerPortalUrl };
       }
 
-      // fallback: use generic Lemon billing portal
-      return {
-        ok: true,
-        upgrade: true,
-        url: "https://repvix.lemonsqueezy.com/billing",
-      };
+      throw new Error("Billing portal URL not ready yet.");
     }
 
-    // لا يوجد اشتراك → إنشاء checkout جديد
-    const checkoutUrl = await createLemonCheckout({
-      userEmail: args.userEmail,
-      clerkUserId: args.clerkUserId,
+    // Fetch lemonCustomerId if exists using query
+    const billingCustomer: {
+      email: string | null;
+      lemonCustomerId: string | null;
+    } | null = await ctx.runQuery(api.billing.getBillingCustomer, {
       organizationId: args.organizationId,
-      variantId: args.variantId,
     });
 
-    return { ok: true, upgrade: false, url: checkoutUrl, checkoutUrl };
+    // Call ACTION to create checkout
+    const result: { url: string } = await ctx.runAction(
+      api.billing.createLemonCheckoutAction,
+      {
+        clerkUserId: args.clerkUserId,
+        organizationId: args.organizationId,
+        variantId: args.variantId,
+        email: billingCustomer?.email ?? "fallback@example.com",
+        lemonCustomerId: billingCustomer?.lemonCustomerId ?? undefined,
+      }
+    );
+
+    return { ok: true, upgrade: false, url: result.url };
   },
 });
 
-async function createLemonCheckout({
-  clerkUserId,
-  organizationId,
-  variantId,
-  userEmail,
-}: {
-  clerkUserId: string;
-  organizationId: Id<"organizations">;
-  variantId: string;
-  userEmail: string;
-}): Promise<string> {
-  const apiKey = process.env.LEMON_SECRET_KEY;
-  const storeId = process.env.LEMON_STORE_ID;
+export const createLemonCheckoutAction = action({
+  args: {
+    clerkUserId: v.string(),
+    organizationId: v.id("organizations"),
+    variantId: v.string(),
+    email: v.string(),
+    lemonCustomerId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const apiKey = process.env.LEMON_SECRET_KEY;
+    const storeId = process.env.LEMON_STORE_ID;
+    if (!apiKey || !storeId) {
+      throw new Error("Missing Lemon Squeezy API keys.");
+    }
 
-  if (!apiKey || !storeId) {
-    throw new Error("Missing Lemon Squeezy API keys.");
-  }
-
-  const payload = {
-    data: {
-      type: "checkouts",
-      attributes: {
-        checkout_data: {
-          email: userEmail,
-          custom: { organizationId, clerkUserId },
+    // Build payload
+    const payload: any = {
+      data: {
+        type: "checkouts",
+        attributes: {
+          checkout_data: {
+            email: args.email, // REQUIRED for portal linking
+            custom: {
+              organizationId: args.organizationId,
+              clerkUserId: args.clerkUserId,
+            },
+          },
+        },
+        relationships: {
+          store: { data: { type: "stores", id: storeId.toString() } },
+          variant: {
+            data: { type: "variants", id: args.variantId.toString() },
+          },
         },
       },
-      relationships: {
-        store: { data: { type: "stores", id: storeId.toString() } },
-        variant: { data: { type: "variants", id: variantId.toString() } },
+    };
+
+    // If customer exists, re-link it
+    if (args.lemonCustomerId) {
+      payload.data.relationships.customer = {
+        data: { type: "customers", id: args.lemonCustomerId },
+      };
+    }
+
+    // External fetch
+    const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
       },
-    },
-  };
+      body: JSON.stringify(payload),
+    });
 
-  const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      Accept: "application/vnd.api+json",
-      "Content-Type": "application/vnd.api+json",
-    },
-    body: JSON.stringify(payload),
-  });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error("Lemon checkout failed: " + text);
+    }
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error("Failed to create checkout: " + text);
-  }
+    const json = await res.json();
+    const url = json?.data?.attributes?.url;
+    if (!url) throw new Error("Missing checkout URL");
 
-  const json = await res.json();
-  const url = json?.data?.attributes?.url;
-  if (!url) throw new Error("Checkout URL missing");
-
-  return url;
-}
+    return { url };
+  },
+});
