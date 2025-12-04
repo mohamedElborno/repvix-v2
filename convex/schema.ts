@@ -47,7 +47,6 @@ export default defineSchema({
         support: v.optional(v.string()),
       })
     ),
-    customerPortalUrl: v.optional(v.string()),
   }).index("by_clerkOrgId", ["clerkOrgId"]),
 
   // =============================

@@ -1,25 +1,34 @@
 // convex/billing.ts
 import { v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
-import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 import { Id } from "./_generated/dataModel";
 import { api } from "./_generated/api";
+import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 
+// -------------------------------------------------------------
+// Helpers
+// -------------------------------------------------------------
 function getTier(variantId?: string | null) {
   if (!variantId) return null;
   try {
-    return mapVariantToPlan(variantId).tier; // "basic" | "starter" | "pro" | "business" (أياً كانت عندك)
+    return mapVariantToPlan(variantId).tier as
+      | "basic"
+      | "starter"
+      | "pro"
+      | "business";
   } catch {
     return null;
   }
 }
 
-function isUpgrade(currentTier: any, newTier: any) {
-  if (!currentTier && newTier) return true; // لا توجد خطة حالية
+function isUpgrade(
+  currentTier: "basic" | "starter" | "pro" | "business" | null,
+  newTier: "basic" | "starter" | "pro" | "business" | null
+) {
+  if (!currentTier && newTier) return true;
   if (!currentTier || !newTier) return false;
-  // إذا كانت التراتبية لديك string فحوّلها لمؤشر رقمي
-  const order = ["basic", "starter", "pro", "business"];
-  const idx = (x: any) => (typeof x === "string" ? order.indexOf(x) : -1);
+  const order = ["basic", "starter", "pro", "business"] as const;
+  const idx = (x: "basic" | "starter" | "pro" | "business") => order.indexOf(x);
   return idx(newTier) > idx(currentTier);
 }
 
@@ -31,9 +40,6 @@ async function markProcessed(ctx: any, lemonId: string) {
   if (ev) await ctx.db.patch(ev._id, { processed: true });
 }
 
-// ===========================================================
-// Helpers
-// ===========================================================
 function ts(input?: string | null): number | undefined {
   if (!input) return undefined;
   const n = Date.parse(input);
@@ -69,7 +75,6 @@ async function resolveOrganizationId(
 
   // احتمال 1: قيمة orgRef هي Convex Id<"organizations">
   try {
-    // Convex ids لها صيغة معيّنة، لكن أبسط اختبار عملي:
     const maybe = await ctx.db.get(orgRef as Id<"organizations">);
     if (maybe?._id) return maybe._id as Id<"organizations">;
   } catch {
@@ -86,18 +91,16 @@ async function resolveOrganizationId(
 
 function extractContext(payload: any) {
   const meta = payload?.meta ?? {};
-  console.log("meta", meta);
   const custom = meta?.custom_data ?? {};
-  console.log("custom", custom);
   return {
-    rawOrganizationRef: custom?.organizationId as string | undefined, // قد تكون Convex أو Clerk
+    rawOrganizationRef: custom?.organizationId as string | undefined,
     clerkUserId: (custom?.clerkUserId as string | undefined) ?? undefined,
   };
 }
 
-// ===========================================================
+// -------------------------------------------------------------
 // Viewer Role
-// ===========================================================
+// -------------------------------------------------------------
 export const getViewerRole = query({
   args: {
     organizationId: v.id("organizations"),
@@ -109,17 +112,15 @@ export const getViewerRole = query({
       .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
       .filter((q) => q.eq(q.field("clerkUserId"), clerkUserId))
       .first();
-    return member?.role ?? null; // "owner" | "admin" | "member" | null
+    return member?.role ?? null; // "admin" | "member" | null
   },
 });
 
-// ===========================================================
+// -------------------------------------------------------------
 // Get Current Plan
-// ===========================================================
+// -------------------------------------------------------------
 export const getCurrentPlan = query({
-  args: {
-    organizationId: v.id("organizations"),
-  },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const org = await ctx.db.get(organizationId);
     if (!org) {
@@ -137,31 +138,28 @@ export const getCurrentPlan = query({
   },
 });
 
-// ===========================================================
+// -------------------------------------------------------------
 // Get Organization For Checkout (internal helper)
-// ===========================================================
+// -------------------------------------------------------------
 export const getOrganizationForCheckout = query({
-  args: {
-    organizationId: v.id("organizations"),
-  },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const org = await ctx.db.get(organizationId);
     if (!org) return null;
     return {
       activeSubscriptionId: org.activeSubscriptionId ?? null,
-      planTier: org.planTier ?? null,
-      customerPortalUrl: org.customerPortalUrl ?? null,
+      planTier:
+        (org.planTier as "basic" | "starter" | "pro" | "business" | null) ??
+        null,
     };
   },
 });
 
-// ===========================================================
+// -------------------------------------------------------------
 // Get Billing Customer (internal helper)
-// ===========================================================
+// -------------------------------------------------------------
 export const getBillingCustomer = query({
-  args: {
-    organizationId: v.id("organizations"),
-  },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const billingCustomer = await ctx.db
       .query("billingCustomers")
@@ -176,26 +174,21 @@ export const getBillingCustomer = query({
   },
 });
 
-// ===========================================================
-// Get Billing Portal Data
-// ===========================================================
+// -------------------------------------------------------------
+// Get Billing Portal Data (بدون إرجاع URL ثابت)
+// -------------------------------------------------------------
 export const getBillingPortalData = query({
-  args: {
-    organizationId: v.id("organizations"),
-  },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const org = await ctx.db.get(organizationId);
     if (!org) {
-      return {
-        plan: null,
-        limits: null,
-        portalUrl: null,
-      };
+      return { plan: null, limits: null };
     }
 
-    const plan = org.planTier ?? null;
+    const plan =
+      (org.planTier as "basic" | "starter" | "pro" | "business" | null) ?? null;
 
-    // Calculate remaining analyses for today
+    // حساب عدد التحليلات المتبقية اليوم
     let remainingAnalyses: number | "unlimited" | undefined = undefined;
     if (org.planTier) {
       const limits = limitsForTier(org.planTier);
@@ -204,7 +197,6 @@ export const getBillingPortalData = query({
       if (dailyLimit === "unlimited") {
         remainingAnalyses = "unlimited";
       } else {
-        // Calculate used analyses today
         const now = Date.now();
         const startOfDay = new Date(now);
         startOfDay.setHours(0, 0, 0, 0);
@@ -232,17 +224,14 @@ export const getBillingPortalData = query({
         }
       : null;
 
-    return {
-      plan,
-      limits,
-      portalUrl: org.customerPortalUrl ?? null,
-    };
+    // لا نعيد portalUrl هنا إطلاقاً
+    return { plan, limits };
   },
 });
 
-// ===========================================================
+// -------------------------------------------------------------
 // ingestWebhook - storing all events
-// ===========================================================
+// -------------------------------------------------------------
 export const ingestWebhook = mutation({
   args: {
     eventName: v.string(),
@@ -267,14 +256,11 @@ export const ingestWebhook = mutation({
   },
 });
 
-// ===========================================================
+// -------------------------------------------------------------
 // handleEvent - the brain of billing
-// ===========================================================
+// -------------------------------------------------------------
 export const handleEvent = mutation({
-  args: {
-    eventName: v.string(),
-    payload: v.any(),
-  },
+  args: { eventName: v.string(), payload: v.any() },
   handler: async (ctx, { eventName, payload }) => {
     if (!ALLOWED.has(eventName)) {
       const lemonId = payload?.data?.id ?? "unknown";
@@ -288,6 +274,7 @@ export const handleEvent = mutation({
 
     const { rawOrganizationRef, clerkUserId } = extractContext(payload);
     const organizationId = await resolveOrganizationId(ctx, rawOrganizationRef);
+
     const data = payload?.data ?? {};
     const attr = data?.attributes ?? {};
 
@@ -299,9 +286,9 @@ export const handleEvent = mutation({
     const productName = attr?.product_name ?? undefined;
     const variantName = attr?.variant_name ?? undefined;
 
-    // ===========================================================
+    // ------------------------------
     // ORDER CREATED
-    // ===========================================================
+    // ------------------------------
     if (eventName === "order_created") {
       const lemonCustomerId = attr?.customer_id
         ? String(attr.customer_id)
@@ -333,9 +320,9 @@ export const handleEvent = mutation({
       }
     }
 
-    // ===========================================================
+    // ------------------------------
     // ORDER REFUNDED
-    // ===========================================================
+    // ------------------------------
     if (eventName === "order_refunded") {
       if (organizationId) {
         await ctx.db.insert("invoices", {
@@ -353,9 +340,9 @@ export const handleEvent = mutation({
       }
     }
 
-    // ===========================================================
+    // ------------------------------
     // SUBSCRIPTION CREATED / UPDATED / PLAN CHANGED
-    // ===========================================================
+    // ------------------------------
     if (
       eventName === "subscription_created" ||
       eventName === "subscription_updated" ||
@@ -373,39 +360,18 @@ export const handleEvent = mutation({
         data?.attributes?.variant_id ??
         undefined;
 
-      // =============================
-      //   الحماية الأساسية
-      // =============================
-
+      // حماية ضد ازدواج/تخفيض غير مسموح
       if (organizationId) {
         const org = await ctx.db.get(organizationId);
-
-        // حفظ رابط بوابة العميل
-        const portalUrl =
-          attr?.urls?.customer_portal ??
-          attr?.urls?.customer_portal_update_subscription ??
-          undefined;
-
         if (org?.activeSubscriptionId) {
           const existingSub = await ctx.db.get(org.activeSubscriptionId);
-
           const currentTier = existingSub?.variantId
             ? getTier(existingSub.variantId)
             : (org.planTier ?? null);
-
           const newTier = getTier(variantId);
-
           const allowed = isUpgrade(currentTier, newTier);
-
           if (!allowed) {
-            console.log("Blocked subscription (duplicate/downgrade)", {
-              currentTier,
-              newTier,
-              subIdExternal,
-            });
-
             await markProcessed(ctx, lemonId);
-
             await ctx.db.insert("billingAudit" as any, {
               organizationId,
               type: "blocked_subscription",
@@ -416,16 +382,12 @@ export const handleEvent = mutation({
               at: Date.now(),
               raw: payload,
             });
-
             return;
           }
         }
       }
 
-      // =============================
-      //   تابع لوجيك البناء الطبيعي
-      // =============================
-
+      // إنشاء/تحديث الاشتراك داخل DB
       if (organizationId && subIdExternal) {
         const existing = await ctx.db
           .query("subscriptions")
@@ -468,7 +430,6 @@ export const handleEvent = mutation({
 
         if (variantId) {
           const { tier, limits } = mapVariantToPlan(variantId);
-
           await ctx.db.patch(organizationId, {
             planTier: tier,
             billingStatus:
@@ -502,15 +463,14 @@ export const handleEvent = mutation({
       }
     }
 
-    // ===========================================================
+    // ------------------------------
     // SUBSCRIPTION CANCELLED / EXPIRED
-    // ===========================================================
+    // ------------------------------
     if (
       eventName === "subscription_cancelled" ||
       eventName === "subscription_expired"
     ) {
       const subIdExternal = String(data?.id ?? "");
-
       if (subIdExternal) {
         const existing = await ctx.db
           .query("subscriptions")
@@ -526,7 +486,7 @@ export const handleEvent = mutation({
             updatedAt: Date.now(),
           });
 
-          // لا نُرجع إلى basic — نعيده إلى no-plan كما اتفقنا
+          // لا نعيد المستخدم إلى basic — نزيل الخطة نهائياً
           await ctx.db.patch(existing.organizationId, {
             billingStatus:
               eventName === "subscription_cancelled" ? "cancelled" : "expired",
@@ -539,15 +499,14 @@ export const handleEvent = mutation({
       }
     }
 
-    // ===========================================================
-    // SUBSCRIPTION PAYMENT (SUCCESS / FAILED / REFUNDED)
-    // ===========================================================
+    // ------------------------------
+    // SUBSCRIPTION PAYMENT EVENTS
+    // ------------------------------
     if (
       eventName === "subscription_payment_success" ||
       eventName === "subscription_payment_failed" ||
       eventName === "subscription_payment_refunded"
     ) {
-      // تخزين الفاتورة/المعاملة
       if (organizationId) {
         const statusInvoice =
           eventName === "subscription_payment_success"
@@ -559,7 +518,7 @@ export const handleEvent = mutation({
         await ctx.db.insert("invoices", {
           organizationId,
           lemonInvoiceId: lemonId,
-          subscriptionId: undefined, // يمكن ربطها لاحقًا لو أردت
+          subscriptionId: undefined,
           amountCents:
             cents(attr?.total ?? 0) * (statusInvoice === "refunded" ? -1 : 1),
           currency: attr?.currency ?? "USD",
@@ -575,13 +534,11 @@ export const handleEvent = mutation({
           createdAt: Date.now(),
         });
 
-        // تجديد الاشتراك وتحديث المنظمة عند نجاح الدفع
         if (
           eventName === "subscription_payment_success" &&
           attr?.subscription_id
         ) {
           const subIdExternal = String(attr.subscription_id);
-
           const sub = await ctx.db
             .query("subscriptions")
             .withIndex("by_sub", (q) =>
@@ -598,7 +555,6 @@ export const handleEvent = mutation({
               updatedAt: Date.now(),
             });
 
-            // استخدم variantId من الاشتراك المخزّن (قد لا يأتي في هذا الحدث)
             const variantId = sub.variantId;
             if (variantId) {
               const { tier, limits } = mapVariantToPlan(variantId);
@@ -625,9 +581,7 @@ export const handleEvent = mutation({
       }
     }
 
-    // ===========================================================
-    // MARK AS PROCESSED
-    // ===========================================================
+    // Mark processed
     const ev = await ctx.db
       .query("webhookEvents")
       .withIndex("by_lemonId", (q) => q.eq("lemonId", lemonId || "unknown"))
@@ -636,6 +590,9 @@ export const handleEvent = mutation({
   },
 });
 
+// -------------------------------------------------------------
+// createCheckoutSession
+// -------------------------------------------------------------
 export const createCheckoutSession = action({
   args: {
     organizationId: v.id("organizations"),
@@ -647,11 +604,10 @@ export const createCheckoutSession = action({
     ctx,
     args
   ): Promise<{ ok: true; upgrade: boolean; url: string }> => {
-    // Read organization data using query
+    // احصل على بيانات المنظمة
     const org: {
       activeSubscriptionId: Id<"subscriptions"> | null;
       planTier: "basic" | "starter" | "pro" | "business" | null;
-      customerPortalUrl: string | null;
     } | null = await ctx.runQuery(api.billing.getOrganizationForCheckout, {
       organizationId: args.organizationId,
     });
@@ -662,14 +618,14 @@ export const createCheckoutSession = action({
     const currentTier = org.planTier ?? null;
     const desiredTier = getTier(args.variantId);
 
-    // Has subscription? → only upgrades allowed
+    // يوجد اشتراك؟ إذن نسمح فقط بالترقية
     if (activeSub && currentTier) {
       const allowed = isUpgrade(currentTier, desiredTier);
       if (!allowed) {
         throw new Error("You already have this or a higher subscription.");
       }
 
-      // Get fresh portal URL every time
+      // هنا لا نستخدم URL ثابت؛ ننشئ Portal Session جديد
       const portal = await ctx.runAction(api.billing.getFreshPortalUrl, {
         organizationId: args.organizationId,
       });
@@ -677,7 +633,7 @@ export const createCheckoutSession = action({
       return { ok: true, upgrade: true, url: portal.url };
     }
 
-    // Fetch lemonCustomerId if exists using query
+    // Fetch lemonCustomerId إن وُجد
     const billingCustomer: {
       email: string | null;
       lemonCustomerId: string | null;
@@ -685,11 +641,11 @@ export const createCheckoutSession = action({
       organizationId: args.organizationId,
     });
 
-    // Get user email - use provided email, billing customer email, or fallback
+    // بريد المستخدم
     const userEmail =
       args.userEmail ?? billingCustomer?.email ?? "customer@repvix.com";
 
-    // Call ACTION to create checkout
+    // إنشاء Checkout عبر Action منفصلة
     const result: { url: string } = await ctx.runAction(
       api.billing.createLemonCheckoutAction,
       {
@@ -705,6 +661,9 @@ export const createCheckoutSession = action({
   },
 });
 
+// -------------------------------------------------------------
+// createLemonCheckoutAction
+// -------------------------------------------------------------
 export const createLemonCheckoutAction = action({
   args: {
     clerkUserId: v.string(),
@@ -720,13 +679,12 @@ export const createLemonCheckoutAction = action({
       throw new Error("Missing Lemon Squeezy API keys.");
     }
 
-    // Build payload
     const payload: any = {
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
-            email: args.email, // REQUIRED for portal linking
+            email: args.email,
             custom: {
               organizationId: args.organizationId,
               clerkUserId: args.clerkUserId,
@@ -742,14 +700,13 @@ export const createLemonCheckoutAction = action({
       },
     };
 
-    // If customer exists, re-link it
+    // ربط العميل إن وجد
     if (args.lemonCustomerId) {
       payload.data.relationships.customer = {
         data: { type: "customers", id: args.lemonCustomerId },
       };
     }
 
-    // External fetch
     const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
       method: "POST",
       headers: {
@@ -768,15 +725,15 @@ export const createLemonCheckoutAction = action({
     const json = await res.json();
     const url = json?.data?.attributes?.url;
     if (!url) throw new Error("Missing checkout URL");
-
     return { url };
   },
 });
 
+// -------------------------------------------------------------
+// getFreshPortalUrl — ينشئ Portal Session لحظيًا (Best Practice)
+// -------------------------------------------------------------
 export const getFreshPortalUrl = action({
-  args: {
-    organizationId: v.id("organizations"),
-  },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }): Promise<{ url: string }> => {
     const apiKey = process.env.LEMON_SECRET_KEY;
     if (!apiKey) throw new Error("Missing Lemon Squeezy API key");
@@ -792,33 +749,37 @@ export const getFreshPortalUrl = action({
 
     const lemonCustomerId = customer.lemonCustomerId;
 
-    // 2) طلب بيانات العميل من Lemon للحصول على رابط البوابة
-    const res = await fetch(
-      `https://api.lemonsqueezy.com/v1/customers/${lemonCustomerId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: "application/vnd.api+json",
+    // 2) إنشاء جلسة Portal جديدة عبر endpoint الرسمي
+    const payload = {
+      data: {
+        type: "billing-portals",
+        attributes: {
+          customer_id: lemonCustomerId,
+          // يمكنك جعله ديناميكيًا حسب اللغة/المسار
+          return_url: `${process.env.APP_URL ?? "https://repvix.com"}/dashboard/billing`,
         },
-      }
-    );
+      },
+    };
+
+    const res = await fetch("https://api.lemonsqueezy.com/v1/billing-portals", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+      },
+      body: JSON.stringify(payload),
+    });
 
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error("Failed to fetch portal URL: " + txt);
+      throw new Error("Failed to create billing portal: " + txt);
     }
 
     const json = await res.json();
+    const url = json?.data?.attributes?.url;
+    if (!url) throw new Error("Portal URL missing from Lemon Squeezy");
 
-    const portalUrl =
-      json?.data?.attributes?.urls?.customer_portal ??
-      json?.data?.attributes?.urls?.customer_portal_update_subscription;
-
-    if (!portalUrl) {
-      throw new Error("Portal URL missing from Lemon");
-    }
-
-    return { url: portalUrl };
+    return { url };
   },
 });

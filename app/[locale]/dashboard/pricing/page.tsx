@@ -13,8 +13,9 @@ import { useAction } from "convex/react";
 
 export default function PricingPage() {
   const t = useTranslations("dashboard.pricing");
-  const { organization } = useOrganization();
   const { user } = useUser();
+  const { organization } = useOrganization();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   // Get Convex organization ID from Clerk org ID
   const convexOrgId = useQuery(
@@ -121,9 +122,11 @@ export default function PricingPage() {
   const createCheckout = useAction(api.billing.createCheckoutSession);
 
   const checkout = async (variantId: string) => {
+    setLoadingPlan(variantId);
+
     if (!variantId || !convexOrgId || !user?.id) {
       toast.error("Error");
-      return;
+      return; // لا تعيد loadingPlan هنا، الصفحة لن تتغير
     }
 
     try {
@@ -134,13 +137,13 @@ export default function PricingPage() {
         userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
       });
 
-      // 1) حالة الترقيــة UPGRADE
+      // Upgrade → portal session → redirect
       if (result.upgrade === true) {
-        window.location.href = result.url; // billing portal
+        window.location.href = result.url;
         return;
       }
 
-      // 2) حالة الاشتراك الجديد NEW CHECKOUT
+      // New checkout
       if (result.url) {
         window.location.href = result.url;
         return;
@@ -149,6 +152,7 @@ export default function PricingPage() {
       toast.error("Unexpected billing response");
     } catch (err: any) {
       toast.error(err.message);
+      setLoadingPlan(null);
     }
   };
 
@@ -201,7 +205,10 @@ export default function PricingPage() {
                       </div>
                       <Button
                         onClick={() => checkout(String(plan.variantId))}
-                        disabled={billing?.planTier === plan.id}
+                        disabled={
+                          billing?.planTier === plan.id ||
+                          loadingPlan === plan.variantId
+                        }
                         size="sm"
                         className={`w-full mt-4 ${
                           plan.popular

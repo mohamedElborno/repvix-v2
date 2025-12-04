@@ -21,17 +21,15 @@ export default function BillingPage() {
   const { organization } = useOrganization();
   const locale = useLocale();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [plan, setPlan] = useState<string | null>(null);
-  const [limits, setLimits] = useState<{
-    remaining?: number;
-    employees?: number;
-    integrations?: number;
-  } | null>(null);
 
   const convexOrgId = useQuery(
     api.orgs.getByClerkId,
     organization?.id ? { clerkOrgId: organization.id } : "skip"
+  );
+
+  const portalData = useQuery(
+    api.billing.getBillingPortalData,
+    convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
   const getPortal = useAction(api.billing.getFreshPortalUrl);
@@ -43,37 +41,12 @@ export default function BillingPage() {
     window.location.href = result.url;
   };
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/billing/portal");
-        const data = await res.json();
-
-        setPlan(data.plan || null);
-        setLimits(data.limits || null);
-      } catch (e: unknown) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, []);
-
-  const openPortal = async () => {
-    try {
-      const r = await fetch("/api/billing/portal", { method: "POST" });
-      const d = await r.json();
-      if (d.url) window.location.href = d.url;
-    } catch (error) {
-      console.error("Failed to open portal:", error);
-    }
-  };
-
   const goToPricing = () => {
     router.push(`/${locale}/dashboard/pricing`);
   };
+
+  // Loading state
+  const loading = portalData === undefined;
 
   return (
     <div className="w-full max-w-6xl mx-auto py-8 min-h-[calc(100vh-120px)]">
@@ -81,9 +54,7 @@ export default function BillingPage() {
         <h1 className="text-4xl font-bold text-foreground mb-2">
           {t("title")}
         </h1>
-        <p className="text-muted-foreground">
-          {t("subtitle") || "Manage your subscription and billing information"}
-        </p>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {loading ? (
@@ -104,22 +75,16 @@ export default function BillingPage() {
               </h2>
             </div>
 
-            {plan ? (
+            {portalData.plan ? (
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">
                     {t("plan")}
                   </p>
-                  <p className="text-2xl font-bold text-foreground capitalize">
-                    {plan === "basic" && "Basic"}
-                    {plan === "starter" && "Starter"}
-                    {plan === "pro" && "Pro"}
-                    {plan === "business" && "Business"}
-                    {!["basic", "starter", "pro", "business"].includes(plan) &&
-                      plan}
+                  <p className="text-2xl font-bold capitalize">
+                    {portalData.plan}
                   </p>
                 </div>
-
                 <Button
                   onClick={manageBilling}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white"
@@ -143,40 +108,40 @@ export default function BillingPage() {
               <div className="p-2 rounded-lg bg-blue-500/10">
                 <BarChart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <h2 className="text-xl font-semibold text-foreground">
-                {t("currentUsage")}
-              </h2>
+              <h2 className="text-xl font-semibold">{t("currentUsage")}</h2>
             </div>
 
-            {limits ? (
+            {portalData.limits ? (
               <div className="space-y-4">
-                {limits.remaining !== undefined && (
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                {portalData.limits.remaining !== undefined && (
+                  <div className="flex justify-between p-3 rounded-lg bg-muted/50">
                     <span className="text-sm text-muted-foreground">
                       {t("remainingAnalyses")}
                     </span>
-                    <span className="text-lg font-semibold text-foreground">
-                      {limits.remaining}
+                    <span className="text-lg font-semibold">
+                      {portalData.limits.remaining}
                     </span>
                   </div>
                 )}
-                {limits.employees !== undefined && (
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+
+                {portalData.limits.employees !== undefined && (
+                  <div className="flex justify-between p-3 rounded-lg bg-muted/50">
                     <span className="text-sm text-muted-foreground">
                       {t("allowedEmployees")}
                     </span>
-                    <span className="text-lg font-semibold text-foreground">
-                      {limits.employees}
+                    <span className="text-lg font-semibold">
+                      {portalData.limits.employees}
                     </span>
                   </div>
                 )}
-                {limits.integrations !== undefined && (
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+
+                {portalData.limits.integrations !== undefined && (
+                  <div className="flex justify-between p-3 rounded-lg bg-muted/50">
                     <span className="text-sm text-muted-foreground">
                       {t("allowedIntegrations")}
                     </span>
-                    <span className="text-lg font-semibold text-foreground">
-                      {limits.integrations}
+                    <span className="text-lg font-semibold">
+                      {portalData.limits.integrations}
                     </span>
                   </div>
                 )}
@@ -192,9 +157,7 @@ export default function BillingPage() {
               <div className="p-2 rounded-lg bg-green-500/10">
                 <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-xl font-semibold text-foreground">
-                {t("upgrade")}
-              </h2>
+              <h2 className="text-xl font-semibold">{t("upgrade")}</h2>
             </div>
 
             <p className="text-muted-foreground mb-4">
@@ -216,7 +179,7 @@ export default function BillingPage() {
               <div className="p-2 rounded-lg bg-orange-500/10">
                 <Settings className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-xl font-semibold">
                 {t("subscriptionManagement")}
               </h2>
             </div>
