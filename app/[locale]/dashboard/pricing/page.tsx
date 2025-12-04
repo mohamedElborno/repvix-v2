@@ -9,12 +9,12 @@ import { useOrganization, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
+import { useMutation } from "convex/react";
 
 export default function PricingPage() {
   const t = useTranslations("dashboard.pricing");
   const { organization } = useOrganization();
   const { user } = useUser();
-  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
 
   // Get Convex organization ID from Clerk org ID
   const convexOrgId = useQuery(
@@ -22,12 +22,10 @@ export default function PricingPage() {
     organization?.id ? { clerkOrgId: organization.id } : "skip"
   );
 
-  useEffect(() => {
-    fetch("/api/billing/current")
-      .then((r) => r.json())
-      .then((d) => setCurrentPlan(d.plan))
-      .catch(() => {});
-  }, []);
+  const billing = useQuery(
+    api.billing.getCurrentPlan,
+    convexOrgId ? { organizationId: convexOrgId } : "skip"
+  );
 
   const plans = [
     {
@@ -118,49 +116,39 @@ export default function PricingPage() {
 
   // Get all unique feature keys across all plans
   const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
-  console.log("currentPlan", currentPlan);
+  console.log("currentPlan", billing);
 
-  const checkout = async (variantId: string | null) => {
-    if (!variantId) {
-      toast.error(t("willContactYou"));
+  const createCheckout = useMutation(api.billing.createCheckoutSession);
+
+  const checkout = async (variantId: string) => {
+    if (!variantId || !convexOrgId || !user?.id) {
+      toast.error("Error");
       return;
     }
 
-    if (!convexOrgId || !user?.id) {
-      toast.error(t("willContactYou"));
-      return;
-    }
-
-    const res = await fetch("/api/billing/create-checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        variantId,
+    try {
+      const result = await createCheckout({
         organizationId: convexOrgId,
         clerkUserId: user.id,
-      }),
-    });
+        variantId,
+      });
 
-    const d = await res.json();
+      // 1) حالة الترقيــة UPGRADE
+      if (result.upgrade === true) {
+        window.location.href = result.url; // billing portal
+        return;
+      }
 
-    if (!d.ok) {
-      toast.error(d.error || "Something went wrong");
-      return;
+      // 2) حالة الاشتراك الجديد NEW CHECKOUT
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
+      toast.error("Unexpected billing response");
+    } catch (err: any) {
+      toast.error(err.message);
     }
-
-    // Upgrade → backend returns the billing portal URL
-    if (d.upgrade && d.url) {
-      window.location.href = d.url;
-      return;
-    }
-
-    // Normal checkout
-    if (d.url) {
-      window.location.href = d.url;
-      return;
-    }
-
-    toast.error("Unexpected response from billing backend");
   };
 
   return (
@@ -212,7 +200,7 @@ export default function PricingPage() {
                       </div>
                       <Button
                         onClick={() => checkout(String(plan.variantId))}
-                        disabled={currentPlan === plan.id}
+                        disabled={billing?.planTier === plan.id}
                         size="sm"
                         className={`w-full mt-4 ${
                           plan.popular
@@ -222,7 +210,7 @@ export default function PricingPage() {
                       >
                         {plan.price === t("customPrice") ? (
                           t("contactUs")
-                        ) : currentPlan === plan.id ? (
+                        ) : billing?.planTier === plan.id ? (
                           t("currentPlan")
                         ) : (
                           <>

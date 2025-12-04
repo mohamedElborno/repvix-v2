@@ -113,6 +113,30 @@ export const getViewerRole = query({
 });
 
 // ===========================================================
+// Get Current Plan
+// ===========================================================
+export const getCurrentPlan = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const org = await ctx.db.get(organizationId);
+    if (!org) {
+      return {
+        planTier: null,
+        billingStatus: null,
+        activeSubscriptionId: null,
+      };
+    }
+    return {
+      planTier: org.planTier ?? null,
+      billingStatus: org.billingStatus ?? null,
+      activeSubscriptionId: org.activeSubscriptionId ?? null,
+    };
+  },
+});
+
+// ===========================================================
 // ingestWebhook - storing all events
 // ===========================================================
 export const ingestWebhook = mutation({
@@ -537,7 +561,7 @@ export const createCheckoutSession = mutation({
       }
 
       if (org.customerPortalUrl) {
-        return { ok: true, url: org.customerPortalUrl };
+        return { ok: true, upgrade: true, url: org.customerPortalUrl };
       }
 
       throw new Error(
@@ -552,7 +576,7 @@ export const createCheckoutSession = mutation({
       variantId: args.variantId,
     });
 
-    return { ok: true, url: checkoutUrl };
+    return { ok: true, upgrade: false, url: checkoutUrl, checkoutUrl };
   },
 });
 
