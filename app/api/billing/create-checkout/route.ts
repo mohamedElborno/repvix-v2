@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizationId, clerkUserId, variantId } = await req.json();
+    const { organizationId, clerkUserId, variantId, userEmail } =
+      await req.json();
 
     if (!organizationId || !clerkUserId || !variantId) {
       return NextResponse.json(
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         type: "checkouts",
         attributes: {
           checkout_data: {
+            email: userEmail,
             custom: { organizationId, clerkUserId },
           },
         },

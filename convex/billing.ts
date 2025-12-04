@@ -605,6 +605,7 @@ export const createCheckoutSession = mutation({
     organizationId: v.id("organizations"),
     clerkUserId: v.string(),
     variantId: v.string(),
+    userEmail: v.string(),
   },
   handler: async (ctx, args) => {
     const org = await ctx.db.get(args.organizationId);
@@ -638,6 +639,7 @@ export const createCheckoutSession = mutation({
 
     // لا يوجد اشتراك → إنشاء checkout جديد
     const checkoutUrl = await createLemonCheckout({
+      userEmail: args.userEmail,
       clerkUserId: args.clerkUserId,
       organizationId: args.organizationId,
       variantId: args.variantId,
@@ -651,10 +653,12 @@ async function createLemonCheckout({
   clerkUserId,
   organizationId,
   variantId,
+  userEmail,
 }: {
   clerkUserId: string;
   organizationId: Id<"organizations">;
   variantId: string;
+  userEmail: string;
 }): Promise<string> {
   const apiKey = process.env.LEMON_SECRET_KEY;
   const storeId = process.env.LEMON_STORE_ID;
@@ -668,6 +672,7 @@ async function createLemonCheckout({
       type: "checkouts",
       attributes: {
         checkout_data: {
+          email: userEmail,
           custom: { organizationId, clerkUserId },
         },
       },

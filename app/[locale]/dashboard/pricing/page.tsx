@@ -131,6 +131,7 @@ export default function PricingPage() {
         organizationId: convexOrgId,
         clerkUserId: user.id,
         variantId,
+        userEmail: user?.emailAddresses[0]?.emailAddress ?? null,
       });
 
       // 1) حالة الترقيــة UPGRADE
