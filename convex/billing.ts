@@ -137,6 +137,70 @@ export const getCurrentPlan = query({
 });
 
 // ===========================================================
+// Get Billing Portal Data
+// ===========================================================
+export const getBillingPortalData = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const org = await ctx.db.get(organizationId);
+    if (!org) {
+      return {
+        plan: null,
+        limits: null,
+        portalUrl: null,
+      };
+    }
+
+    const plan = org.planTier ?? null;
+
+    // Calculate remaining analyses for today
+    let remainingAnalyses: number | "unlimited" | undefined = undefined;
+    if (org.planTier) {
+      const limits = limitsForTier(org.planTier);
+      const dailyLimit = limits.dailyAnalyses;
+
+      if (dailyLimit === "unlimited") {
+        remainingAnalyses = "unlimited";
+      } else {
+        // Calculate used analyses today
+        const now = Date.now();
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+        const startOfDayMs = startOfDay.getTime();
+
+        const analyses = await ctx.db
+          .query("chatAnalyses")
+          .withIndex("by_org_createdAt", (q) =>
+            q
+              .eq("organizationId", organizationId)
+              .gte("createdAt", startOfDayMs)
+          )
+          .collect();
+
+        const usedToday = analyses.length;
+        remainingAnalyses = Math.max(0, dailyLimit - usedToday);
+      }
+    }
+
+    const limits = org.limits
+      ? {
+          remaining: remainingAnalyses,
+          employees: org.limits.members,
+          integrations: org.limits.integrations?.length ?? 0,
+        }
+      : null;
+
+    return {
+      plan,
+      limits,
+      portalUrl: org.customerPortalUrl ?? null,
+    };
+  },
+});
+
+// ===========================================================
 // ingestWebhook - storing all events
 // ===========================================================
 export const ingestWebhook = mutation({
@@ -564,9 +628,12 @@ export const createCheckoutSession = mutation({
         return { ok: true, upgrade: true, url: org.customerPortalUrl };
       }
 
-      throw new Error(
-        "Upgrade allowed but billing portal URL is not ready yet. Try again shortly."
-      );
+      // fallback: use generic Lemon billing portal
+      return {
+        ok: true,
+        upgrade: true,
+        url: "https://repvix.lemonsqueezy.com/billing",
+      };
     }
 
     // لا يوجد اشتراك → إنشاء checkout جديد

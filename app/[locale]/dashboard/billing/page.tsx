@@ -92,7 +92,13 @@ export default function BillingPage() {
                   <p className="text-sm text-muted-foreground mb-1">
                     {t("plan")}
                   </p>
-                  <p className="text-2xl font-bold text-foreground">{plan}</p>
+                  <p className="text-2xl font-bold text-foreground capitalize">
+                    {plan === "basic" && "Basic"}
+                    {plan === "starter" && "Starter"}
+                    {plan === "pro" && "Pro"}
+                    {plan === "business" && "Business"}
+                    {!["basic", "starter", "pro", "business"].includes(plan) && plan}
+                  </p>
                 </div>
 
                 <Button
