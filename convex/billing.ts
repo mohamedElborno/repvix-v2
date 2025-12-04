@@ -645,6 +645,7 @@ export const createCheckoutSession = action({
     organizationId: v.id("organizations"),
     clerkUserId: v.string(),
     variantId: v.string(),
+    userEmail: v.optional(v.string()),
   },
   handler: async (
     ctx,
@@ -687,6 +688,10 @@ export const createCheckoutSession = action({
       organizationId: args.organizationId,
     });
 
+    // Get user email - use provided email, billing customer email, or fallback
+    const userEmail =
+      args.userEmail ?? billingCustomer?.email ?? "customer@repvix.com";
+
     // Call ACTION to create checkout
     const result: { url: string } = await ctx.runAction(
       api.billing.createLemonCheckoutAction,
@@ -694,7 +699,7 @@ export const createCheckoutSession = action({
         clerkUserId: args.clerkUserId,
         organizationId: args.organizationId,
         variantId: args.variantId,
-        email: billingCustomer?.email ?? "fallback@example.com",
+        email: userEmail,
         lemonCustomerId: billingCustomer?.lemonCustomerId ?? undefined,
       }
     );
