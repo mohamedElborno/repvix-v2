@@ -131,40 +131,9 @@ export default function PricingPage() {
       return;
     }
 
-    // 1. Check if the organization has an active subscription
-    const billing = await fetch("/api/billing/current").then((r) => r.json());
-
-    const hasActiveSubscription =
-      billing.status === "active" ||
-      billing.status === "trial" ||
-      billing.status === "past_due";
-
-    // 2. If they have a subscription → We don't allow checkout from the frontend
-    if (hasActiveSubscription) {
-      // Allow only upgrades
-      if (billing.planTier) {
-        const requested = plans.find((p) => p.variantId === variantId);
-        const currentPlan = plans.find((p) => p.id === billing.planTier);
-
-        if (requested && currentPlan && requested.id > currentPlan.id) {
-          // Upgrade → Send the user to the billing portal
-          window.location.href = "https://repvix.lemonsqueezy.com/billing";
-          return;
-        }
-      }
-
-      toast.error(
-        "You already have an active subscription. You can only upgrade from the billing portal."
-      );
-      return;
-    }
-
-    // 3. Create checkout
     const res = await fetch("/api/billing/create-checkout", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         variantId,
         organizationId: convexOrgId,
@@ -173,11 +142,25 @@ export default function PricingPage() {
     });
 
     const d = await res.json();
-    if (d.ok && d.url) {
-      window.location.href = d.url;
-    } else {
-      toast.error(d.error || "An error occurred while creating the checkout");
+
+    if (!d.ok) {
+      toast.error(d.error || "Something went wrong");
+      return;
     }
+
+    // Upgrade → backend returns the billing portal URL
+    if (d.upgrade && d.url) {
+      window.location.href = d.url;
+      return;
+    }
+
+    // Normal checkout
+    if (d.url) {
+      window.location.href = d.url;
+      return;
+    }
+
+    toast.error("Unexpected response from billing backend");
   };
 
   return (

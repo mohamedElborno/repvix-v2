@@ -4,6 +4,32 @@ import { mutation, query } from "./_generated/server";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 import { Id } from "./_generated/dataModel";
 
+function getTier(variantId?: string | null) {
+  if (!variantId) return null;
+  try {
+    return mapVariantToPlan(variantId).tier; // "basic" | "starter" | "pro" | "business" (أياً كانت عندك)
+  } catch {
+    return null;
+  }
+}
+
+function isUpgrade(currentTier: any, newTier: any) {
+  if (!currentTier && newTier) return true; // لا توجد خطة حالية
+  if (!currentTier || !newTier) return false;
+  // إذا كانت التراتبية لديك string فحوّلها لمؤشر رقمي
+  const order = ["basic", "starter", "pro", "business"];
+  const idx = (x: any) => (typeof x === "string" ? order.indexOf(x) : -1);
+  return idx(newTier) > idx(currentTier);
+}
+
+async function markProcessed(ctx: any, lemonId: string) {
+  const ev = await ctx.db
+    .query("webhookEvents")
+    .withIndex("by_lemonId", (q: any) => q.eq("lemonId", lemonId))
+    .first();
+  if (ev) await ctx.db.patch(ev._id, { processed: true });
+}
+
 // ===========================================================
 // Helpers
 // ===========================================================
@@ -212,11 +238,69 @@ export const handleEvent = mutation({
       const renewsAt = ts(attr?.renews_at);
       const canceledAt = ts(attr?.canceled_at);
       const trialEndsAt = ts(attr?.trial_ends_at);
+
       const variantId =
         variantIdFromEvent ??
         data?.attributes?.first_subscription_item?.variant_id ??
         data?.attributes?.variant_id ??
         undefined;
+
+      // =============================
+      //   الحماية الأساسية
+      // =============================
+
+      if (organizationId) {
+        const org = await ctx.db.get(organizationId);
+
+        // حفظ رابط بوابة العميل
+        const portalUrl =
+          attr?.urls?.customer_portal ??
+          attr?.urls?.customer_portal_update_subscription ??
+          undefined;
+
+        if (portalUrl) {
+          await ctx.db.patch(organizationId, { customerPortalUrl: portalUrl });
+        }
+
+        if (org?.activeSubscriptionId) {
+          const existingSub = await ctx.db.get(org.activeSubscriptionId);
+
+          const currentTier = existingSub?.variantId
+            ? getTier(existingSub.variantId)
+            : (org.planTier ?? null);
+
+          const newTier = getTier(variantId);
+
+          const allowed = isUpgrade(currentTier, newTier);
+
+          if (!allowed) {
+            console.log("Blocked subscription (duplicate/downgrade)", {
+              currentTier,
+              newTier,
+              subIdExternal,
+            });
+
+            await markProcessed(ctx, lemonId);
+
+            await ctx.db.insert("billingAudit" as any, {
+              organizationId,
+              type: "blocked_subscription",
+              reason: "duplicate_or_downgrade",
+              currentTier,
+              newTier,
+              lemonSubscriptionId: subIdExternal,
+              at: Date.now(),
+              raw: payload,
+            });
+
+            return;
+          }
+        }
+      }
+
+      // =============================
+      //   تابع لوجيك البناء الطبيعي
+      // =============================
 
       if (organizationId && subIdExternal) {
         const existing = await ctx.db
@@ -258,7 +342,6 @@ export const handleEvent = mutation({
           });
         }
 
-        // ---- APPLY PLAN TO ORGANIZATION ----
         if (variantId) {
           const { tier, limits } = mapVariantToPlan(variantId);
 
@@ -433,52 +516,43 @@ export const createCheckoutSession = mutation({
   args: {
     organizationId: v.id("organizations"),
     clerkUserId: v.string(),
-    variantId: v.string(), // الباقة المطلوبة
+    variantId: v.string(),
   },
   handler: async (ctx, args) => {
-    // 1. جلب المنظمة
     const org = await ctx.db.get(args.organizationId);
     if (!org) throw new Error("Organization not found");
 
-    const currentPlan = org.planTier;
-    const currentStatus = org.billingStatus;
     const activeSub = org.activeSubscriptionId;
+    const currentTier = org.planTier ?? null;
+    const desiredTier = getTier(args.variantId);
 
-    // 2. هل لديه اشتراك قائم؟
-    if (activeSub) {
-      // اشتراك موجود — ممنوع بدء Checkout جديد
-      // إلا في حالة Upgrade
-      if (
-        currentStatus === "active" ||
-        currentStatus === "trial" ||
-        currentStatus === "past_due"
-      ) {
-        // جلب تفاصيل الخطة المطلوبة
-        const { tier: newTier } = mapVariantToPlan(args.variantId);
+    // لديه اشتراك حالي → نسمح فقط بالـ Upgrade
+    if (activeSub && currentTier) {
+      const allowed = isUpgrade(currentTier, desiredTier);
 
-        // إذا كانت الخطة الجديدة أعلى من الحالية = Upgrade مسموح
-        if (newTier && currentPlan && newTier > currentPlan) {
-          return {
-            upgrade: true,
-            url: "https://repvix.lemonsqueezy.com/billing",
-          };
-        }
-
-        // غير ذلك = منع
-        throw new Error("You already have an active subscription.");
+      if (!allowed) {
+        throw new Error(
+          "You already have an active subscription. You cannot repurchase the same or lower plan."
+        );
       }
+
+      if (org.customerPortalUrl) {
+        return { ok: true, url: org.customerPortalUrl };
+      }
+
+      throw new Error(
+        "Upgrade allowed but billing portal URL is not ready yet. Try again shortly."
+      );
     }
 
-    // 3. إذا لا يوجد اشتراك → إنشاء checkout جديد
+    // لا يوجد اشتراك → إنشاء checkout جديد
     const checkoutUrl = await createLemonCheckout({
       clerkUserId: args.clerkUserId,
       organizationId: args.organizationId,
       variantId: args.variantId,
     });
 
-    return {
-      checkoutUrl,
-    };
+    return { ok: true, url: checkoutUrl };
   },
 });
 
@@ -524,13 +598,12 @@ async function createLemonCheckout({
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error("Failed to create checkout: " + err);
+    const text = await res.text();
+    throw new Error("Failed to create checkout: " + text);
   }
 
   const json = await res.json();
   const url = json?.data?.attributes?.url;
-
   if (!url) throw new Error("Checkout URL missing");
 
   return url;
