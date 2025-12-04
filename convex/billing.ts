@@ -59,7 +59,9 @@ async function resolveOrganizationId(
 
 function extractContext(payload: any) {
   const meta = payload?.meta ?? {};
-  const custom = meta?.custom ?? {};
+  console.log("meta", meta);
+  const custom = meta?.custom_data ?? {};
+  console.log("custom", custom);
   return {
     rawOrganizationRef: custom?.organizationId as string | undefined, // قد تكون Convex أو Clerk
     clerkUserId: (custom?.clerkUserId as string | undefined) ?? undefined,
@@ -210,7 +212,11 @@ export const handleEvent = mutation({
       const renewsAt = ts(attr?.renews_at);
       const canceledAt = ts(attr?.canceled_at);
       const trialEndsAt = ts(attr?.trial_ends_at);
-      const variantId = variantIdFromEvent; // في هذه الأحداث عادةً موجود
+      const variantId =
+        variantIdFromEvent ??
+        data?.attributes?.first_subscription_item?.variant_id ??
+        data?.attributes?.variant_id ??
+        undefined;
 
       if (organizationId && subIdExternal) {
         const existing = await ctx.db
@@ -422,3 +428,110 @@ export const handleEvent = mutation({
     if (ev) await ctx.db.patch(ev._id, { processed: true });
   },
 });
+
+export const createCheckoutSession = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(),
+    variantId: v.string(), // الباقة المطلوبة
+  },
+  handler: async (ctx, args) => {
+    // 1. جلب المنظمة
+    const org = await ctx.db.get(args.organizationId);
+    if (!org) throw new Error("Organization not found");
+
+    const currentPlan = org.planTier;
+    const currentStatus = org.billingStatus;
+    const activeSub = org.activeSubscriptionId;
+
+    // 2. هل لديه اشتراك قائم؟
+    if (activeSub) {
+      // اشتراك موجود — ممنوع بدء Checkout جديد
+      // إلا في حالة Upgrade
+      if (
+        currentStatus === "active" ||
+        currentStatus === "trial" ||
+        currentStatus === "past_due"
+      ) {
+        // جلب تفاصيل الخطة المطلوبة
+        const { tier: newTier } = mapVariantToPlan(args.variantId);
+
+        // إذا كانت الخطة الجديدة أعلى من الحالية = Upgrade مسموح
+        if (newTier && currentPlan && newTier > currentPlan) {
+          return {
+            upgrade: true,
+            url: "https://repvix.lemonsqueezy.com/billing",
+          };
+        }
+
+        // غير ذلك = منع
+        throw new Error("You already have an active subscription.");
+      }
+    }
+
+    // 3. إذا لا يوجد اشتراك → إنشاء checkout جديد
+    const checkoutUrl = await createLemonCheckout({
+      clerkUserId: args.clerkUserId,
+      organizationId: args.organizationId,
+      variantId: args.variantId,
+    });
+
+    return {
+      checkoutUrl,
+    };
+  },
+});
+
+async function createLemonCheckout({
+  clerkUserId,
+  organizationId,
+  variantId,
+}: {
+  clerkUserId: string;
+  organizationId: Id<"organizations">;
+  variantId: string;
+}): Promise<string> {
+  const apiKey = process.env.LEMON_SECRET_KEY;
+  const storeId = process.env.LEMON_STORE_ID;
+
+  if (!apiKey || !storeId) {
+    throw new Error("Missing Lemon Squeezy API keys.");
+  }
+
+  const payload = {
+    data: {
+      type: "checkouts",
+      attributes: {
+        checkout_data: {
+          custom: { organizationId, clerkUserId },
+        },
+      },
+      relationships: {
+        store: { data: { type: "stores", id: storeId.toString() } },
+        variant: { data: { type: "variants", id: variantId.toString() } },
+      },
+    },
+  };
+
+  const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: "application/vnd.api+json",
+      "Content-Type": "application/vnd.api+json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error("Failed to create checkout: " + err);
+  }
+
+  const json = await res.json();
+  const url = json?.data?.attributes?.url;
+
+  if (!url) throw new Error("Checkout URL missing");
+
+  return url;
+}

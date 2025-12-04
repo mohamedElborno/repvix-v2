@@ -680,7 +680,9 @@ export default defineSchema({
     payload: v.any(),
     receivedAt: v.number(),
     processed: v.boolean(),
-  }).index("by_lemonId", ["lemonId"]),
+  })
+    .index("by_lemonId", ["lemonId"])
+    .index("by_processed", ["processed"]),
 
   billingCustomers: defineTable({
     organizationId: v.id("organizations"),

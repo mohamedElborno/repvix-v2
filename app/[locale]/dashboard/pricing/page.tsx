@@ -118,6 +118,7 @@ export default function PricingPage() {
 
   // Get all unique feature keys across all plans
   const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
+  console.log("currentPlan", currentPlan);
 
   const checkout = async (variantId: string | null) => {
     if (!variantId) {
@@ -130,6 +131,35 @@ export default function PricingPage() {
       return;
     }
 
+    // 1. Check if the organization has an active subscription
+    const billing = await fetch("/api/billing/current").then((r) => r.json());
+
+    const hasActiveSubscription =
+      billing.status === "active" ||
+      billing.status === "trial" ||
+      billing.status === "past_due";
+
+    // 2. If they have a subscription → We don't allow checkout from the frontend
+    if (hasActiveSubscription) {
+      // Allow only upgrades
+      if (billing.planTier) {
+        const requested = plans.find((p) => p.variantId === variantId);
+        const currentPlan = plans.find((p) => p.id === billing.planTier);
+
+        if (requested && currentPlan && requested.id > currentPlan.id) {
+          // Upgrade → Send the user to the billing portal
+          window.location.href = "https://repvix.lemonsqueezy.com/billing";
+          return;
+        }
+      }
+
+      toast.error(
+        "You already have an active subscription. You can only upgrade from the billing portal."
+      );
+      return;
+    }
+
+    // 3. Create checkout
     const res = await fetch("/api/billing/create-checkout", {
       method: "POST",
       headers: {
@@ -146,7 +176,7 @@ export default function PricingPage() {
     if (d.ok && d.url) {
       window.location.href = d.url;
     } else {
-      toast.error(d.error || "حدث خطأ أثناء إنشاء جلسة الدفع");
+      toast.error(d.error || "An error occurred while creating the checkout");
     }
   };
 
