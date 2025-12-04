@@ -137,14 +137,12 @@ export default function PricingPage() {
       // 1) حالة الترقيــة UPGRADE
       if (result.upgrade === true) {
         window.location.href = result.url; // billing portal
-        console.log("result.url", result.url);
         return;
       }
 
       // 2) حالة الاشتراك الجديد NEW CHECKOUT
       if (result.url) {
         window.location.href = result.url;
-        console.log("result.url", result.url);
         return;
       }
 

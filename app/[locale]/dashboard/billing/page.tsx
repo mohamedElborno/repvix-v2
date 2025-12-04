@@ -12,9 +12,13 @@ import {
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { api } from "@/convex/_generated/api";
+import { useAction, useQuery } from "convex/react";
+import { useOrganization } from "@clerk/nextjs";
 
 export default function BillingPage() {
   const t = useTranslations("billing");
+  const { organization } = useOrganization();
   const locale = useLocale();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -24,6 +28,20 @@ export default function BillingPage() {
     employees?: number;
     integrations?: number;
   } | null>(null);
+
+  const convexOrgId = useQuery(
+    api.orgs.getByClerkId,
+    organization?.id ? { clerkOrgId: organization.id } : "skip"
+  );
+
+  const getPortal = useAction(api.billing.getFreshPortalUrl);
+
+  const manageBilling = async () => {
+    if (!convexOrgId) return;
+
+    const result = await getPortal({ organizationId: convexOrgId });
+    window.location.href = result.url;
+  };
 
   useEffect(() => {
     async function load() {
@@ -97,12 +115,13 @@ export default function BillingPage() {
                     {plan === "starter" && "Starter"}
                     {plan === "pro" && "Pro"}
                     {plan === "business" && "Business"}
-                    {!["basic", "starter", "pro", "business"].includes(plan) && plan}
+                    {!["basic", "starter", "pro", "business"].includes(plan) &&
+                      plan}
                   </p>
                 </div>
 
                 <Button
-                  onClick={openPortal}
+                  onClick={manageBilling}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   {t("manageSubscription")}
@@ -204,7 +223,7 @@ export default function BillingPage() {
 
             <div className="space-y-3">
               <Button
-                onClick={openPortal}
+                onClick={manageBilling}
                 variant="outline"
                 className="w-full border-border hover:bg-muted"
               >
@@ -212,7 +231,7 @@ export default function BillingPage() {
               </Button>
 
               <Button
-                onClick={openPortal}
+                onClick={manageBilling}
                 variant="outline"
                 className="w-full border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/10"
               >

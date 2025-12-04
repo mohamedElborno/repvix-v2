@@ -386,10 +386,6 @@ export const handleEvent = mutation({
           attr?.urls?.customer_portal_update_subscription ??
           undefined;
 
-        if (portalUrl) {
-          await ctx.db.patch(organizationId, { customerPortalUrl: portalUrl });
-        }
-
         if (org?.activeSubscriptionId) {
           const existingSub = await ctx.db.get(org.activeSubscriptionId);
 
@@ -673,11 +669,12 @@ export const createCheckoutSession = action({
         throw new Error("You already have this or a higher subscription.");
       }
 
-      if (org.customerPortalUrl) {
-        return { ok: true, upgrade: true, url: org.customerPortalUrl };
-      }
+      // Get fresh portal URL every time
+      const portal = await ctx.runAction(api.billing.getFreshPortalUrl, {
+        organizationId: args.organizationId,
+      });
 
-      throw new Error("Billing portal URL not ready yet.");
+      return { ok: true, upgrade: true, url: portal.url };
     }
 
     // Fetch lemonCustomerId if exists using query
@@ -773,5 +770,55 @@ export const createLemonCheckoutAction = action({
     if (!url) throw new Error("Missing checkout URL");
 
     return { url };
+  },
+});
+
+export const getFreshPortalUrl = action({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }): Promise<{ url: string }> => {
+    const apiKey = process.env.LEMON_SECRET_KEY;
+    if (!apiKey) throw new Error("Missing Lemon Squeezy API key");
+
+    // 1) الحصول على billing customer
+    const customer = await ctx.runQuery(api.billing.getBillingCustomer, {
+      organizationId,
+    });
+
+    if (!customer?.lemonCustomerId) {
+      throw new Error("Customer not found for this organization");
+    }
+
+    const lemonCustomerId = customer.lemonCustomerId;
+
+    // 2) طلب بيانات العميل من Lemon للحصول على رابط البوابة
+    const res = await fetch(
+      `https://api.lemonsqueezy.com/v1/customers/${lemonCustomerId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/vnd.api+json",
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error("Failed to fetch portal URL: " + txt);
+    }
+
+    const json = await res.json();
+
+    const portalUrl =
+      json?.data?.attributes?.urls?.customer_portal ??
+      json?.data?.attributes?.urls?.customer_portal_update_subscription;
+
+    if (!portalUrl) {
+      throw new Error("Portal URL missing from Lemon");
+    }
+
+    return { url: portalUrl };
   },
 });
