@@ -59,7 +59,7 @@ async function resolveOrganizationId(
 
 function extractContext(payload: any) {
   const meta = payload?.meta ?? {};
-  const custom = meta?.custom_data ?? {};
+  const custom = meta?.custom ?? {};
   return {
     rawOrganizationRef: custom?.organizationId as string | undefined, // قد تكون Convex أو Clerk
     clerkUserId: (custom?.clerkUserId as string | undefined) ?? undefined,
