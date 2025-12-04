@@ -706,6 +706,9 @@ export default defineSchema({
     renewsAt: v.optional(v.number()),
     canceledAt: v.optional(v.number()),
     trialEndsAt: v.optional(v.number()),
+    customerPortal: v.optional(v.string()),
+    updatePaymentMethodUrl: v.optional(v.string()),
+    updateSubscriptionUrl: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

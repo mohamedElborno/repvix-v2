@@ -126,7 +126,8 @@ export default function PricingPage() {
 
     if (!variantId || !convexOrgId || !user?.id) {
       toast.error("Error");
-      return; // لا تعيد loadingPlan هنا، الصفحة لن تتغير
+      setLoadingPlan(null);
+      return;
     }
 
     try {
@@ -137,13 +138,6 @@ export default function PricingPage() {
         userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
       });
 
-      // Upgrade → portal session → redirect
-      if (result.upgrade === true) {
-        window.location.href = result.url;
-        return;
-      }
-
-      // New checkout
       if (result.url) {
         window.location.href = result.url;
         return;
@@ -152,6 +146,7 @@ export default function PricingPage() {
       toast.error("Unexpected billing response");
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
       setLoadingPlan(null);
     }
   };

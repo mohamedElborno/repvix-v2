@@ -1,13 +1,35 @@
-// convex/billing.ts
 import { v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 
-// -------------------------------------------------------------
-// Helpers
-// -------------------------------------------------------------
+/* --------------------------------------------------------------
+ * Helper Functions
+ * -------------------------------------------------------------- */
+
+function mapLemonStatus(
+  s: string
+): "none" | "trial" | "active" | "past_due" | "cancelled" | "expired" {
+  if (s === "on_trial") return "trial";
+  if (s === "active") return "active";
+  if (s === "past_due") return "past_due";
+  if (s === "cancelled") return "cancelled";
+  if (s === "expired") return "expired";
+  return "none";
+}
+
+function ts(input?: string | null): number | undefined {
+  if (!input) return undefined;
+  const n = Date.parse(input);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function cents(n: any): number {
+  const x = Number(n);
+  return Number.isFinite(x) ? Math.round(x) : 0;
+}
+
 function getTier(variantId?: string | null) {
   if (!variantId) return null;
   try {
@@ -27,109 +49,57 @@ function isUpgrade(
 ) {
   if (!currentTier && newTier) return true;
   if (!currentTier || !newTier) return false;
+
   const order = ["basic", "starter", "pro", "business"] as const;
   const idx = (x: "basic" | "starter" | "pro" | "business") => order.indexOf(x);
+
   return idx(newTier) > idx(currentTier);
 }
 
-async function markProcessed(ctx: any, lemonId: string) {
-  const ev = await ctx.db
-    .query("webhookEvents")
-    .withIndex("by_lemonId", (q: any) => q.eq("lemonId", lemonId))
-    .first();
-  if (ev) await ctx.db.patch(ev._id, { processed: true });
-}
+async function resolveOrganizationId(ctx: any, ref?: string) {
+  if (!ref) return undefined;
 
-function ts(input?: string | null): number | undefined {
-  if (!input) return undefined;
-  const n = Date.parse(input);
-  return Number.isFinite(n) ? n : undefined;
-}
-
-function cents(n: any): number {
-  const x = Number(n);
-  return Number.isFinite(x) ? Math.round(x) : 0;
-}
-
-const ALLOWED = new Set([
-  "order_created",
-  "order_refunded",
-
-  "subscription_created",
-  "subscription_updated",
-  "subscription_cancelled",
-  "subscription_expired",
-  "subscription_plan_changed",
-
-  "subscription_payment_success",
-  "subscription_payment_failed",
-  "subscription_payment_refunded",
-]);
-
-// custom_data قد تحتوي Convex orgId أو Clerk org id
-async function resolveOrganizationId(
-  ctx: any,
-  orgRef?: string
-): Promise<Id<"organizations"> | undefined> {
-  if (!orgRef) return undefined;
-
-  // احتمال 1: قيمة orgRef هي Convex Id<"organizations">
   try {
-    const maybe = await ctx.db.get(orgRef as Id<"organizations">);
-    if (maybe?._id) return maybe._id as Id<"organizations">;
-  } catch {
-    // ليس Convex Id
-  }
+    const maybe = await ctx.db.get(ref as Id<"organizations">);
+    if (maybe?._id) return maybe._id;
+  } catch {}
 
-  // احتمال 2: هي Clerk org id — ابحث عبر index by_clerkOrgId
-  const byClerk = await ctx.db
+  const viaClerk = await ctx.db
     .query("organizations")
-    .withIndex("by_clerkOrgId", (q: any) => q.eq("clerkOrgId", orgRef))
+    .withIndex("by_clerkOrgId", (q: any) => q.eq("clerkOrgId", ref))
     .first();
-  return byClerk?._id as Id<"organizations"> | undefined;
+
+  return viaClerk?._id;
 }
 
-function extractContext(payload: any) {
-  const meta = payload?.meta ?? {};
-  const custom = meta?.custom_data ?? {};
-  return {
-    rawOrganizationRef: custom?.organizationId as string | undefined,
-    clerkUserId: (custom?.clerkUserId as string | undefined) ?? undefined,
-  };
-}
+/* --------------------------------------------------------------
+ * Queries
+ * -------------------------------------------------------------- */
 
-// -------------------------------------------------------------
-// Viewer Role
-// -------------------------------------------------------------
 export const getViewerRole = query({
-  args: {
-    organizationId: v.id("organizations"),
-    clerkUserId: v.string(),
-  },
+  args: { organizationId: v.id("organizations"), clerkUserId: v.string() },
   handler: async (ctx, { organizationId, clerkUserId }) => {
     const member = await ctx.db
       .query("organizationMembers")
-      .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
       .filter((q) => q.eq(q.field("clerkUserId"), clerkUserId))
       .first();
-    return member?.role ?? null; // "admin" | "member" | null
+
+    return member?.role ?? null;
   },
 });
 
-// -------------------------------------------------------------
-// Get Current Plan
-// -------------------------------------------------------------
 export const getCurrentPlan = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const org = await ctx.db.get(organizationId);
-    if (!org) {
+    if (!org)
       return {
         planTier: null,
         billingStatus: null,
         activeSubscriptionId: null,
       };
-    }
+
     return {
       planTier: org.planTier ?? null,
       billingStatus: org.billingStatus ?? null,
@@ -138,14 +108,12 @@ export const getCurrentPlan = query({
   },
 });
 
-// -------------------------------------------------------------
-// Get Organization For Checkout (internal helper)
-// -------------------------------------------------------------
 export const getOrganizationForCheckout = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const org = await ctx.db.get(organizationId);
     if (!org) return null;
+
     return {
       activeSubscriptionId: org.activeSubscriptionId ?? null,
       planTier:
@@ -155,64 +123,51 @@ export const getOrganizationForCheckout = query({
   },
 });
 
-// -------------------------------------------------------------
-// Get Billing Customer (internal helper)
-// -------------------------------------------------------------
 export const getBillingCustomer = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
-    const billingCustomer = await ctx.db
+    const bc = await ctx.db
       .query("billingCustomers")
-      .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
       .first();
-    return billingCustomer
+
+    return bc
       ? {
-          email: billingCustomer.email ?? null,
-          lemonCustomerId: billingCustomer.lemonCustomerId ?? null,
+          email: bc.email ?? null,
+          lemonCustomerId: bc.lemonCustomerId ?? null,
         }
       : null;
   },
 });
 
-// -------------------------------------------------------------
-// Get Billing Portal Data (بدون إرجاع URL ثابت)
-// -------------------------------------------------------------
 export const getBillingPortalData = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
     const org = await ctx.db.get(organizationId);
-    if (!org) {
-      return { plan: null, limits: null };
-    }
+    if (!org) return { plan: null, limits: null };
 
-    const plan =
-      (org.planTier as "basic" | "starter" | "pro" | "business" | null) ?? null;
-
-    // حساب عدد التحليلات المتبقية اليوم
+    const plan = org.planTier ?? null;
     let remainingAnalyses: number | "unlimited" | undefined = undefined;
-    if (org.planTier) {
-      const limits = limitsForTier(org.planTier);
-      const dailyLimit = limits.dailyAnalyses;
 
-      if (dailyLimit === "unlimited") {
+    if (org.planTier) {
+      const lim = limitsForTier(org.planTier);
+
+      if (lim.dailyAnalyses === "unlimited") {
         remainingAnalyses = "unlimited";
       } else {
         const now = Date.now();
-        const startOfDay = new Date(now);
-        startOfDay.setHours(0, 0, 0, 0);
-        const startOfDayMs = startOfDay.getTime();
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        const startMs = start.getTime();
 
         const analyses = await ctx.db
           .query("chatAnalyses")
-          .withIndex("by_org_createdAt", (q) =>
-            q
-              .eq("organizationId", organizationId)
-              .gte("createdAt", startOfDayMs)
+          .withIndex("by_org_createdAt", (q: any) =>
+            q.eq("organizationId", organizationId).gte("createdAt", startMs)
           )
           .collect();
 
-        const usedToday = analyses.length;
-        remainingAnalyses = Math.max(0, dailyLimit - usedToday);
+        remainingAnalyses = Math.max(0, lim.dailyAnalyses - analyses.length);
       }
     }
 
@@ -224,24 +179,20 @@ export const getBillingPortalData = query({
         }
       : null;
 
-    // لا نعيد portalUrl هنا إطلاقاً
     return { plan, limits };
   },
 });
 
-// -------------------------------------------------------------
-// ingestWebhook - storing all events
-// -------------------------------------------------------------
+/* --------------------------------------------------------------
+ * Insert Webhook Event
+ * -------------------------------------------------------------- */
+
 export const ingestWebhook = mutation({
-  args: {
-    eventName: v.string(),
-    lemonId: v.string(),
-    payload: v.any(),
-  },
+  args: { eventName: v.string(), lemonId: v.string(), payload: v.any() },
   handler: async (ctx, args) => {
     const dup = await ctx.db
       .query("webhookEvents")
-      .withIndex("by_lemonId", (q) => q.eq("lemonId", args.lemonId))
+      .withIndex("by_lemonId", (q: any) => q.eq("lemonId", args.lemonId))
       .first();
 
     if (!dup) {
@@ -256,54 +207,41 @@ export const ingestWebhook = mutation({
   },
 });
 
-// -------------------------------------------------------------
-// handleEvent - the brain of billing
-// -------------------------------------------------------------
+/* --------------------------------------------------------------
+ * Main Billing Webhook Processor
+ * -------------------------------------------------------------- */
+
 export const handleEvent = mutation({
   args: { eventName: v.string(), payload: v.any() },
   handler: async (ctx, { eventName, payload }) => {
-    if (!ALLOWED.has(eventName)) {
-      const lemonId = payload?.data?.id ?? "unknown";
-      const ev = await ctx.db
-        .query("webhookEvents")
-        .withIndex("by_lemonId", (q) => q.eq("lemonId", lemonId))
-        .first();
-      if (ev) await ctx.db.patch(ev._id, { processed: true });
-      return;
-    }
-
-    const { rawOrganizationRef, clerkUserId } = extractContext(payload);
-    const organizationId = await resolveOrganizationId(ctx, rawOrganizationRef);
-
     const data = payload?.data ?? {};
     const attr = data?.attributes ?? {};
-
     const lemonId = String(data?.id ?? "");
-    const productId = attr?.product_id ? String(attr.product_id) : undefined;
-    const variantIdFromEvent = attr?.variant_id
-      ? String(attr.variant_id)
-      : undefined;
-    const productName = attr?.product_name ?? undefined;
-    const variantName = attr?.variant_name ?? undefined;
 
-    // ------------------------------
-    // ORDER CREATED
-    // ------------------------------
+    // Extract org + clerkUser from webhook custom data
+    const custom = payload?.meta?.custom_data ?? {};
+    const orgRef = custom?.organizationId as string | undefined;
+    const clerkUserId = custom?.clerkUserId as string | undefined;
+
+    const organizationId = await resolveOrganizationId(ctx, orgRef);
+
+    /* -------------------------
+     * ORDER CREATED
+     * ------------------------- */
     if (eventName === "order_created") {
-      const lemonCustomerId = attr?.customer_id
-        ? String(attr.customer_id)
-        : undefined;
-      const email = attr?.user_email ?? undefined;
-
-      if (organizationId && lemonCustomerId) {
+      if (organizationId && attr?.customer_id) {
         const existing = await ctx.db
           .query("billingCustomers")
-          .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+          .withIndex("by_org", (q: any) =>
+            q.eq("organizationId", organizationId)
+          )
           .first();
+
+        const email = attr?.user_email ?? undefined;
 
         if (existing) {
           await ctx.db.patch(existing._id, {
-            lemonCustomerId,
+            lemonCustomerId: String(attr.customer_id),
             email: email ?? existing.email,
             updatedAt: Date.now(),
           });
@@ -311,7 +249,7 @@ export const handleEvent = mutation({
           await ctx.db.insert("billingCustomers", {
             organizationId,
             clerkUserId: clerkUserId ?? "",
-            lemonCustomerId,
+            lemonCustomerId: String(attr.customer_id),
             email,
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -320,132 +258,92 @@ export const handleEvent = mutation({
       }
     }
 
-    // ------------------------------
-    // ORDER REFUNDED
-    // ------------------------------
-    if (eventName === "order_refunded") {
-      if (organizationId) {
-        await ctx.db.insert("invoices", {
-          organizationId,
-          lemonInvoiceId: lemonId,
-          subscriptionId: undefined,
-          amountCents: cents(attr?.total ?? 0) * -1,
-          currency: attr?.currency ?? "USD",
-          status: "refunded",
-          issuedAt: ts(attr?.created_at) ?? Date.now(),
-          paidAt: ts(attr?.refunded_at),
-          meta: attr,
-          createdAt: Date.now(),
-        });
-      }
+    /* -------------------------
+     * ORDER REFUNDED
+     * ------------------------- */
+    if (eventName === "order_refunded" && organizationId) {
+      await ctx.db.insert("invoices", {
+        organizationId,
+        lemonInvoiceId: lemonId,
+        subscriptionId: undefined,
+        amountCents: -cents(attr?.total ?? 0),
+        currency: attr?.currency ?? "USD",
+        status: "refunded",
+        issuedAt: ts(attr?.created_at) ?? Date.now(),
+        paidAt: ts(attr?.refunded_at),
+        meta: attr,
+        createdAt: Date.now(),
+      });
     }
 
-    // ------------------------------
-    // SUBSCRIPTION CREATED / UPDATED / PLAN CHANGED
-    // ------------------------------
-    if (
-      eventName === "subscription_created" ||
-      eventName === "subscription_updated" ||
-      eventName === "subscription_plan_changed"
-    ) {
-      const subIdExternal = String(data?.id ?? "");
-      const status = String(attr?.status ?? "active");
+    /* -------------------------
+     * SUBSCRIPTIONS
+     * ------------------------- */
+    if (eventName.startsWith("subscription_")) {
+      const subExternal = String(data?.id ?? "");
+      const statusRaw = String(attr?.status ?? "none");
+      const status = mapLemonStatus(statusRaw);
+
+      const variantId =
+        attr?.variant_id ??
+        data?.attributes?.first_subscription_item?.variant_id ??
+        undefined;
+
       const renewsAt = ts(attr?.renews_at);
       const canceledAt = ts(attr?.canceled_at);
       const trialEndsAt = ts(attr?.trial_ends_at);
 
-      const variantId =
-        variantIdFromEvent ??
-        data?.attributes?.first_subscription_item?.variant_id ??
-        data?.attributes?.variant_id ??
-        undefined;
+      const subscriptionUpdate = {
+        status: statusRaw,
+        productId: attr?.product_id ? String(attr.product_id) : undefined,
+        variantId: variantId ? String(variantId) : undefined,
+        planName: attr?.variant_name ?? attr?.product_name,
+        currentPeriodEnd: renewsAt,
+        renewsAt,
+        canceledAt,
+        trialEndsAt,
+        updatedAt: Date.now(),
 
-      // حماية ضد ازدواج/تخفيض غير مسموح
+        // Important URLs
+        customerPortal: attr?.urls?.customer_portal ?? null,
+        updatePaymentMethodUrl: attr?.urls?.update_payment_method ?? null,
+        updateSubscriptionUrl:
+          attr?.urls?.customer_portal_update_subscription ?? null,
+      };
+
       if (organizationId) {
-        const org = await ctx.db.get(organizationId);
-        if (org?.activeSubscriptionId) {
-          const existingSub = await ctx.db.get(org.activeSubscriptionId);
-          const currentTier = existingSub?.variantId
-            ? getTier(existingSub.variantId)
-            : (org.planTier ?? null);
-          const newTier = getTier(variantId);
-          const allowed = isUpgrade(currentTier, newTier);
-          if (!allowed) {
-            await markProcessed(ctx, lemonId);
-            await ctx.db.insert("billingAudit" as any, {
-              organizationId,
-              type: "blocked_subscription",
-              reason: "duplicate_or_downgrade",
-              currentTier,
-              newTier,
-              lemonSubscriptionId: subIdExternal,
-              at: Date.now(),
-              raw: payload,
-            });
-            return;
-          }
-        }
-      }
-
-      // إنشاء/تحديث الاشتراك داخل DB
-      if (organizationId && subIdExternal) {
         const existing = await ctx.db
           .query("subscriptions")
-          .withIndex("by_sub", (q) =>
-            q.eq("lemonSubscriptionId", subIdExternal)
+          .withIndex("by_sub", (q: any) =>
+            q.eq("lemonSubscriptionId", subExternal)
           )
           .first();
 
         let subscriptionId: Id<"subscriptions">;
 
         if (existing) {
-          await ctx.db.patch(existing._id, {
-            status,
-            productId,
-            variantId,
-            planName: variantName ?? existing.planName ?? productName,
-            currentPeriodEnd: renewsAt,
-            renewsAt,
-            canceledAt,
-            trialEndsAt,
-            updatedAt: Date.now(),
-          });
+          await ctx.db.patch(existing._id, subscriptionUpdate);
           subscriptionId = existing._id;
         } else {
           subscriptionId = await ctx.db.insert("subscriptions", {
             organizationId,
-            lemonSubscriptionId: subIdExternal,
-            status,
-            productId,
-            variantId,
-            planName: variantName ?? productName,
-            currentPeriodEnd: renewsAt,
-            renewsAt,
-            canceledAt,
-            trialEndsAt,
+            lemonSubscriptionId: subExternal,
             createdAt: Date.now(),
-            updatedAt: Date.now(),
+            ...subscriptionUpdate,
           });
         }
 
-        if (variantId) {
-          const { tier, limits } = mapVariantToPlan(variantId);
+        // Update org billing info
+        const tier = getTier(subscriptionUpdate.variantId ?? null);
+
+        if (tier) {
+          const { limits } = mapVariantToPlan(subscriptionUpdate.variantId);
+
           await ctx.db.patch(organizationId, {
             planTier: tier,
-            billingStatus:
-              status === "active"
-                ? "active"
-                : status === "on_trial"
-                  ? "trial"
-                  : status === "past_due"
-                    ? "past_due"
-                    : status === "cancelled"
-                      ? "cancelled"
-                      : status === "expired"
-                        ? "expired"
-                        : "none",
+            billingStatus: status,
             activeSubscriptionId: subscriptionId,
-            renewsAt: renewsAt ?? undefined,
+            renewsAt,
             limits: {
               members:
                 limits.members === "unlimited" ? undefined : limits.members,
@@ -463,136 +361,92 @@ export const handleEvent = mutation({
       }
     }
 
-    // ------------------------------
-    // SUBSCRIPTION CANCELLED / EXPIRED
-    // ------------------------------
-    if (
-      eventName === "subscription_cancelled" ||
-      eventName === "subscription_expired"
-    ) {
-      const subIdExternal = String(data?.id ?? "");
-      if (subIdExternal) {
+    /* -------------------------
+     * SUBSCRIPTION PAYMENT
+     * ------------------------- */
+    if (eventName.startsWith("subscription_payment_") && organizationId) {
+      const isRefund = eventName === "subscription_payment_refunded";
+      const isFailed = eventName === "subscription_payment_failed";
+
+      const invoiceStatus = isRefund
+        ? "refunded"
+        : isFailed
+          ? "payment_failed"
+          : "paid";
+
+      await ctx.db.insert("invoices", {
+        organizationId,
+        lemonInvoiceId: lemonId,
+        subscriptionId: undefined,
+        amountCents: cents(attr?.total ?? 0) * (isRefund ? -1 : 1),
+        currency: attr?.currency ?? "USD",
+        status: invoiceStatus,
+        issuedAt: ts(attr?.created_at) ?? Date.now(),
+        paidAt: ts(attr?.paid_at),
+        meta: attr,
+        createdAt: Date.now(),
+      });
+
+      if (!isFailed && attr?.subscription_id) {
+        const subId = String(attr.subscription_id);
+
         const existing = await ctx.db
           .query("subscriptions")
-          .withIndex("by_sub", (q) =>
-            q.eq("lemonSubscriptionId", subIdExternal)
-          )
+          .withIndex("by_sub", (q: any) => q.eq("lemonSubscriptionId", subId))
           .first();
 
         if (existing) {
+          const newRenew = ts(attr?.renews_at) ?? existing.renewsAt;
+
           await ctx.db.patch(existing._id, {
-            status:
-              eventName === "subscription_cancelled" ? "cancelled" : "expired",
+            status: "active",
+            renewsAt: newRenew,
+            currentPeriodEnd: newRenew,
             updatedAt: Date.now(),
           });
 
-          // لا نعيد المستخدم إلى basic — نزيل الخطة نهائياً
-          await ctx.db.patch(existing.organizationId, {
-            billingStatus:
-              eventName === "subscription_cancelled" ? "cancelled" : "expired",
-            activeSubscriptionId: undefined,
-            planTier: undefined,
-            renewsAt: undefined,
-            limits: undefined,
-          });
-        }
-      }
-    }
+          const tier = getTier(existing.variantId);
+          if (tier) {
+            const { limits } = mapVariantToPlan(existing.variantId!);
 
-    // ------------------------------
-    // SUBSCRIPTION PAYMENT EVENTS
-    // ------------------------------
-    if (
-      eventName === "subscription_payment_success" ||
-      eventName === "subscription_payment_failed" ||
-      eventName === "subscription_payment_refunded"
-    ) {
-      if (organizationId) {
-        const statusInvoice =
-          eventName === "subscription_payment_success"
-            ? "paid"
-            : eventName === "subscription_payment_failed"
-              ? "payment_failed"
-              : "refunded";
-
-        await ctx.db.insert("invoices", {
-          organizationId,
-          lemonInvoiceId: lemonId,
-          subscriptionId: undefined,
-          amountCents:
-            cents(attr?.total ?? 0) * (statusInvoice === "refunded" ? -1 : 1),
-          currency: attr?.currency ?? "USD",
-          status: statusInvoice,
-          issuedAt: ts(attr?.created_at) ?? Date.now(),
-          paidAt:
-            statusInvoice === "paid"
-              ? (ts(attr?.paid_at) ?? Date.now())
-              : statusInvoice === "refunded"
-                ? ts(attr?.refunded_at)
-                : undefined,
-          meta: attr,
-          createdAt: Date.now(),
-        });
-
-        if (
-          eventName === "subscription_payment_success" &&
-          attr?.subscription_id
-        ) {
-          const subIdExternal = String(attr.subscription_id);
-          const sub = await ctx.db
-            .query("subscriptions")
-            .withIndex("by_sub", (q) =>
-              q.eq("lemonSubscriptionId", subIdExternal)
-            )
-            .first();
-
-          if (sub) {
-            const newRenew = ts(attr?.renews_at) ?? sub.renewsAt;
-            await ctx.db.patch(sub._id, {
-              status: "active",
+            await ctx.db.patch(existing.organizationId, {
+              billingStatus: "active",
+              planTier: tier,
               renewsAt: newRenew,
-              currentPeriodEnd: newRenew,
-              updatedAt: Date.now(),
+              limits: {
+                members:
+                  limits.members === "unlimited" ? undefined : limits.members,
+                dailyAnalyses:
+                  limits.dailyAnalyses === "unlimited"
+                    ? undefined
+                    : limits.dailyAnalyses,
+                exports: limits.exports,
+                integrations: limits.integrations,
+                features: limits.features,
+                support: limits.support,
+              },
             });
-
-            const variantId = sub.variantId;
-            if (variantId) {
-              const { tier, limits } = mapVariantToPlan(variantId);
-              await ctx.db.patch(organizationId, {
-                billingStatus: "active",
-                planTier: tier,
-                renewsAt: newRenew,
-                limits: {
-                  members:
-                    limits.members === "unlimited" ? undefined : limits.members,
-                  dailyAnalyses:
-                    limits.dailyAnalyses === "unlimited"
-                      ? undefined
-                      : limits.dailyAnalyses,
-                  exports: limits.exports,
-                  integrations: limits.integrations,
-                  features: limits.features,
-                  support: limits.support,
-                },
-              });
-            }
           }
         }
       }
     }
 
-    // Mark processed
+    /* -------------------------
+     * Mark Webhook Processed
+     * ------------------------- */
     const ev = await ctx.db
       .query("webhookEvents")
-      .withIndex("by_lemonId", (q) => q.eq("lemonId", lemonId || "unknown"))
+      .withIndex("by_lemonId", (q: any) => q.eq("lemonId", lemonId))
       .first();
+
     if (ev) await ctx.db.patch(ev._id, { processed: true });
   },
 });
 
-// -------------------------------------------------------------
-// createCheckoutSession
-// -------------------------------------------------------------
+/* --------------------------------------------------------------
+ * Checkout Creation
+ * -------------------------------------------------------------- */
+
 export const createCheckoutSession = action({
   args: {
     organizationId: v.id("organizations"),
@@ -600,91 +454,51 @@ export const createCheckoutSession = action({
     variantId: v.string(),
     userEmail: v.optional(v.string()),
   },
+
   handler: async (
     ctx,
     args
   ): Promise<{ ok: true; upgrade: boolean; url: string }> => {
-    // احصل على بيانات المنظمة
-    const org: {
-      activeSubscriptionId: Id<"subscriptions"> | null;
-      planTier: "basic" | "starter" | "pro" | "business" | null;
-    } | null = await ctx.runQuery(api.billing.getOrganizationForCheckout, {
+    const org = await ctx.runQuery(api.billing.getOrganizationForCheckout, {
       organizationId: args.organizationId,
     });
 
     if (!org) throw new Error("Organization not found");
 
     const activeSub = org.activeSubscriptionId;
-    const currentTier = org.planTier ?? null;
+    const currentTier = org.planTier;
     const desiredTier = getTier(args.variantId);
 
-    // يوجد اشتراك؟ إذن نسمح فقط بالترقية
+    // If already subscribed → upgrade only
     if (activeSub && currentTier) {
       const allowed = isUpgrade(currentTier, desiredTier);
-      if (!allowed) {
-        throw new Error("You already have this or a higher subscription.");
-      }
+      if (!allowed) throw new Error("Cannot downgrade or keep same tier.");
 
-      // هنا لا نستخدم URL ثابت؛ ننشئ Portal Session جديد
-      const portal = await ctx.runAction(api.billing.getFreshPortalUrl, {
-        organizationId: args.organizationId,
+      // Use customerPortal stored inside subscription
+      const sub = await ctx.runQuery(api.subscriptions.getById, {
+        subscriptionId: activeSub,
       });
 
-      return { ok: true, upgrade: true, url: portal.url };
+      if (!sub?.customerPortal)
+        throw new Error("Portal URL not available yet. Try again later.");
+
+      return { ok: true, upgrade: true, url: sub.customerPortal };
     }
 
-    // Fetch lemonCustomerId إن وُجد
-    const billingCustomer: {
-      email: string | null;
-      lemonCustomerId: string | null;
-    } | null = await ctx.runQuery(api.billing.getBillingCustomer, {
+    // Fetch Lemon customer
+    const billingCustomer = await ctx.runQuery(api.billing.getBillingCustomer, {
       organizationId: args.organizationId,
     });
 
-    // بريد المستخدم
-    const userEmail =
+    const email =
       args.userEmail ?? billingCustomer?.email ?? "customer@repvix.com";
 
-    // إنشاء Checkout عبر Action منفصلة
-    const result: { url: string } = await ctx.runAction(
-      api.billing.createLemonCheckoutAction,
-      {
-        clerkUserId: args.clerkUserId,
-        organizationId: args.organizationId,
-        variantId: args.variantId,
-        email: userEmail,
-        lemonCustomerId: billingCustomer?.lemonCustomerId ?? undefined,
-      }
-    );
-
-    return { ok: true, upgrade: false, url: result.url };
-  },
-});
-
-// -------------------------------------------------------------
-// createLemonCheckoutAction
-// -------------------------------------------------------------
-export const createLemonCheckoutAction = action({
-  args: {
-    clerkUserId: v.string(),
-    organizationId: v.id("organizations"),
-    variantId: v.string(),
-    email: v.string(),
-    lemonCustomerId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const apiKey = process.env.LEMON_SECRET_KEY;
-    const storeId = process.env.LEMON_STORE_ID;
-    if (!apiKey || !storeId) {
-      throw new Error("Missing Lemon Squeezy API keys.");
-    }
-
-    const payload: any = {
+    const checkoutPayload = {
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
-            email: args.email,
+            email,
             custom: {
               organizationId: args.organizationId,
               clerkUserId: args.clerkUserId,
@@ -692,94 +506,45 @@ export const createLemonCheckoutAction = action({
           },
         },
         relationships: {
-          store: { data: { type: "stores", id: storeId.toString() } },
+          store: {
+            data: { type: "stores", id: process.env.LEMON_STORE_ID },
+          },
           variant: {
-            data: { type: "variants", id: args.variantId.toString() },
+            data: { type: "variants", id: args.variantId },
           },
         },
       },
     };
 
-    // ربط العميل إن وجد
-    if (args.lemonCustomerId) {
-      payload.data.relationships.customer = {
-        data: { type: "customers", id: args.lemonCustomerId },
+    // Attach existing customer ID if exists
+    if (billingCustomer?.lemonCustomerId) {
+      (checkoutPayload.data.relationships as any)["customer"] = {
+        data: {
+          type: "customers",
+          id: billingCustomer.lemonCustomerId,
+        },
       };
     }
 
     const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
         Accept: "application/vnd.api+json",
         "Content-Type": "application/vnd.api+json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(checkoutPayload),
     });
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error("Lemon checkout failed: " + text);
+      throw new Error("Checkout failed: " + text);
     }
 
     const json = await res.json();
     const url = json?.data?.attributes?.url;
-    if (!url) throw new Error("Missing checkout URL");
-    return { url };
-  },
-});
+    if (!url) throw new Error("Checkout URL missing");
 
-// -------------------------------------------------------------
-// getFreshPortalUrl — ينشئ Portal Session لحظيًا (Best Practice)
-// -------------------------------------------------------------
-export const getFreshPortalUrl = action({
-  args: { organizationId: v.id("organizations") },
-  handler: async (ctx, { organizationId }): Promise<{ url: string }> => {
-    const apiKey = process.env.LEMON_SECRET_KEY;
-    if (!apiKey) throw new Error("Missing Lemon Squeezy API key");
-
-    // 1) الحصول على billing customer
-    const customer = await ctx.runQuery(api.billing.getBillingCustomer, {
-      organizationId,
-    });
-
-    if (!customer?.lemonCustomerId) {
-      throw new Error("Customer not found for this organization");
-    }
-
-    const lemonCustomerId = customer.lemonCustomerId;
-
-    // 2) إنشاء جلسة Portal جديدة عبر endpoint الرسمي
-    const payload = {
-      data: {
-        type: "billing-portals",
-        attributes: {
-          customer_id: lemonCustomerId,
-          // يمكنك جعله ديناميكيًا حسب اللغة/المسار
-          return_url: `${process.env.APP_URL ?? "https://repvix.com"}/dashboard/billing`,
-        },
-      },
-    };
-
-    const res = await fetch("https://api.lemonsqueezy.com/v1/billing-portals", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: "application/vnd.api+json",
-        "Content-Type": "application/vnd.api+json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error("Failed to create billing portal: " + txt);
-    }
-
-    const json = await res.json();
-    const url = json?.data?.attributes?.url;
-    if (!url) throw new Error("Portal URL missing from Lemon Squeezy");
-
-    return { url };
+    return { ok: true, upgrade: false, url };
   },
 });

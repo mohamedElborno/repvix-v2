@@ -32,13 +32,14 @@ export default function BillingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
-  const getPortal = useAction(api.billing.getFreshPortalUrl);
+  const sub = useQuery(
+    api.subscriptions.getByOrg,
+    convexOrgId ? { organizationId: convexOrgId } : "skip"
+  );
 
-  const manageBilling = async () => {
-    if (!convexOrgId) return;
-
-    const result = await getPortal({ organizationId: convexOrgId });
-    window.location.href = result.url;
+  const manageBilling = () => {
+    if (!sub?.customerPortal) return;
+    window.location.href = sub.customerPortal;
   };
 
   const goToPricing = () => {

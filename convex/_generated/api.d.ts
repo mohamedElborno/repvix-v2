@@ -27,6 +27,7 @@ import type * as lib_plans from "../lib/plans.js";
 import type * as messages from "../messages.js";
 import type * as orgMembers from "../orgMembers.js";
 import type * as orgs from "../orgs.js";
+import type * as subscriptions from "../subscriptions.js";
 
 import type {
   ApiFromModules,
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   orgMembers: typeof orgMembers;
   orgs: typeof orgs;
+  subscriptions: typeof subscriptions;
 }>;
 
 /**
