@@ -32,14 +32,16 @@ export default function BillingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
-  const sub = useQuery(
-    api.subscriptions.getByOrg,
-    convexOrgId ? { organizationId: convexOrgId } : "skip"
-  );
+  const getPortal = useAction(api.billing.getFreshPortalUrl);
 
-  const manageBilling = () => {
-    if (!sub?.customerPortal) return;
-    window.location.href = sub.customerPortal;
+  const manageBilling = async () => {
+    if (!convexOrgId) return;
+    try {
+      const result = await getPortal({ organizationId: convexOrgId });
+      window.location.href = result.url;
+    } catch (error: any) {
+      console.error("Failed to get billing portal:", error);
+    }
   };
 
   const goToPricing = () => {

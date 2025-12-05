@@ -476,44 +476,53 @@ export const createCheckoutSession = action({
         throw new Error("Cannot downgrade or keep same tier.");
       }
 
-      // ✅ نجيب الاشتراك عن طريق runQuery وليس ctx.db
-      const subDoc = await ctx.runQuery(api.subscriptions.getById, {
-        subscriptionId: activeSub,
-      });
-
-      if (!subDoc) {
-        throw new Error("Active subscription record not found.");
-      }
-
-      if (!subDoc.lemonSubscriptionId) {
-        throw new Error("Missing Lemon subscription id on this record.");
-      }
-
-      // نطلب الاشتراك من Lemon لنأخذ URLs محدثة
-      const subRes = await fetch(
-        `https://api.lemonsqueezy.com/v1/subscriptions/${subDoc.lemonSubscriptionId}`,
+      // ✅ نجيب بيانات العميل (Customer) لاستخدامها في إنشاء Billing Portal Session
+      const billingCustomer = await ctx.runQuery(
+        api.billing.getBillingCustomer,
         {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
-            Accept: "application/vnd.api+json",
-          },
+          organizationId: args.organizationId,
         }
       );
 
-      if (!subRes.ok) {
-        const errText = await subRes.text();
-        throw new Error("Failed to fetch subscription from Lemon: " + errText);
+      if (!billingCustomer?.lemonCustomerId) {
+        throw new Error("Customer not found. Please contact support.");
       }
 
-      const subJson = await subRes.json();
-      const urls = subJson?.data?.attributes?.urls ?? {};
+      // ✅ إنشاء جلسة بوابة دفع جديدة عبر Billing Portal API
+      // هذا أفضل من استخدام الروابط الموقعة لأنها قد تنتهي صلاحيتها
+      const portalPayload = {
+        data: {
+          type: "billing-portals",
+          attributes: {
+            customer_id: billingCustomer.lemonCustomerId,
+            return_url: `${process.env.APP_URL ?? "https://repvix.com"}/dashboard/billing`,
+          },
+        },
+      };
 
-      const portalUrl =
-        urls.customer_portal_update_subscription || urls.customer_portal;
+      const portalRes = await fetch(
+        "https://api.lemonsqueezy.com/v1/billing-portals",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
+            Accept: "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+          },
+          body: JSON.stringify(portalPayload),
+        }
+      );
+
+      if (!portalRes.ok) {
+        const errText = await portalRes.text();
+        throw new Error("Failed to create billing portal session: " + errText);
+      }
+
+      const portalJson = await portalRes.json();
+      const portalUrl = portalJson?.data?.attributes?.url;
 
       if (!portalUrl) {
-        throw new Error("Customer portal URL missing from Lemon API.");
+        throw new Error("Billing portal URL missing from Lemon API response.");
       }
 
       return { ok: true, upgrade: true, url: portalUrl };
@@ -580,5 +589,62 @@ export const createCheckoutSession = action({
     if (!url) throw new Error("Checkout URL missing");
 
     return { ok: true, upgrade: false, url };
+  },
+});
+
+/* --------------------------------------------------------------
+ * Get Fresh Billing Portal URL
+ * -------------------------------------------------------------- */
+
+export const getFreshPortalUrl = action({
+  args: { organizationId: v.id("organizations") },
+  handler: async (ctx, { organizationId }): Promise<{ url: string }> => {
+    const apiKey = process.env.LEMON_SECRET_KEY;
+    if (!apiKey) {
+      throw new Error("Missing Lemon Squeezy API key");
+    }
+
+    // Get billing customer
+    const customer = await ctx.runQuery(api.billing.getBillingCustomer, {
+      organizationId,
+    });
+
+    if (!customer?.lemonCustomerId) {
+      throw new Error("Customer not found for this organization");
+    }
+
+    // Create a new billing portal session
+    const portalPayload = {
+      data: {
+        type: "billing-portals",
+        attributes: {
+          customer_id: customer.lemonCustomerId,
+          return_url: `${process.env.APP_URL ?? "https://repvix.com"}/dashboard/billing`,
+        },
+      },
+    };
+
+    const res = await fetch("https://api.lemonsqueezy.com/v1/billing-portals", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+      },
+      body: JSON.stringify(portalPayload),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error("Failed to create billing portal: " + txt);
+    }
+
+    const json = await res.json();
+    const url = json?.data?.attributes?.url;
+    if (!url) {
+      throw new Error("Portal URL missing from Lemon Squeezy response");
+    }
+
+    return { url };
   },
 });
