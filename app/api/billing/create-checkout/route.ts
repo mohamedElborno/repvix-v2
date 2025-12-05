@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         subscriptionId: currentPlan.activeSubscriptionId,
       });
 
-      if (!subscription?.lemonSubscriptionId) {
+      if (!subscription) {
         return NextResponse.json(
           {
             ok: false,
@@ -90,34 +90,9 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // جلب portal URL من Lemon Squeezy
-      const subRes = await fetch(
-        `https://api.lemonsqueezy.com/v1/subscriptions/${subscription.lemonSubscriptionId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            Accept: "application/vnd.api+json",
-          },
-        }
-      );
-
-      if (!subRes.ok) {
-        const errText = await subRes.text();
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "Failed to fetch subscription from Lemon",
-            details: errText,
-          },
-          { status: 500 }
-        );
-      }
-
-      const subJson = await subRes.json();
-      const urls = subJson?.data?.attributes?.urls ?? {};
+      // استخدام portal URL المحفوظ في قاعدة البيانات
       const portalUrl =
-        urls.customer_portal_update_subscription || urls.customer_portal;
+        subscription.updateSubscriptionUrl || subscription.customerPortal;
 
       if (!portalUrl) {
         return NextResponse.json(

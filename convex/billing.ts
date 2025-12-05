@@ -323,32 +323,9 @@ export const handleEvent = mutation({
               status: "cancelled", // نضع status كـ cancelled في قاعدة البيانات
             });
 
-            // محاولة إلغاء الاشتراك الجديد عبر Lemon Squeezy API
-            // ملاحظة: هذا يتطلب action وليس mutation، لكن يمكننا تجاهل الخطأ
-            try {
-              const apiKey = process.env.LEMON_SECRET_KEY;
-              if (apiKey) {
-                // إلغاء الاشتراك عبر Lemon Squeezy API
-                await fetch(
-                  `https://api.lemonsqueezy.com/v1/subscriptions/${subExternal}`,
-                  {
-                    method: "DELETE",
-                    headers: {
-                      Authorization: `Bearer ${apiKey}`,
-                      Accept: "application/vnd.api+json",
-                    },
-                  }
-                );
-              }
-            } catch (error) {
-              // إذا فشل الإلغاء، نستمر - الاشتراك سيُلغى يدوياً لاحقاً
-              console.error(
-                `Failed to cancel duplicate subscription ${subExternal}:`,
-                error
-              );
-            }
-
             // لا نحدث organization - نحتفظ بالاشتراك القديم
+            // ملاحظة: الاشتراك الجديد سيُلغى تلقائياً من Lemon Squeezy عند انتهاء الفترة التجريبية
+            // أو يمكن إلغاؤه يدوياً من لوحة التحكم
             console.warn(
               `Duplicate subscription detected and cancelled for org ${organizationId}: existing tier ${currentTier}, new tier ${newTier}, subscription ${subExternal}`
             );
