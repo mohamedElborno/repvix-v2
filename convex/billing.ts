@@ -648,3 +648,83 @@ export const createCheckout = action({
     return { ok: true, url: checkoutUrl };
   },
 });
+
+/* --------------------------------------------------------------
+ * Get Billing Portal URL
+ * -------------------------------------------------------------- */
+
+export const getBillingPortalUrl = action({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const apiKey = process.env.LEMON_SECRET_KEY;
+
+    if (!apiKey) {
+      return {
+        ok: false,
+        error: "Missing Lemon Squeezy API credentials",
+      };
+    }
+
+    // الحصول على الاشتراك النشط
+    const activeSubscription: {
+      lemonSubscriptionId: string;
+      variantId: string | null;
+      productId: string | null;
+      status: string;
+    } | null = await ctx.runQuery(api.billing.getActiveSubscription, {
+      organizationId,
+    });
+
+    if (!activeSubscription) {
+      return {
+        ok: false,
+        error: "No active subscription found",
+        hint: "You need an active subscription to access the billing portal",
+      };
+    }
+
+    // الحصول على معلومات الاشتراك من Lemon Squeezy API
+    const res: Response = await fetch(
+      `https://api.lemonsqueezy.com/v1/subscriptions/${activeSubscription.lemonSubscriptionId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/vnd.api+json",
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errorText: string = await res.text();
+      let errorDetails: any;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText;
+      }
+
+      return {
+        ok: false,
+        error: "Failed to get subscription details",
+        details: errorDetails,
+      };
+    }
+
+    const json = await res.json();
+    const customerPortalUrl =
+      json?.data?.attributes?.urls?.customer_portal ?? null;
+
+    if (!customerPortalUrl) {
+      return {
+        ok: false,
+        error: "Billing portal URL not available",
+        hint: "The subscription may not have a customer portal URL yet",
+      };
+    }
+
+    return { ok: true, url: customerPortalUrl };
+  },
+});
