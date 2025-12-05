@@ -9,6 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { normalizeMessages, type RawMessageInput } from "@/lib/chat/normalize";
 import { parseWhatsappToRawMessages } from "@/lib/chat/parseWhatsapp";
 import { findBestNameMatch } from "@/lib/helper/normalizeNameForMatch";
+import { normalizeNameForMatch } from "@/lib/helper/normalizeNameForMatch";
 
 const DEFAULT_LANGUAGE: "ar" | "en" = "ar";
 
@@ -130,12 +131,16 @@ export async function POST(req: Request) {
           );
 
           if (bestCustomerName) {
-            // إعادة الـ parse مع customerNames لتمييز العميل
-            rawMessages = parseWhatsappToRawMessages(rawText, {
-              agentNames: possibleAgentNames,
-              customerNames: [bestCustomerName],
-              defaultSenderType: "customer",
-              phoneIsCustomerIfUnknown: true,
+            // إذا تم تمرير اسم العميل، نعتبر هذا الاسم هو العميل وكل الباقي موظفين
+            const normCustomer = normalizeNameForMatch(bestCustomerName);
+            rawMessages = rawMessages.map((m) => {
+              const isCustomer =
+                m.senderName &&
+                normalizeNameForMatch(m.senderName) === normCustomer;
+              return {
+                ...m,
+                senderType: isCustomer ? "customer" : "agent",
+              };
             });
           } else {
             // لا يوجد تطابق جيد → نستخدم pass 1 كما هو
