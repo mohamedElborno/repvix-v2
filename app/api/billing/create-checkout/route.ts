@@ -1,5 +1,22 @@
 // app/api/billing/create-checkout/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { getConvexServerClient } from "@/lib/convex";
+import { api } from "@/convex/_generated/api";
+import { mapVariantToPlan } from "@/convex/billingPlan";
+
+// Helper function to check if it's an upgrade
+function isUpgrade(
+  currentTier: "basic" | "starter" | "pro" | "business" | null,
+  newTier: "basic" | "starter" | "pro" | "business" | null
+) {
+  if (!currentTier && newTier) return true;
+  if (!currentTier || !newTier) return false;
+
+  const order = ["basic", "starter", "pro", "business"] as const;
+  const idx = (x: "basic" | "starter" | "pro" | "business") => order.indexOf(x);
+
+  return idx(newTier) > idx(currentTier);
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +38,103 @@ export async function POST(req: NextRequest) {
         { ok: false, error: "Missing Lemon Squeezy API credentials" },
         { status: 500 }
       );
+    }
+
+    // التحقق من الاشتراك الحالي
+    const convex = await getConvexServerClient();
+    const currentPlan = await convex.query(api.billing.getCurrentPlan, {
+      organizationId: organizationId as any,
+    });
+
+    const desiredTier = mapVariantToPlan(variantId).tier;
+    const currentTier = currentPlan?.planTier ?? null;
+
+    // إذا كان لديه اشتراك نشط
+    if (currentPlan?.activeSubscriptionId && currentTier) {
+      // إذا كان يحاول الاشتراك في نفس الخطة
+      if (currentTier === desiredTier) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "You already have an active subscription for this plan",
+            hint: "You are already subscribed to this plan. To manage your subscription, please visit the billing page.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // إذا كان يحاول التخفيض (downgrade)
+      if (!isUpgrade(currentTier, desiredTier)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Cannot downgrade through checkout",
+            hint: "To downgrade your plan, please cancel your current subscription first or contact support.",
+          },
+          { status: 400 }
+        );
+      }
+
+      // إذا كان يحاول الترقية (upgrade) - يجب توجيهه إلى portal URL
+      const subscription = await convex.query(api.subscriptions.getById, {
+        subscriptionId: currentPlan.activeSubscriptionId,
+      });
+
+      if (!subscription?.lemonSubscriptionId) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Active subscription record not found",
+          },
+          { status: 500 }
+        );
+      }
+
+      // جلب portal URL من Lemon Squeezy
+      const subRes = await fetch(
+        `https://api.lemonsqueezy.com/v1/subscriptions/${subscription.lemonSubscriptionId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/vnd.api+json",
+          },
+        }
+      );
+
+      if (!subRes.ok) {
+        const errText = await subRes.text();
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Failed to fetch subscription from Lemon",
+            details: errText,
+          },
+          { status: 500 }
+        );
+      }
+
+      const subJson = await subRes.json();
+      const urls = subJson?.data?.attributes?.urls ?? {};
+      const portalUrl =
+        urls.customer_portal_update_subscription || urls.customer_portal;
+
+      if (!portalUrl) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Customer portal URL not available",
+            hint: "Please contact support to upgrade your plan.",
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        ok: true,
+        upgrade: true,
+        url: portalUrl,
+      });
     }
 
     // (A) تأكد أن الـ store صحيح ومتاح بالمفتاح الحالي
@@ -82,13 +196,21 @@ export async function POST(req: NextRequest) {
       // للآن نكتفي بالتحقق من وجود الـ variant
     }
 
+    // جلب email العميل و lemonCustomerId من Convex
+    const billingCustomer = await convex.query(api.billing.getBillingCustomer, {
+      organizationId: organizationId as any,
+    });
+
+    const customerEmail =
+      userEmail ?? billingCustomer?.email ?? "customer@repvix.com";
+
     // Create Checkout
     const checkoutPayload = {
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
-            email: userEmail,
+            email: customerEmail,
             custom: { organizationId, clerkUserId },
           },
         },
@@ -98,6 +220,16 @@ export async function POST(req: NextRequest) {
         },
       },
     };
+
+    // إضافة customer relationship إذا كان موجوداً
+    if (billingCustomer?.lemonCustomerId) {
+      (checkoutPayload.data.relationships as any)["customer"] = {
+        data: {
+          type: "customers",
+          id: billingCustomer.lemonCustomerId,
+        },
+      };
+    }
 
     const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
       method: "POST",

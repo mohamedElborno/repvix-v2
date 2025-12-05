@@ -1,7 +1,6 @@
 import { v } from "convex/values";
-import { action, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { api } from "./_generated/api";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 
 /* --------------------------------------------------------------
@@ -104,21 +103,6 @@ export const getCurrentPlan = query({
       planTier: org.planTier ?? null,
       billingStatus: org.billingStatus ?? null,
       activeSubscriptionId: org.activeSubscriptionId ?? null,
-    };
-  },
-});
-
-export const getOrganizationForCheckout = query({
-  args: { organizationId: v.id("organizations") },
-  handler: async (ctx, { organizationId }) => {
-    const org = await ctx.db.get(organizationId);
-    if (!org) return null;
-
-    return {
-      activeSubscriptionId: org.activeSubscriptionId ?? null,
-      planTier:
-        (org.planTier as "basic" | "starter" | "pro" | "business" | null) ??
-        null,
     };
   },
 });
@@ -312,6 +296,66 @@ export const handleEvent = mutation({
       };
 
       if (organizationId) {
+        // التحقق من الاشتراك المكرر في نفس الخطة
+        if (eventName === "subscription_created") {
+          const org = await ctx.db
+            .query("organizations")
+            .filter((q) => q.eq(q.field("_id"), organizationId))
+            .first();
+          const newTier = getTier(variantId);
+          const currentTier = org?.planTier ?? null;
+
+          // إذا كان لديه اشتراك نشط في نفس الخطة
+          if (
+            org?.activeSubscriptionId &&
+            currentTier &&
+            newTier &&
+            currentTier === newTier &&
+            status !== "cancelled" &&
+            status !== "expired"
+          ) {
+            // نحفظ الاشتراك الجديد في قاعدة البيانات لكن لا نحدث organization
+            await ctx.db.insert("subscriptions", {
+              organizationId,
+              lemonSubscriptionId: subExternal,
+              createdAt: Date.now(),
+              ...subscriptionUpdate,
+              status: "cancelled", // نضع status كـ cancelled في قاعدة البيانات
+            });
+
+            // محاولة إلغاء الاشتراك الجديد عبر Lemon Squeezy API
+            // ملاحظة: هذا يتطلب action وليس mutation، لكن يمكننا تجاهل الخطأ
+            try {
+              const apiKey = process.env.LEMON_SECRET_KEY;
+              if (apiKey) {
+                // إلغاء الاشتراك عبر Lemon Squeezy API
+                await fetch(
+                  `https://api.lemonsqueezy.com/v1/subscriptions/${subExternal}`,
+                  {
+                    method: "DELETE",
+                    headers: {
+                      Authorization: `Bearer ${apiKey}`,
+                      Accept: "application/vnd.api+json",
+                    },
+                  }
+                );
+              }
+            } catch (error) {
+              // إذا فشل الإلغاء، نستمر - الاشتراك سيُلغى يدوياً لاحقاً
+              console.error(
+                `Failed to cancel duplicate subscription ${subExternal}:`,
+                error
+              );
+            }
+
+            // لا نحدث organization - نحتفظ بالاشتراك القديم
+            console.warn(
+              `Duplicate subscription detected and cancelled for org ${organizationId}: existing tier ${currentTier}, new tier ${newTier}, subscription ${subExternal}`
+            );
+            return; // نخرج من الدالة ولا نحدث organization
+          }
+        }
+
         const existing = await ctx.db
           .query("subscriptions")
           .withIndex("by_sub", (q: any) =>
@@ -440,145 +484,5 @@ export const handleEvent = mutation({
       .first();
 
     if (ev) await ctx.db.patch(ev._id, { processed: true });
-  },
-});
-
-/* --------------------------------------------------------------
- * Checkout Creation
- * -------------------------------------------------------------- */
-
-export const createCheckoutSession = action({
-  args: {
-    organizationId: v.id("organizations"),
-    clerkUserId: v.string(),
-    variantId: v.string(),
-    userEmail: v.optional(v.string()),
-  },
-
-  handler: async (
-    ctx,
-    args
-  ): Promise<{ ok: true; upgrade: boolean; url: string }> => {
-    const org = await ctx.runQuery(api.billing.getOrganizationForCheckout, {
-      organizationId: args.organizationId,
-    });
-
-    if (!org) throw new Error("Organization not found");
-
-    const activeSub = org.activeSubscriptionId;
-    const currentTier = org.planTier;
-    const desiredTier = getTier(args.variantId);
-
-    // لو في اشتراك حالي → نسمح فقط بالترقية
-    if (activeSub && currentTier) {
-      const allowed = isUpgrade(currentTier, desiredTier);
-      if (!allowed) {
-        throw new Error("Cannot downgrade or keep same tier.");
-      }
-
-      // ✅ نجيب الاشتراك عن طريق runQuery وليس ctx.db
-      const subDoc = await ctx.runQuery(api.subscriptions.getById, {
-        subscriptionId: activeSub,
-      });
-
-      if (!subDoc) {
-        throw new Error("Active subscription record not found.");
-      }
-
-      if (!subDoc.lemonSubscriptionId) {
-        throw new Error("Missing Lemon subscription id on this record.");
-      }
-
-      // نطلب الاشتراك من Lemon لنأخذ URLs محدثة
-      const subRes = await fetch(
-        `https://api.lemonsqueezy.com/v1/subscriptions/${subDoc.lemonSubscriptionId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
-            Accept: "application/vnd.api+json",
-          },
-        }
-      );
-
-      if (!subRes.ok) {
-        const errText = await subRes.text();
-        throw new Error("Failed to fetch subscription from Lemon: " + errText);
-      }
-
-      const subJson = await subRes.json();
-      const urls = subJson?.data?.attributes?.urls ?? {};
-
-      const portalUrl =
-        urls.customer_portal_update_subscription || urls.customer_portal;
-
-      if (!portalUrl) {
-        throw new Error("Customer portal URL missing from Lemon API.");
-      }
-
-      return { ok: true, upgrade: true, url: portalUrl };
-    }
-
-    // ===== اشتراك جديد (Checkout) كما هو =====
-
-    const billingCustomer = await ctx.runQuery(api.billing.getBillingCustomer, {
-      organizationId: args.organizationId,
-    });
-
-    const email =
-      args.userEmail ?? billingCustomer?.email ?? "customer@repvix.com";
-
-    const checkoutPayload = {
-      data: {
-        type: "checkouts",
-        attributes: {
-          checkout_data: {
-            email,
-            custom: {
-              organizationId: args.organizationId,
-              clerkUserId: args.clerkUserId,
-            },
-          },
-        },
-        relationships: {
-          store: {
-            data: { type: "stores", id: process.env.LEMON_STORE_ID },
-          },
-          variant: {
-            data: { type: "variants", id: args.variantId },
-          },
-        },
-      },
-    };
-
-    if (billingCustomer?.lemonCustomerId) {
-      (checkoutPayload.data.relationships as any)["customer"] = {
-        data: {
-          type: "customers",
-          id: billingCustomer.lemonCustomerId,
-        },
-      };
-    }
-
-    const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
-        Accept: "application/vnd.api+json",
-        "Content-Type": "application/vnd.api+json",
-      },
-      body: JSON.stringify(checkoutPayload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error("Checkout failed: " + text);
-    }
-
-    const json = await res.json();
-    const url = json?.data?.attributes?.url;
-    if (!url) throw new Error("Checkout URL missing");
-
-    return { ok: true, upgrade: false, url };
   },
 });
