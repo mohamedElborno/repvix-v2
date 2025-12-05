@@ -469,84 +469,58 @@ export const createCheckoutSession = action({
     const currentTier = org.planTier;
     const desiredTier = getTier(args.variantId);
 
-    // If already subscribed → upgrade only
+    // لو في اشتراك حالي → نسمح فقط بالترقية
     if (activeSub && currentTier) {
       const allowed = isUpgrade(currentTier, desiredTier);
-      if (!allowed) throw new Error("Cannot downgrade or keep same tier.");
+      if (!allowed) {
+        throw new Error("Cannot downgrade or keep same tier.");
+      }
 
-      // 1. **التعديل الجديد:** جلب الاشتراك النشط أولاً.
-      const subscription = await ctx.runQuery(api.subscriptions.getById, {
+      // ✅ نجيب الاشتراك عن طريق runQuery وليس ctx.db
+      const subDoc = await ctx.runQuery(api.subscriptions.getById, {
         subscriptionId: activeSub,
       });
-      if (!subscription) throw new Error("Active subscription not found.");
 
-      // 2. **الأولوية للرابط المحفوظ:** إذا كان رابط البوابة موجودًا من الويب هوك، استخدمه مباشرةً.
-      if (subscription.customerPortal) {
-        return { ok: true, upgrade: true, url: subscription.customerPortal };
+      if (!subDoc) {
+        throw new Error("Active subscription record not found.");
       }
 
-      // 3. **الخيار الاحتياطي:** محاولة إنشاء الرابط عبر API (في حال لم يتم حفظه بواسطة الويب هوك)
-
-      // جلب معرف العميل الخاص بـ Lemon Squeezy لهذه المنظمة
-      const billingCustomer = await ctx.runQuery(
-        api.billing.getBillingCustomer,
-        {
-          organizationId: args.organizationId,
-        }
-      );
-
-      const customerId = billingCustomer?.lemonCustomerId;
-
-      if (!customerId) {
-        throw new Error(
-          "No Lemon customer found for this organization. Cannot upgrade."
-        );
+      if (!subDoc.lemonSubscriptionId) {
+        throw new Error("Missing Lemon subscription id on this record.");
       }
 
-      // إرسال طلب POST لإنشاء رابط بوابة العملاء (Customer Portal URL)
-      const portalUrlRes = await fetch(
-        "https://api.lemonsqueezy.com/v1/customer-portal-urls",
+      // نطلب الاشتراك من Lemon لنأخذ URLs محدثة
+      const subRes = await fetch(
+        `https://api.lemonsqueezy.com/v1/subscriptions/${subDoc.lemonSubscriptionId}`,
         {
-          method: "POST",
+          method: "GET",
           headers: {
             Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
             Accept: "application/vnd.api+json",
-            "Content-Type": "application/vnd.api+json",
           },
-          body: JSON.stringify({
-            data: {
-              type: "customer-portal-urls",
-              attributes: {
-                store_id: process.env.LEMON_STORE_ID,
-                customer_id: customerId,
-                // إضافة متغير redirect_url لضمان عودة العميل للتطبيق بعد الترقية
-                redirect_url:
-                  process.env.NEXT_PUBLIC_BASE_URL + "/dashboard/billing",
-              },
-            },
-          }),
         }
       );
 
-      if (!portalUrlRes.ok) {
-        const errText = await portalUrlRes.text();
-        // رسالة خطأ مُحسّنة للمساعدة في تحديد المشكلة (مثل 404 أو 401)
-        throw new Error(
-          "Failed to create Customer Portal URL (API Fallback): " + errText
-        );
+      if (!subRes.ok) {
+        const errText = await subRes.text();
+        throw new Error("Failed to fetch subscription from Lemon: " + errText);
       }
 
-      const portalJson = await portalUrlRes.json();
-      const portalUrl = portalJson?.data?.attributes?.url;
+      const subJson = await subRes.json();
+      const urls = subJson?.data?.attributes?.urls ?? {};
 
-      if (!portalUrl)
-        throw new Error("Customer Portal URL missing from API response.");
+      const portalUrl =
+        urls.customer_portal_update_subscription || urls.customer_portal;
+
+      if (!portalUrl) {
+        throw new Error("Customer portal URL missing from Lemon API.");
+      }
 
       return { ok: true, upgrade: true, url: portalUrl };
     }
-    // ... complete remaining code for regular checkout (new subscription)
 
-    // Fetch Lemon customer
+    // ===== اشتراك جديد (Checkout) كما هو =====
+
     const billingCustomer = await ctx.runQuery(api.billing.getBillingCustomer, {
       organizationId: args.organizationId,
     });
@@ -577,7 +551,6 @@ export const createCheckoutSession = action({
       },
     };
 
-    // Attach existing customer ID if exists
     if (billingCustomer?.lemonCustomerId) {
       (checkoutPayload.data.relationships as any)["customer"] = {
         data: {

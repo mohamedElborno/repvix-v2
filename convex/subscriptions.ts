@@ -33,17 +33,15 @@ export const getByOrg = query({
     };
   },
 });
-
 export const getById = query({
-  args: {
-    subscriptionId: v.id("subscriptions"),
-  },
+  args: { subscriptionId: v.id("subscriptions") },
   handler: async (ctx, { subscriptionId }) => {
     const sub = await ctx.db.get(subscriptionId);
     if (!sub) return null;
 
     return {
       id: sub._id,
+      lemonSubscriptionId: sub.lemonSubscriptionId,
       status: sub.status,
       productId: sub.productId ?? null,
       variantId: sub.variantId ?? null,
