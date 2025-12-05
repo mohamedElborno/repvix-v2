@@ -3,13 +3,12 @@
 import { Check, ArrowRight, Star, X, Info } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
-import { useAction } from "convex/react";
 
 export default function PricingPage() {
   const t = useTranslations("dashboard.pricing");
@@ -119,8 +118,6 @@ export default function PricingPage() {
   const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
   console.log("currentPlan", billing);
 
-  const createCheckout = useAction(api.billing.createCheckoutSession);
-
   const checkout = async (variantId: string) => {
     setLoadingPlan(variantId);
 
@@ -131,22 +128,37 @@ export default function PricingPage() {
     }
 
     try {
-      const result = await createCheckout({
-        organizationId: convexOrgId,
-        clerkUserId: user.id,
-        variantId,
-        userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
+      const response = await fetch("/api/billing/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          organizationId: convexOrgId,
+          clerkUserId: user.id,
+          variantId,
+          userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
+        }),
       });
-      console.log("result", result);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create checkout");
+      }
+
+      console.log("Checkout result:", result);
+
       if (result.url) {
-        console.log("result", result);
+        console.log("Redirecting to:", result.url);
         window.location.href = result.url;
         return;
       }
 
       toast.error("Unexpected billing response");
     } catch (err: any) {
-      toast.error(err.message);
+      console.error("Checkout error:", err);
+      toast.error(err.message || "Failed to create checkout");
     } finally {
       setLoadingPlan(null);
     }
