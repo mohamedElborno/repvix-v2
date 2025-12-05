@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 
 /* --------------------------------------------------------------
@@ -107,20 +108,31 @@ export const getCurrentPlan = query({
   },
 });
 
-export const getBillingCustomer = query({
-  args: { organizationId: v.id("organizations") },
-  handler: async (ctx, { organizationId }) => {
-    const bc = await ctx.db
-      .query("billingCustomers")
-      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
-      .first();
+/**
+ * التحقق من وجود اشتراك نشط في variant معين
+ */
+export const hasActiveSubscriptionForVariant = query({
+  args: {
+    organizationId: v.id("organizations"),
+    variantId: v.string(),
+  },
+  handler: async (ctx, { organizationId, variantId }) => {
+    // البحث عن اشتراكات نشطة للمنظمة في هذا الـ variant
+    const activeStatuses = ["active", "on_trial"];
 
-    return bc
-      ? {
-          email: bc.email ?? null,
-          lemonCustomerId: bc.lemonCustomerId ?? null,
-        }
-      : null;
+    const subscriptions = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect();
+
+    // التحقق من وجود اشتراك نشط في نفس الـ variant
+    const hasActive = subscriptions.some(
+      (sub) =>
+        sub.variantId === variantId &&
+        activeStatuses.includes(sub.status.toLowerCase())
+    );
+
+    return hasActive;
   },
 });
 
@@ -296,43 +308,6 @@ export const handleEvent = mutation({
       };
 
       if (organizationId) {
-        // التحقق من الاشتراك المكرر في نفس الخطة
-        if (eventName === "subscription_created") {
-          const org = await ctx.db
-            .query("organizations")
-            .filter((q) => q.eq(q.field("_id"), organizationId))
-            .first();
-          const newTier = getTier(variantId);
-          const currentTier = org?.planTier ?? null;
-
-          // إذا كان لديه اشتراك نشط في نفس الخطة
-          if (
-            org?.activeSubscriptionId &&
-            currentTier &&
-            newTier &&
-            currentTier === newTier &&
-            status !== "cancelled" &&
-            status !== "expired"
-          ) {
-            // نحفظ الاشتراك الجديد في قاعدة البيانات لكن لا نحدث organization
-            await ctx.db.insert("subscriptions", {
-              organizationId,
-              lemonSubscriptionId: subExternal,
-              createdAt: Date.now(),
-              ...subscriptionUpdate,
-              status: "cancelled", // نضع status كـ cancelled في قاعدة البيانات
-            });
-
-            // لا نحدث organization - نحتفظ بالاشتراك القديم
-            // ملاحظة: الاشتراك الجديد سيُلغى تلقائياً من Lemon Squeezy عند انتهاء الفترة التجريبية
-            // أو يمكن إلغاؤه يدوياً من لوحة التحكم
-            console.warn(
-              `Duplicate subscription detected and cancelled for org ${organizationId}: existing tier ${currentTier}, new tier ${newTier}, subscription ${subExternal}`
-            );
-            return; // نخرج من الدالة ولا نحدث organization
-          }
-        }
-
         const existing = await ctx.db
           .query("subscriptions")
           .withIndex("by_sub", (q: any) =>
@@ -461,5 +436,171 @@ export const handleEvent = mutation({
       .first();
 
     if (ev) await ctx.db.patch(ev._id, { processed: true });
+  },
+});
+
+/* --------------------------------------------------------------
+ * Create Checkout
+ * -------------------------------------------------------------- */
+
+export const createCheckout = action({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(),
+    variantId: v.string(),
+    userEmail: v.optional(v.string()),
+  },
+  handler: async (
+    ctx,
+    { organizationId, clerkUserId, variantId, userEmail }
+  ) => {
+    if (!organizationId || !clerkUserId || !variantId) {
+      return {
+        ok: false,
+        error: "Missing required fields",
+      };
+    }
+
+    // التحقق من وجود اشتراك نشط في نفس الباقة
+    const hasActive = await ctx.runQuery(
+      api.billing.hasActiveSubscriptionForVariant,
+      {
+        organizationId,
+        variantId,
+      }
+    );
+
+    if (hasActive) {
+      const { tier } = mapVariantToPlan(variantId);
+      return {
+        ok: false,
+        error: "You already have an active subscription for this plan",
+        code: "ALREADY_SUBSCRIBED",
+        tier,
+        hint: "You cannot subscribe to the same plan multiple times. Please cancel your current subscription first or upgrade/downgrade to a different plan.",
+      };
+    }
+
+    const apiKey = process.env.LEMON_SECRET_KEY;
+    const storeId = process.env.LEMON_STORE_ID;
+
+    if (!apiKey || !storeId) {
+      return {
+        ok: false,
+        error: "Missing Lemon Squeezy API credentials",
+      };
+    }
+
+    // (A) تأكد أن الـ store صحيح ومتاح بالمفتاح الحالي
+    {
+      const checkStore = await fetch(
+        `https://api.lemonsqueezy.com/v1/stores/${storeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/vnd.api+json",
+          },
+        }
+      );
+      if (!checkStore.ok) {
+        const msg = await checkStore.text();
+        return {
+          ok: false,
+          error: "Store not accessible with this key",
+          details: msg,
+        };
+      }
+    }
+
+    // (B) تأكد أن الـ variant موجود وتابع لنفس البيئة والـ store
+    {
+      const checkVariant = await fetch(
+        `https://api.lemonsqueezy.com/v1/variants/${variantId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/vnd.api+json",
+          },
+        }
+      );
+
+      if (!checkVariant.ok) {
+        const msg = await checkVariant.text();
+        return {
+          ok: false,
+          error: "Variant not found or not accessible",
+          details: msg,
+          variantId,
+          hint: "Make sure the variant ID exists in your Lemon Squeezy store and matches the environment (test/production)",
+        };
+      }
+
+      // تحقق أن الـ variant مرتبط بنفس الـ store
+      const variantData = await checkVariant.json();
+      const variantStoreId =
+        variantData?.data?.relationships?.product?.data?.id;
+
+      // ملاحظة: قد نحتاج للتحقق من product ثم store، لكن هذا يعتمد على بنية Lemon API
+      // للآن نكتفي بالتحقق من وجود الـ variant
+    }
+
+    // Create Checkout
+    const checkoutPayload = {
+      data: {
+        type: "checkouts",
+        attributes: {
+          checkout_data: {
+            email: userEmail,
+            custom: { organizationId, clerkUserId },
+          },
+        },
+        relationships: {
+          store: { data: { type: "stores", id: storeId.toString() } },
+          variant: { data: { type: "variants", id: variantId.toString() } },
+        },
+      },
+    };
+
+    const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json",
+      },
+      body: JSON.stringify(checkoutPayload),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(err);
+      } catch {
+        errorDetails = err;
+      }
+
+      return {
+        ok: false,
+        error: "Lemon API Error",
+        details: errorDetails,
+        variantId,
+        storeId,
+        hint:
+          errorDetails?.errors?.[0]?.detail ||
+          "Check if variant exists and is linked to the correct store",
+      };
+    }
+
+    const json = await res.json();
+    const checkoutUrl = json?.data?.attributes?.url;
+    if (!checkoutUrl) {
+      return {
+        ok: false,
+        error: "Missing checkout URL",
+      };
+    }
+
+    return { ok: true, url: checkoutUrl };
   },
 });

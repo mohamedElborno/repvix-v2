@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 
@@ -26,6 +26,42 @@ export default function PricingPage() {
     api.billing.getCurrentPlan,
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
+
+  const createCheckout = useAction(api.billing.createCheckout);
+
+  // التحقق من الاشتراكات النشطة لكل باقة
+  const hasActiveBasic = useQuery(
+    api.billing.hasActiveSubscriptionForVariant,
+    convexOrgId ? { organizationId: convexOrgId, variantId: "1101994" } : "skip"
+  );
+  const hasActiveStarter = useQuery(
+    api.billing.hasActiveSubscriptionForVariant,
+    convexOrgId ? { organizationId: convexOrgId, variantId: "1101995" } : "skip"
+  );
+  const hasActivePro = useQuery(
+    api.billing.hasActiveSubscriptionForVariant,
+    convexOrgId ? { organizationId: convexOrgId, variantId: "1101996" } : "skip"
+  );
+  const hasActiveBusiness = useQuery(
+    api.billing.hasActiveSubscriptionForVariant,
+    convexOrgId ? { organizationId: convexOrgId, variantId: "1102000" } : "skip"
+  );
+
+  // دالة مساعدة للتحقق من الاشتراك النشط
+  const hasActiveSubscription = (variantId: string) => {
+    switch (variantId) {
+      case "1101994":
+        return hasActiveBasic ?? false;
+      case "1101995":
+        return hasActiveStarter ?? false;
+      case "1101996":
+        return hasActivePro ?? false;
+      case "1102000":
+        return hasActiveBusiness ?? false;
+      default:
+        return false;
+    }
+  };
 
   const plans = [
     {
@@ -128,23 +164,26 @@ export default function PricingPage() {
     }
 
     try {
-      const response = await fetch("/api/billing/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          organizationId: convexOrgId,
-          clerkUserId: user.id,
-          variantId,
-          userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
-        }),
+      const result = await createCheckout({
+        organizationId: convexOrgId,
+        clerkUserId: user.id,
+        variantId,
+        userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create checkout");
+      if (!result.ok) {
+        if (result.code === "ALREADY_SUBSCRIBED") {
+          toast.error(
+            result.error ||
+              "You already have an active subscription for this plan",
+            {
+              description: result.hint,
+            }
+          );
+        } else {
+          throw new Error(result.error || "Failed to create checkout");
+        }
+        return;
       }
 
       console.log("Checkout result:", result);
@@ -215,6 +254,7 @@ export default function PricingPage() {
                         onClick={() => checkout(String(plan.variantId))}
                         disabled={
                           billing?.planTier === plan.id ||
+                          hasActiveSubscription(String(plan.variantId)) ||
                           loadingPlan === plan.variantId
                         }
                         size="sm"
@@ -226,7 +266,8 @@ export default function PricingPage() {
                       >
                         {plan.price === t("customPrice") ? (
                           t("contactUs")
-                        ) : billing?.planTier === plan.id ? (
+                        ) : billing?.planTier === plan.id ||
+                          hasActiveSubscription(String(plan.variantId)) ? (
                           t("currentPlan")
                         ) : (
                           <>
