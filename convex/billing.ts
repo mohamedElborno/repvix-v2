@@ -332,10 +332,10 @@ export const handleEvent = mutation({
         updatedAt: Date.now(),
 
         // Important URLs
-        customerPortal: attr?.urls?.customer_portal ?? null,
-        updatePaymentMethodUrl: attr?.urls?.update_payment_method ?? null,
+        customerPortal: attr?.urls?.customer_portal ?? undefined,
+        updatePaymentMethodUrl: attr?.urls?.update_payment_method ?? undefined,
         updateSubscriptionUrl:
-          attr?.urls?.customer_portal_update_subscription ?? null,
+          attr?.urls?.customer_portal_update_subscription ?? undefined,
       };
 
       if (organizationId) {
@@ -512,53 +512,13 @@ export const createCheckout = action({
       };
     }
 
-    // التحقق من وجود اشتراك نشط في باقة مختلفة - يمكن تغييره بدلاً من إنشاء checkout جديد
-    const currentSubscription: {
-      lemonSubscriptionId: string;
-      variantId: string | null;
-      productId: string | null;
-      status: string;
-    } | null = await ctx.runQuery(api.billing.getActiveSubscription, {
+    // ملاحظة: عند وجود اشتراك نشط في باقة مختلفة، سننشئ checkout جديد
+    // Lemon Squeezy سيتعامل مع التغيير تلقائياً عند إتمام الدفع
+    console.log("Creating checkout for:", {
       organizationId,
+      variantId,
+      userEmail,
     });
-
-    // إذا كان لديه اشتراك نشط في باقة مختلفة، نغير الاشتراك بدلاً من إنشاء checkout جديد
-    if (currentSubscription && currentSubscription.variantId !== variantId) {
-      const apiKey = process.env.LEMON_SECRET_KEY;
-      if (!apiKey) {
-        return {
-          ok: false,
-          error: "Missing Lemon Squeezy API credentials",
-        };
-      }
-
-      // تغيير الاشتراك إلى الباقة الجديدة
-      const changeResult: {
-        ok: boolean;
-        error?: string;
-        message?: string;
-        details?: any;
-      } = await ctx.runAction(api.billing.changeSubscriptionPlan, {
-        subscriptionId: currentSubscription.lemonSubscriptionId,
-        variantId,
-        productId: currentSubscription.productId ?? undefined, // استخدام product_id من الاشتراك الحالي إذا كان متاحاً
-        invoiceImmediately: false, // يمكن تغييره حسب الحاجة
-      });
-
-      if (!changeResult.ok) {
-        return {
-          ok: false,
-          error: changeResult.error || "Failed to change subscription plan",
-          details: changeResult.details,
-        };
-      }
-
-      return {
-        ok: true,
-        changed: true,
-        message: "Subscription plan changed successfully",
-      };
-    }
 
     const apiKey = process.env.LEMON_SECRET_KEY;
     const storeId = process.env.LEMON_STORE_ID;
@@ -672,14 +632,19 @@ export const createCheckout = action({
     }
 
     const json = await res.json();
+    console.log("Checkout API response:", JSON.stringify(json, null, 2));
+
     const checkoutUrl = json?.data?.attributes?.url;
     if (!checkoutUrl) {
+      console.error("Missing checkout URL in response:", json);
       return {
         ok: false,
         error: "Missing checkout URL",
+        details: json,
       };
     }
 
+    console.log("Checkout URL created successfully:", checkoutUrl);
     return { ok: true, url: checkoutUrl };
   },
 });
@@ -814,12 +779,28 @@ export const changeSubscriptionPlan = action({
         errorDetails = errorText;
       }
 
+      console.error("Failed to change subscription plan:", {
+        subscriptionId,
+        variantId,
+        productId,
+        status: res.status,
+        error: errorDetails,
+      });
+
       return {
         ok: false,
         error: "Failed to change subscription plan",
         details: errorDetails,
       };
     }
+
+    const responseData = await res.json();
+    console.log("Subscription plan changed successfully:", {
+      subscriptionId,
+      variantId,
+      productId,
+      response: responseData,
+    });
 
     return {
       ok: true,
