@@ -474,16 +474,61 @@ export const createCheckoutSession = action({
       const allowed = isUpgrade(currentTier, desiredTier);
       if (!allowed) throw new Error("Cannot downgrade or keep same tier.");
 
-      // Use customerPortal stored inside subscription
-      const sub = await ctx.runQuery(api.subscriptions.getById, {
-        subscriptionId: activeSub,
-      });
+      // Get Lemon customer for this org
+      const billingCustomer = await ctx.runQuery(
+        api.billing.getBillingCustomer,
+        {
+          organizationId: args.organizationId,
+        }
+      );
 
-      if (!sub?.customerPortal)
-        throw new Error("Portal URL not available yet. Try again later.");
+      const customerId = billingCustomer?.lemonCustomerId;
 
-      return { ok: true, upgrade: true, url: sub.customerPortal };
+      if (!customerId) {
+        throw new Error(
+          "No Lemon customer found for this organization. Cannot upgrade."
+        );
+      }
+
+      // 🛑 الإصلاح النهائي: استخدام customer-portal-urls لإنشاء رابط بوابة العميل مباشرة
+      const portalUrlRes = await fetch(
+        "https://api.lemonsqueezy.com/v1/customer-portal-urls", // ✅ نقطة نهاية جديدة وموثوقة
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.LEMON_SECRET_KEY}`,
+            Accept: "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+          },
+          body: JSON.stringify({
+            data: {
+              type: "customer-portal-urls",
+              attributes: {
+                store_id: process.env.LEMON_STORE_ID,
+                customer_id: customerId,
+                // إضافة متغير redirect_url سيضمن عودة العميل للتطبيق بعد الترقية
+                redirect_url:
+                  process.env.NEXT_PUBLIC_BASE_URL + "/dashboard/billing",
+              },
+            },
+          }),
+        }
+      );
+
+      if (!portalUrlRes.ok) {
+        const errText = await portalUrlRes.text();
+        throw new Error("Failed to create Customer Portal URL: " + errText);
+      }
+
+      const portalJson = await portalUrlRes.json();
+      const portalUrl = portalJson?.data?.attributes?.url;
+
+      if (!portalUrl)
+        throw new Error("Customer Portal URL missing from API response.");
+
+      return { ok: true, upgrade: true, url: portalUrl };
     }
+    // ... complete remaining code for regular checkout (new subscription)
 
     // Fetch Lemon customer
     const billingCustomer = await ctx.runQuery(api.billing.getBillingCustomer, {
