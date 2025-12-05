@@ -43,7 +43,10 @@ import {
 } from "lucide-react";
 
 import InviteEmployeeDialog from "../components/InviteEmployeeDialog";
-import { leaveOrganizationAction } from "./[memberConvexId]/actions";
+import {
+  leaveOrganizationAction,
+  createOrganizationAction,
+} from "./[memberConvexId]/actions";
 
 export default function EmployeesClient() {
   const t = useTranslations("team");
@@ -53,8 +56,7 @@ export default function EmployeesClient() {
 
   // ----------- HOOKS ALWAYS ON TOP ----------- //
   const { organization, isLoaded, membership } = useOrganization();
-  const { userMemberships, setActive, createOrganization } =
-    useOrganizationList();
+  const { userMemberships, setActive } = useOrganizationList();
 
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
@@ -154,11 +156,7 @@ export default function EmployeesClient() {
       // 5) user has no orgs → create org UI
       if (userMemberships.data.length === 0) {
         return (
-          <CreateOrganizationUI
-            createOrganization={createOrganization}
-            t={t}
-            router={router}
-          />
+          <CreateOrganizationUI setActive={setActive} t={t} router={router} />
         );
       }
 
@@ -418,7 +416,7 @@ function MembersGrid({ members, t, locale, myRole, currentUserId }: any) {
 /* ------------------------------------------------------------------------- */
 /* CREATE ORG UI */
 /* ------------------------------------------------------------------------- */
-function CreateOrganizationUI({ createOrganization, t, router }: any) {
+function CreateOrganizationUI({ setActive, t, router }: any) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -426,7 +424,14 @@ function CreateOrganizationUI({ createOrganization, t, router }: any) {
     try {
       setLoading(true);
 
-      await createOrganization({ name });
+      // Create organization in Clerk and sync to Convex
+      const result = await createOrganizationAction(name);
+
+      if (result.success && result.organizationId && setActive) {
+        // Activate the newly created organization
+        await setActive({ organization: result.organizationId });
+      }
+
       toast.success(t("organizationCreated"));
       router.refresh();
     } catch (err: any) {
