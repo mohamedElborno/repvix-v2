@@ -13,7 +13,7 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { useAction, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { useOrganization } from "@clerk/nextjs";
 import { toast } from "sonner";
 
@@ -38,59 +38,18 @@ export default function BillingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
-  const cancelSubscription = useAction(api.billing.cancelSubscription);
-  const [isCancelling, setIsCancelling] = useState(false);
-
   const manageBilling = () => {
-    if (!sub?.customerPortal) return;
+    // استخدام customerPortal URL من Lemon Squeezy
+    // هذا الرابط يحتوي على جميع خيارات إدارة الاشتراك (تغيير الخطة، الدفع، الإلغاء)
+    if (!sub?.customerPortal) {
+      toast.error("Billing portal URL not available");
+      return;
+    }
     window.location.href = sub.customerPortal;
   };
 
   const goToPricing = () => {
     router.push(`/${locale}/dashboard/pricing`);
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!convexOrgId) {
-      toast.error("Error: Organization not found");
-      return;
-    }
-
-    // تأكيد من المستخدم
-    if (
-      !confirm(
-        "Are you sure you want to cancel your subscription? Your subscription will remain active until the end of the current billing period."
-      )
-    ) {
-      return;
-    }
-
-    setIsCancelling(true);
-    try {
-      const result = await cancelSubscription({
-        organizationId: convexOrgId,
-      });
-
-      if (!result.ok) {
-        toast.error(result.error || "Failed to cancel subscription");
-        return;
-      }
-
-      toast.success(
-        result.message ||
-          "Subscription cancelled successfully. It will remain active until the end of the current billing period."
-      );
-
-      // إعادة تحميل الصفحة بعد ثانية
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (err: any) {
-      console.error("Cancel subscription error:", err);
-      toast.error(err.message || "Failed to cancel subscription");
-    } finally {
-      setIsCancelling(false);
-    }
   };
 
   // Loading state
@@ -242,21 +201,12 @@ export default function BillingPage() {
               </Button>
 
               <Button
-                onClick={handleCancelSubscription}
+                onClick={manageBilling}
                 variant="outline"
-                disabled={isCancelling || !sub || sub.status === "cancelled"}
+                disabled={!sub?.customerPortal}
                 className="w-full border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/10 disabled:opacity-50"
               >
-                {isCancelling ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Cancelling...
-                  </>
-                ) : sub?.status === "cancelled" ? (
-                  "Subscription Cancelled"
-                ) : (
-                  t("cancelSubscription")
-                )}
+                {t("cancelSubscription")}
               </Button>
             </div>
 

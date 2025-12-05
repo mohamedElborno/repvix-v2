@@ -366,12 +366,18 @@ export const handleEvent = mutation({
         if (tier) {
           const { limits } = mapVariantToPlan(subscriptionUpdate.variantId);
 
-          await ctx.db.patch(organizationId, {
-            planTier: tier,
+          // عند الإلغاء، نحتفظ بالباقة والحدود حتى نهاية الفترة
+          // لكن نحدث billingStatus إلى "cancelled"
+          const orgUpdate: any = {
             billingStatus: status,
             activeSubscriptionId: subscriptionId,
             renewsAt,
-            limits: {
+          };
+
+          // إذا لم يكن ملغى، نحدث الباقة والحدود
+          if (status !== "cancelled") {
+            orgUpdate.planTier = tier;
+            orgUpdate.limits = {
               members:
                 limits.members === "unlimited" ? undefined : limits.members,
               dailyAnalyses:
@@ -382,7 +388,14 @@ export const handleEvent = mutation({
               integrations: limits.integrations,
               features: limits.features,
               support: limits.support,
-            },
+            };
+          }
+
+          await ctx.db.patch(organizationId, orgUpdate);
+        } else if (status === "cancelled") {
+          // إذا كان ملغى وليس لدينا tier، نحدث فقط billingStatus
+          await ctx.db.patch(organizationId, {
+            billingStatus: status,
           });
         }
       }
@@ -633,85 +646,5 @@ export const createCheckout = action({
     }
 
     return { ok: true, url: checkoutUrl };
-  },
-});
-
-/* --------------------------------------------------------------
- * Cancel Subscription
- * -------------------------------------------------------------- */
-
-export const cancelSubscription = action({
-  args: {
-    organizationId: v.id("organizations"),
-  },
-  handler: async (ctx, { organizationId }) => {
-    const apiKey = process.env.LEMON_SECRET_KEY;
-
-    if (!apiKey) {
-      return {
-        ok: false,
-        error: "Missing Lemon Squeezy API credentials",
-      };
-    }
-
-    // الحصول على الاشتراك النشط
-    const activeSubscription: {
-      lemonSubscriptionId: string;
-      variantId: string | null;
-      productId: string | null;
-      status: string;
-    } | null = await ctx.runQuery(api.billing.getActiveSubscription, {
-      organizationId,
-    });
-
-    if (!activeSubscription) {
-      return {
-        ok: false,
-        error: "No active subscription found",
-      };
-    }
-
-    // إلغاء الاشتراك في Lemon Squeezy
-    const res: Response = await fetch(
-      `https://api.lemonsqueezy.com/v1/subscriptions/${activeSubscription.lemonSubscriptionId}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: "application/vnd.api+json",
-          "Content-Type": "application/vnd.api+json",
-        },
-        body: JSON.stringify({
-          data: {
-            type: "subscriptions",
-            id: activeSubscription.lemonSubscriptionId,
-            attributes: {
-              cancelled: true,
-            },
-          },
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      const errorText: string = await res.text();
-      let errorDetails: any;
-      try {
-        errorDetails = JSON.parse(errorText);
-      } catch {
-        errorDetails = errorText;
-      }
-
-      return {
-        ok: false,
-        error: "Failed to cancel subscription",
-        details: errorDetails,
-      };
-    }
-
-    return {
-      ok: true,
-      message: "Subscription cancelled successfully",
-    };
   },
 });
