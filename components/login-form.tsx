@@ -14,12 +14,15 @@ export function LoginForm() {
   const { signIn, isLoaded, setActive } = useSignIn();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [usePhone, setUsePhone] = useState(false);
   const [formData, setFormData] = useState({
     identifier: "",
     password: "",
   });
+  const [code, setCode] = useState("");
+  const [awaitingCode, setAwaitingCode] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -44,10 +47,25 @@ export function LoginForm() {
         toast.success(t("signInSuccess") || "Signed in successfully!");
         router.push("/dashboard");
       } else {
-        // Handle additional steps if needed (e.g., 2FA)
-        toast.error(
-          t("additionalStepsRequired") || "Additional steps required"
+        // Handle additional steps (e.g., email verification code)
+        const emailFactor = result.supportedFirstFactors?.find(
+          (f: any) => f.strategy === "email_code"
         );
+
+        if (result.status === "needs_first_factor" && emailFactor) {
+          await signIn.prepareFirstFactor({
+            strategy: "email_code",
+            emailAddressId: (emailFactor as any).emailAddressId,
+          });
+          setAwaitingCode(true);
+          toast.success(
+            t("checkEmailCode") || "We sent you a verification code by email."
+          );
+        } else {
+          toast.error(
+            t("additionalStepsRequired") || "Additional steps required"
+          );
+        }
       }
     } catch (err: any) {
       toast.error(err.errors?.[0]?.message || t("errorOccurred"));
@@ -76,6 +94,31 @@ export function LoginForm() {
     }
   };
 
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+    setIsVerifying(true);
+    try {
+      const attempt = await signIn.attemptFirstFactor({
+        strategy: "email_code",
+        code,
+      });
+      if (attempt.status === "complete") {
+        await setActive({ session: attempt.createdSessionId });
+        toast.success(t("signInSuccess") || "Signed in successfully!");
+        router.push("/dashboard");
+      } else {
+        toast.error(
+          t("additionalStepsRequired") || "Additional steps required"
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.errors?.[0]?.message || t("errorOccurred"));
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -91,7 +134,7 @@ export function LoginForm() {
 
       {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80 mb-2">
+        <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-linear-to-b from-white to-white/80 mb-2">
           {t("title")}
         </h1>
         <p className="text-sm text-white/70">{t("subtitle")}</p>
@@ -149,98 +192,140 @@ export function LoginForm() {
         </div>
       </div>
 
-      {/* Email/Username Sign-in Form */}
-      <form onSubmit={handleEmailSignIn} className="space-y-4">
-        {/* Email/Username or Phone */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
+      {/* Email/Username Sign-in Form OR Code Verification */}
+      {awaitingCode ? (
+        <form onSubmit={handleVerifyCode} className="space-y-4">
+          <div>
             <label
-              htmlFor="identifier"
-              className="block text-xs font-medium text-white/70"
+              htmlFor="code"
+              className="block text-xs font-medium text-white/70 mb-2"
             >
-              {usePhone ? t("phoneNumber") : t("emailOrUsername")}
+              {t("verificationCode") || "Verification code"}
             </label>
-            <button
-              type="button"
-              onClick={() => setUsePhone(!usePhone)}
+            <input
+              id="code"
+              name="code"
+              type="text"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder={
+                t("verificationCodePlaceholder") ||
+                "Enter the code sent to your email"
+              }
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={isVerifying}
+            className="w-full rounded-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-6 transition-all duration-200 mt-6"
+          >
+            {isVerifying ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            ) : (
+              <>
+                {t("continue")}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </form>
+      ) : (
+        <form onSubmit={handleEmailSignIn} className="space-y-4">
+          {/* Email/Username or Phone */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label
+                htmlFor="identifier"
+                className="block text-xs font-medium text-white/70"
+              >
+                {usePhone ? t("phoneNumber") : t("emailOrUsername")}
+              </label>
+              <button
+                type="button"
+                onClick={() => setUsePhone(!usePhone)}
+                className="text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors"
+              >
+                {usePhone ? t("useEmail") : t("usePhone")}
+              </button>
+            </div>
+            <input
+              id="identifier"
+              name="identifier"
+              type={usePhone ? "tel" : "text"}
+              required
+              value={formData.identifier}
+              onChange={handleInputChange}
+              placeholder={
+                usePhone
+                  ? t("phonePlaceholder")
+                  : t("emailOrUsernamePlaceholder")
+              }
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-medium text-white/70 mb-2"
+            >
+              {t("password")}
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder={t("passwordPlaceholder")}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Forgot Password Link */}
+          <div className="flex justify-end">
+            <a
+              href="/forgot-password"
               className="text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors"
             >
-              {usePhone ? t("useEmail") : t("usePhone")}
-            </button>
+              {t("forgotPassword")}
+            </a>
           </div>
-          <input
-            id="identifier"
-            name="identifier"
-            type={usePhone ? "tel" : "text"}
-            required
-            value={formData.identifier}
-            onChange={handleInputChange}
-            placeholder={
-              usePhone ? t("phonePlaceholder") : t("emailOrUsernamePlaceholder")
-            }
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
-          />
-        </div>
 
-        {/* Password */}
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-xs font-medium text-white/70 mb-2"
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full rounded-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-6 transition-all duration-200 mt-6"
           >
-            {t("password")}
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              required
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder={t("passwordPlaceholder")}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder:text-white/40 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
-            >
-              {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
-                <Eye className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Forgot Password Link */}
-        <div className="flex justify-end">
-          <a
-            href="/forgot-password"
-            className="text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors"
-          >
-            {t("forgotPassword")}
-          </a>
-        </div>
-
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-6 transition-all duration-200 mt-6"
-        >
-          {isLoading ? (
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-          ) : (
-            <>
-              {t("continue")}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </>
-          )}
-        </Button>
-      </form>
+            {isLoading ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            ) : (
+              <>
+                {t("continue")}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </form>
+      )}
 
       {/* Sign Up Link */}
       <div className="mt-6 text-center">

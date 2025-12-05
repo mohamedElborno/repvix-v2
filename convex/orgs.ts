@@ -89,10 +89,45 @@ export const syncOrganizationMembers = mutation({
       .first();
 
     if (!callerMembership) {
-      throw new Error("Unauthorized: caller is not a member of this organization.");
-    }
-    if (callerMembership.role !== "admin") {
-      throw new Error("Insufficient permissions");
+      // Allow the caller to self-provision only if Clerk says they belong to this org
+      const selfFromClerk = args.members.find(
+        (m) => m.clerkUserId === caller.subject
+      );
+      if (!selfFromClerk) {
+        throw new Error(
+          "Unauthorized: caller is not a member of this organization."
+        );
+      }
+
+      const role = normalizeRole(selfFromClerk.role);
+
+      await assertMemberCapacity(
+        ctx,
+        org._id,
+        org.planTier,
+        (org as any).limits?.members,
+        1
+      );
+
+      await ctx.db.insert("organizationMembers", {
+        organizationId: org._id,
+        clerkUserId: selfFromClerk.clerkUserId,
+        name: selfFromClerk.name || undefined,
+        email: selfFromClerk.email || undefined,
+        imageUrl: selfFromClerk.imageUrl || undefined,
+        role,
+        joinedAt: Date.now(),
+      });
+      // Only sync the caller entry; ignore others
+      args.members = [selfFromClerk];
+    } else if (callerMembership.role !== "admin") {
+      // Non-admins may only sync their own record; ignore others
+      args.members = args.members.filter(
+        (m) => m.clerkUserId === caller.subject
+      );
+      if (!args.members.length) {
+        return true;
+      }
     }
 
     const existingMembers = await ctx.db
