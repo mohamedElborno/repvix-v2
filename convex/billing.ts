@@ -332,10 +332,10 @@ export const handleEvent = mutation({
         updatedAt: Date.now(),
 
         // Important URLs
-        customerPortal: attr?.urls?.customer_portal ?? undefined,
-        updatePaymentMethodUrl: attr?.urls?.update_payment_method ?? undefined,
+        customerPortal: attr?.urls?.customer_portal ?? null,
+        updatePaymentMethodUrl: attr?.urls?.update_payment_method ?? null,
         updateSubscriptionUrl:
-          attr?.urls?.customer_portal_update_subscription ?? undefined,
+          attr?.urls?.customer_portal_update_subscription ?? null,
       };
 
       if (organizationId) {
@@ -512,14 +512,6 @@ export const createCheckout = action({
       };
     }
 
-    // ملاحظة: عند وجود اشتراك نشط في باقة مختلفة، سننشئ checkout جديد
-    // Lemon Squeezy سيتعامل مع التغيير تلقائياً عند إتمام الدفع
-    console.log("Creating checkout for:", {
-      organizationId,
-      variantId,
-      userEmail,
-    });
-
     const apiKey = process.env.LEMON_SECRET_KEY;
     const storeId = process.env.LEMON_STORE_ID;
 
@@ -632,45 +624,27 @@ export const createCheckout = action({
     }
 
     const json = await res.json();
-    console.log("Checkout API response:", JSON.stringify(json, null, 2));
-
     const checkoutUrl = json?.data?.attributes?.url;
     if (!checkoutUrl) {
-      console.error("Missing checkout URL in response:", json);
       return {
         ok: false,
         error: "Missing checkout URL",
-        details: json,
       };
     }
 
-    console.log("Checkout URL created successfully:", checkoutUrl);
     return { ok: true, url: checkoutUrl };
   },
 });
 
 /* --------------------------------------------------------------
- * Change Subscription Plan
+ * Cancel Subscription
  * -------------------------------------------------------------- */
 
-export const changeSubscriptionPlan = action({
+export const cancelSubscription = action({
   args: {
-    subscriptionId: v.string(),
-    variantId: v.string(),
-    productId: v.optional(v.string()), // يمكن تمرير product_id مباشرة
-    invoiceImmediately: v.optional(v.boolean()),
-    disableProrations: v.optional(v.boolean()),
+    organizationId: v.id("organizations"),
   },
-  handler: async (
-    ctx,
-    {
-      subscriptionId,
-      variantId,
-      productId: providedProductId,
-      invoiceImmediately,
-      disableProrations,
-    }
-  ) => {
+  handler: async (ctx, { organizationId }) => {
     const apiKey = process.env.LEMON_SECRET_KEY;
 
     if (!apiKey) {
@@ -680,85 +654,26 @@ export const changeSubscriptionPlan = action({
       };
     }
 
-    let productId = providedProductId;
+    // الحصول على الاشتراك النشط
+    const activeSubscription: {
+      lemonSubscriptionId: string;
+      variantId: string | null;
+      productId: string | null;
+      status: string;
+    } | null = await ctx.runQuery(api.billing.getActiveSubscription, {
+      organizationId,
+    });
 
-    // إذا لم يتم توفير product_id، نحاول الحصول عليه من variant
-    if (!productId) {
-      // الحصول على معلومات الـ variant للحصول على product_id
-      const variantRes = await fetch(
-        `https://api.lemonsqueezy.com/v1/variants/${variantId}?include=product`,
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            Accept: "application/vnd.api+json",
-          },
-        }
-      );
-
-      if (!variantRes.ok) {
-        const errorText = await variantRes.text();
-        return {
-          ok: false,
-          error: "Variant not found",
-          details: errorText,
-        };
-      }
-
-      const variantData = await variantRes.json();
-
-      // محاولة الحصول على product_id من أماكن مختلفة
-      // الطريقة الأولى: من relationships
-      productId = variantData?.data?.relationships?.product?.data?.id;
-
-      // الطريقة الثانية: من included data
-      if (!productId && variantData?.included) {
-        const product = variantData.included.find(
-          (item: any) => item.type === "products"
-        );
-        productId = product?.id;
-      }
-
-      // الطريقة الثالثة: من attributes (إذا كان موجوداً)
-      if (!productId) {
-        productId = variantData?.data?.attributes?.product_id?.toString();
-      }
-
-      if (!productId) {
-        console.error(
-          "Variant data structure:",
-          JSON.stringify(variantData, null, 2)
-        );
-        return {
-          ok: false,
-          error: "Could not determine product ID for variant",
-          details: "Please check the variant data structure in the logs",
-        };
-      }
+    if (!activeSubscription) {
+      return {
+        ok: false,
+        error: "No active subscription found",
+      };
     }
 
-    // بناء payload لتغيير الاشتراك
-    const payload: any = {
-      data: {
-        type: "subscriptions",
-        id: subscriptionId,
-        attributes: {
-          product_id: parseInt(productId),
-          variant_id: parseInt(variantId),
-        },
-      },
-    };
-
-    // إضافة خيارات proration إذا كانت محددة
-    if (invoiceImmediately !== undefined) {
-      payload.data.attributes.invoice_immediately = invoiceImmediately;
-    }
-    if (disableProrations !== undefined) {
-      payload.data.attributes.disable_prorations = disableProrations;
-    }
-
-    // تغيير خطة الاشتراك
-    const res = await fetch(
-      `https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`,
+    // إلغاء الاشتراك في Lemon Squeezy
+    const res: Response = await fetch(
+      `https://api.lemonsqueezy.com/v1/subscriptions/${activeSubscription.lemonSubscriptionId}`,
       {
         method: "PATCH",
         headers: {
@@ -766,45 +681,37 @@ export const changeSubscriptionPlan = action({
           Accept: "application/vnd.api+json",
           "Content-Type": "application/vnd.api+json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          data: {
+            type: "subscriptions",
+            id: activeSubscription.lemonSubscriptionId,
+            attributes: {
+              cancelled: true,
+            },
+          },
+        }),
       }
     );
 
     if (!res.ok) {
-      const errorText = await res.text();
-      let errorDetails;
+      const errorText: string = await res.text();
+      let errorDetails: any;
       try {
         errorDetails = JSON.parse(errorText);
       } catch {
         errorDetails = errorText;
       }
 
-      console.error("Failed to change subscription plan:", {
-        subscriptionId,
-        variantId,
-        productId,
-        status: res.status,
-        error: errorDetails,
-      });
-
       return {
         ok: false,
-        error: "Failed to change subscription plan",
+        error: "Failed to cancel subscription",
         details: errorDetails,
       };
     }
 
-    const responseData = await res.json();
-    console.log("Subscription plan changed successfully:", {
-      subscriptionId,
-      variantId,
-      productId,
-      response: responseData,
-    });
-
     return {
       ok: true,
-      message: "Subscription plan changed successfully",
+      message: "Subscription cancelled successfully",
     };
   },
 });
