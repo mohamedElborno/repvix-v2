@@ -47,6 +47,7 @@ import {
   leaveOrganizationAction,
   createOrganizationAction,
 } from "./[memberConvexId]/actions";
+import { Id } from "@/convex/_generated/dataModel";
 
 export default function EmployeesClient() {
   const t = useTranslations("team");
@@ -89,6 +90,16 @@ export default function EmployeesClient() {
   const members = useQuery(
     api.orgs.getOrganizationMembers,
     organization?.id ? { clerkOrgId: organization.id } : "skip"
+  );
+
+  const convexOrgId = useQuery(
+    api.orgs.getByClerkId,
+    organization?.id ? { clerkOrgId: organization.id } : "skip"
+  ) as Id<"organizations"> | null | undefined;
+
+  const memberLimit = useQuery(
+    api.orgMembers.getMemberLimitStatus,
+    convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
   const filteredMembers = useMemo(() => {
@@ -254,7 +265,18 @@ export default function EmployeesClient() {
             isOpen={showInvite}
             onClose={() => setShowInvite(false)}
             onSubmit={async (email: string, role: string) => {
-              const normalizedRole = role === "admin" ? "org:admin" : "org:member";
+              if (memberLimit && memberLimit.allowed === false) {
+                const remaining = memberLimit.remaining ?? 0;
+                toast.error(
+                  remaining > 0
+                    ? t("invitationFailed") ||
+                        "Member limit reached for your current plan."
+                    : "Member limit reached for your current plan."
+                );
+                return;
+              }
+              const normalizedRole =
+                role === "admin" ? "org:admin" : "org:member";
               try {
                 await organization.inviteMember({
                   emailAddress: email,

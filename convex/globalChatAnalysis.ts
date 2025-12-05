@@ -3,6 +3,7 @@
 import { v } from "convex/values";
 import { action, internalAction } from "./_generated/server";
 import { api, internal } from "./_generated/api";
+import { requireUser } from "./auth";
 import { getOpenAiClient, CHAT_ANALYSIS_MODEL } from "../lib/openai/client";
 import { getGlobalAnalysisSystemPrompt } from "@/lib/ai/prompts/globalAnalysisPrompt";
 import { Id } from "./_generated/dataModel";
@@ -32,6 +33,19 @@ export const runFullGlobalAnalysis = action({
     tokenInputCount?: number | undefined;
     tokenOutputCount?: number | undefined;
   }> => {
+    const user = await requireUser(ctx as any);
+
+    const membership = await ctx.runQuery(api.orgMembers.isMember, {
+      organizationId: args.organizationId,
+      clerkUserId: user.subject,
+    });
+    if (!membership) {
+      return {
+        ok: false,
+        code: "NOT_ORG_MEMBER",
+      };
+    }
+
     // Rate limit: one global analysis per org per day (24h window)
     const latest = await ctx.runQuery(api.globalAnalysis.getLatestByOrg, {
       organizationId: args.organizationId,
@@ -51,10 +65,13 @@ export const runFullGlobalAnalysis = action({
       }
     }
 
-    const res = await ctx.runAction(internal.globalChatAnalysis.analyzeGlobalChats, {
-      organizationId: args.organizationId,
-      analysisLanguage: args.language,
-    });
+    const res = await ctx.runAction(
+      internal.globalChatAnalysis.analyzeGlobalChats,
+      {
+        organizationId: args.organizationId,
+        analysisLanguage: args.language,
+      }
+    );
     return { ok: true, ...res };
   },
 });

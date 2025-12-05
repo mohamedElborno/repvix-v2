@@ -89,33 +89,10 @@ export const syncOrganizationMembers = mutation({
       .first();
 
     if (!callerMembership) {
-      const fromClerk = args.members.find(
-        (m) => m.clerkUserId === caller.subject
-      );
-
-      if (!fromClerk) {
-        throw new Error("Not a member of this organization.");
-      }
-
-      const role = normalizeRole(fromClerk.role);
-
-      await assertMemberCapacity(
-        ctx,
-        org._id,
-        org.planTier,
-        (org as any).limits?.members,
-        1
-      );
-
-      await ctx.db.insert("organizationMembers", {
-        organizationId: org._id,
-        clerkUserId: fromClerk.clerkUserId,
-        name: fromClerk.name || undefined,
-        email: fromClerk.email || undefined,
-        imageUrl: fromClerk.imageUrl || undefined,
-        role,
-        joinedAt: Date.now(),
-      });
+      throw new Error("Unauthorized: caller is not a member of this organization.");
+    }
+    if (callerMembership.role !== "admin") {
+      throw new Error("Insufficient permissions");
     }
 
     const existingMembers = await ctx.db

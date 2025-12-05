@@ -108,6 +108,59 @@ export const updateMemberInfo = mutation({
   },
 });
 
+export const isMember = query({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkUserId: v.string(),
+  },
+  handler: async (ctx, { organizationId, clerkUserId }) => {
+    const membership = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q) => q.eq("clerkUserId", clerkUserId))
+      .filter((q) => q.eq(q.field("organizationId"), organizationId))
+      .first();
+    return membership ? { role: membership.role, _id: membership._id } : null;
+  },
+});
+
+export const getMemberLimitStatus = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const org = await ctx.db.get(organizationId);
+    if (!org) {
+      return {
+        allowed: false,
+        limit: 0,
+        remaining: 0,
+        count: 0,
+      };
+    }
+
+    const limit =
+      org.limits?.members !== undefined
+        ? org.limits.members
+        : limitsForTier((org.planTier as any) || "basic").members;
+
+    const count = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect()
+      .then((arr: any[]) => arr.length);
+
+    const remaining =
+      limit === undefined || limit === "unlimited"
+        ? undefined
+        : Math.max(0, Number(limit) - count);
+
+    const allowed =
+      limit === undefined || limit === "unlimited" ? true : count < Number(limit);
+
+    return { allowed, limit, remaining, count };
+  },
+});
+
 export const addMemberFromInvite = mutation({
   args: {
     organizationId: v.id("organizations"),
@@ -118,6 +171,12 @@ export const addMemberFromInvite = mutation({
     role: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
+    // Only admins of the org can add members via this endpoint
+    const callerMembership = await requireOrgMembership(ctx, args.organizationId);
+    if (callerMembership.role !== "admin") {
+      throw new Error("Insufficient permissions");
+    }
+
     const existing = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
