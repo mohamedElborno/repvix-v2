@@ -492,7 +492,8 @@ export const createCheckoutSession = action({
 
       // 🛑 الإصلاح النهائي: استخدام customer-portal-urls لإنشاء رابط بوابة العميل مباشرة
       const portalUrlRes = await fetch(
-        "https://api.lemonsqueezy.com/v1/customer-portal-urls", // ✅ نقطة نهاية جديدة وموثوقة
+        // تم تصحيح الرابط بإزالة "/v1/" ليتطابق مع نقطة نهاية Lemon Squeezy API الصحيحة.
+        "https://api.lemonsqueezy.com/customer-portal-urls",
         {
           method: "POST",
           headers: {

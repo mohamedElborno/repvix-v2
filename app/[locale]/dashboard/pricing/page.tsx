@@ -140,6 +140,7 @@ export default function PricingPage() {
 
       if (result.url) {
         window.location.href = result.url;
+        console.log("result", result);
         return;
       }
 
