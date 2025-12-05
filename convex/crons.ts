@@ -5,7 +5,7 @@ const crons = cronJobs();
 
 crons.interval(
   "Process LemonSqueezy billing events",
-  { seconds: 20 },
+  { seconds: 10 },
   internal.billingProcessor.run
 );
 

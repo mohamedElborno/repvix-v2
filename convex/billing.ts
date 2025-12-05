@@ -57,19 +57,44 @@ function isUpgrade(
 }
 
 async function resolveOrganizationId(ctx: any, ref?: string) {
-  if (!ref) return undefined;
+  if (!ref) {
+    console.warn("resolveOrganizationId: ref is empty");
+    return undefined;
+  }
 
+  // Try as Convex ID first
   try {
     const maybe = await ctx.db.get(ref as Id<"organizations">);
-    if (maybe?._id) return maybe._id;
-  } catch {}
+    if (maybe?._id) {
+      console.log(
+        `resolveOrganizationId: Found organization by Convex ID: ${ref}`
+      );
+      return maybe._id;
+    }
+  } catch (error) {
+    // Not a valid Convex ID, try as Clerk ID
+    console.log(
+      `resolveOrganizationId: ${ref} is not a Convex ID, trying as Clerk ID`
+    );
+  }
 
+  // Try as Clerk Org ID
   const viaClerk = await ctx.db
     .query("organizations")
     .withIndex("by_clerkOrgId", (q: any) => q.eq("clerkOrgId", ref))
     .first();
 
-  return viaClerk?._id;
+  if (viaClerk?._id) {
+    console.log(
+      `resolveOrganizationId: Found organization by Clerk ID: ${ref}`
+    );
+    return viaClerk._id;
+  }
+
+  console.error(
+    `resolveOrganizationId: Organization not found for ref: ${ref}`
+  );
+  return undefined;
 }
 
 /* --------------------------------------------------------------
@@ -252,6 +277,13 @@ export const handleEvent = mutation({
 
     const organizationId = await resolveOrganizationId(ctx, orgRef);
 
+    // Log for debugging
+    if (!organizationId && orgRef) {
+      console.error(
+        `Failed to resolve organizationId for ref: ${orgRef}, event: ${eventName}, lemonId: ${lemonId}`
+      );
+    }
+
     /* -------------------------
      * ORDER CREATED
      * ------------------------- */
@@ -338,66 +370,85 @@ export const handleEvent = mutation({
           attr?.urls?.customer_portal_update_subscription ?? null,
       };
 
-      if (organizationId) {
-        const existing = await ctx.db
-          .query("subscriptions")
-          .withIndex("by_sub", (q: any) =>
-            q.eq("lemonSubscriptionId", subExternal)
-          )
-          .first();
+      if (!organizationId) {
+        console.error(
+          `Cannot process subscription ${subExternal}: organizationId is null. orgRef: ${orgRef}, event: ${eventName}`
+        );
+        // لا نستمر إذا لم نجد organizationId
+        return;
+      }
 
-        let subscriptionId: Id<"subscriptions">;
+      const existing = await ctx.db
+        .query("subscriptions")
+        .withIndex("by_sub", (q: any) =>
+          q.eq("lemonSubscriptionId", subExternal)
+        )
+        .first();
 
-        if (existing) {
-          await ctx.db.patch(existing._id, subscriptionUpdate);
-          subscriptionId = existing._id;
-        } else {
-          subscriptionId = await ctx.db.insert("subscriptions", {
-            organizationId,
-            lemonSubscriptionId: subExternal,
-            createdAt: Date.now(),
-            ...subscriptionUpdate,
-          });
-        }
+      let subscriptionId: Id<"subscriptions">;
 
-        // Update org billing info
-        const tier = getTier(subscriptionUpdate.variantId ?? null);
+      if (existing) {
+        await ctx.db.patch(existing._id, subscriptionUpdate);
+        subscriptionId = existing._id;
+        console.log(
+          `Updated subscription ${subExternal} for organization ${organizationId}`
+        );
+      } else {
+        subscriptionId = await ctx.db.insert("subscriptions", {
+          organizationId,
+          lemonSubscriptionId: subExternal,
+          createdAt: Date.now(),
+          ...subscriptionUpdate,
+        });
+        console.log(
+          `Created subscription ${subExternal} for organization ${organizationId}`
+        );
+      }
 
-        if (tier) {
-          const { limits } = mapVariantToPlan(subscriptionUpdate.variantId);
+      // Update org billing info
+      const tier = getTier(subscriptionUpdate.variantId ?? null);
 
-          // عند الإلغاء، نحتفظ بالباقة والحدود حتى نهاية الفترة
-          // لكن نحدث billingStatus إلى "cancelled"
-          const orgUpdate: any = {
-            billingStatus: status,
-            activeSubscriptionId: subscriptionId,
-            renewsAt,
+      if (tier) {
+        const { limits } = mapVariantToPlan(subscriptionUpdate.variantId);
+
+        // عند الإلغاء، نحتفظ بالباقة والحدود حتى نهاية الفترة
+        // لكن نحدث billingStatus إلى "cancelled"
+        const orgUpdate: any = {
+          billingStatus: status,
+          activeSubscriptionId: subscriptionId,
+          renewsAt,
+        };
+
+        // إذا لم يكن ملغى، نحدث الباقة والحدود
+        if (status !== "cancelled") {
+          orgUpdate.planTier = tier;
+          orgUpdate.limits = {
+            members:
+              limits.members === "unlimited" ? undefined : limits.members,
+            dailyAnalyses:
+              limits.dailyAnalyses === "unlimited"
+                ? undefined
+                : limits.dailyAnalyses,
+            exports: limits.exports,
+            integrations: limits.integrations,
+            features: limits.features,
+            support: limits.support,
           };
-
-          // إذا لم يكن ملغى، نحدث الباقة والحدود
-          if (status !== "cancelled") {
-            orgUpdate.planTier = tier;
-            orgUpdate.limits = {
-              members:
-                limits.members === "unlimited" ? undefined : limits.members,
-              dailyAnalyses:
-                limits.dailyAnalyses === "unlimited"
-                  ? undefined
-                  : limits.dailyAnalyses,
-              exports: limits.exports,
-              integrations: limits.integrations,
-              features: limits.features,
-              support: limits.support,
-            };
-          }
-
-          await ctx.db.patch(organizationId, orgUpdate);
-        } else if (status === "cancelled") {
-          // إذا كان ملغى وليس لدينا tier، نحدث فقط billingStatus
-          await ctx.db.patch(organizationId, {
-            billingStatus: status,
-          });
         }
+
+        await ctx.db.patch(organizationId, orgUpdate);
+        console.log(
+          `Updated organization ${organizationId} with tier ${tier} and status ${status}`
+        );
+      } else if (status === "cancelled") {
+        // إذا كان ملغى وليس لدينا tier، نحدث فقط billingStatus
+        await ctx.db.patch(organizationId, {
+          billingStatus: status,
+        });
+      } else {
+        console.warn(
+          `No tier found for variantId ${subscriptionUpdate.variantId}, subscription saved but org not updated`
+        );
       }
     }
 
@@ -479,7 +530,50 @@ export const handleEvent = mutation({
       .withIndex("by_lemonId", (q: any) => q.eq("lemonId", lemonId))
       .first();
 
-    if (ev) await ctx.db.patch(ev._id, { processed: true });
+    if (ev) {
+      await ctx.db.patch(ev._id, { processed: true });
+      console.log(
+        `Marked webhook event ${ev._id} (lemonId: ${lemonId}) as processed`
+      );
+    } else {
+      console.warn(
+        `Webhook event with lemonId ${lemonId} not found in database`
+      );
+    }
+  },
+});
+
+/* --------------------------------------------------------------
+ * Manual Webhook Processing (for testing/debugging)
+ * -------------------------------------------------------------- */
+export const processUnprocessedWebhooks = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const events = await ctx.db
+      .query("webhookEvents")
+      .withIndex("by_processed", (q: any) => q.eq("processed", false))
+      .take(50);
+
+    console.log(`Found ${events.length} unprocessed webhook events`);
+
+    for (const ev of events) {
+      try {
+        await ctx.runMutation(api.billing.handleEvent, {
+          eventName: ev.eventName,
+          payload: ev.payload,
+        });
+        console.log(
+          `Processed webhook event ${ev._id} (lemonId: ${ev.lemonId})`
+        );
+      } catch (error) {
+        console.error(
+          `Error processing webhook event ${ev._id} (lemonId: ${ev.lemonId}):`,
+          error
+        );
+      }
+    }
+
+    return { processed: events.length };
   },
 });
 
