@@ -474,7 +474,20 @@ export const createCheckoutSession = action({
       const allowed = isUpgrade(currentTier, desiredTier);
       if (!allowed) throw new Error("Cannot downgrade or keep same tier.");
 
-      // Get Lemon customer for this org
+      // 1. **التعديل الجديد:** جلب الاشتراك النشط أولاً.
+      const subscription = await ctx.runQuery(api.subscriptions.getById, {
+        subscriptionId: activeSub,
+      });
+      if (!subscription) throw new Error("Active subscription not found.");
+
+      // 2. **الأولوية للرابط المحفوظ:** إذا كان رابط البوابة موجودًا من الويب هوك، استخدمه مباشرةً.
+      if (subscription.customerPortal) {
+        return { ok: true, upgrade: true, url: subscription.customerPortal };
+      }
+
+      // 3. **الخيار الاحتياطي:** محاولة إنشاء الرابط عبر API (في حال لم يتم حفظه بواسطة الويب هوك)
+
+      // جلب معرف العميل الخاص بـ Lemon Squeezy لهذه المنظمة
       const billingCustomer = await ctx.runQuery(
         api.billing.getBillingCustomer,
         {
@@ -490,10 +503,9 @@ export const createCheckoutSession = action({
         );
       }
 
-      // 🛑 الإصلاح النهائي: استخدام customer-portal-urls لإنشاء رابط بوابة العميل مباشرة
+      // إرسال طلب POST لإنشاء رابط بوابة العملاء (Customer Portal URL)
       const portalUrlRes = await fetch(
-        // تم تصحيح الرابط بإزالة "/v1/" ليتطابق مع نقطة نهاية Lemon Squeezy API الصحيحة.
-        "https://api.lemonsqueezy.com/customer-portal-urls",
+        "https://api.lemonsqueezy.com/v1/customer-portal-urls",
         {
           method: "POST",
           headers: {
@@ -507,7 +519,7 @@ export const createCheckoutSession = action({
               attributes: {
                 store_id: process.env.LEMON_STORE_ID,
                 customer_id: customerId,
-                // إضافة متغير redirect_url سيضمن عودة العميل للتطبيق بعد الترقية
+                // إضافة متغير redirect_url لضمان عودة العميل للتطبيق بعد الترقية
                 redirect_url:
                   process.env.NEXT_PUBLIC_BASE_URL + "/dashboard/billing",
               },
@@ -518,7 +530,10 @@ export const createCheckoutSession = action({
 
       if (!portalUrlRes.ok) {
         const errText = await portalUrlRes.text();
-        throw new Error("Failed to create Customer Portal URL: " + errText);
+        // رسالة خطأ مُحسّنة للمساعدة في تحديد المشكلة (مثل 404 أو 401)
+        throw new Error(
+          "Failed to create Customer Portal URL (API Fallback): " + errText
+        );
       }
 
       const portalJson = await portalUrlRes.json();

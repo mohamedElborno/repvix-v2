@@ -137,10 +137,10 @@ export default function PricingPage() {
         variantId,
         userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
       });
-
+      console.log("result", result);
       if (result.url) {
-        window.location.href = result.url;
         console.log("result", result);
+        window.location.href = result.url;
         return;
       }
 
