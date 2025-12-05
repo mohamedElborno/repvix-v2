@@ -136,6 +136,37 @@ export const hasActiveSubscriptionForVariant = query({
   },
 });
 
+/**
+ * الحصول على الاشتراك النشط الحالي للمنظمة
+ */
+export const getActiveSubscription = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, { organizationId }) => {
+    const activeStatuses = ["active", "on_trial"];
+
+    const subscriptions = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect();
+
+    // البحث عن أول اشتراك نشط
+    const activeSub = subscriptions.find((sub) =>
+      activeStatuses.includes(sub.status.toLowerCase())
+    );
+
+    if (!activeSub) return null;
+
+    return {
+      lemonSubscriptionId: activeSub.lemonSubscriptionId,
+      variantId: activeSub.variantId ?? null,
+      productId: activeSub.productId ?? null,
+      status: activeSub.status,
+    };
+  },
+});
+
 export const getBillingPortalData = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
@@ -481,6 +512,54 @@ export const createCheckout = action({
       };
     }
 
+    // التحقق من وجود اشتراك نشط في باقة مختلفة - يمكن تغييره بدلاً من إنشاء checkout جديد
+    const currentSubscription: {
+      lemonSubscriptionId: string;
+      variantId: string | null;
+      productId: string | null;
+      status: string;
+    } | null = await ctx.runQuery(api.billing.getActiveSubscription, {
+      organizationId,
+    });
+
+    // إذا كان لديه اشتراك نشط في باقة مختلفة، نغير الاشتراك بدلاً من إنشاء checkout جديد
+    if (currentSubscription && currentSubscription.variantId !== variantId) {
+      const apiKey = process.env.LEMON_SECRET_KEY;
+      if (!apiKey) {
+        return {
+          ok: false,
+          error: "Missing Lemon Squeezy API credentials",
+        };
+      }
+
+      // تغيير الاشتراك إلى الباقة الجديدة
+      const changeResult: {
+        ok: boolean;
+        error?: string;
+        message?: string;
+        details?: any;
+      } = await ctx.runAction(api.billing.changeSubscriptionPlan, {
+        subscriptionId: currentSubscription.lemonSubscriptionId,
+        variantId,
+        productId: currentSubscription.productId ?? undefined, // استخدام product_id من الاشتراك الحالي إذا كان متاحاً
+        invoiceImmediately: false, // يمكن تغييره حسب الحاجة
+      });
+
+      if (!changeResult.ok) {
+        return {
+          ok: false,
+          error: changeResult.error || "Failed to change subscription plan",
+          details: changeResult.details,
+        };
+      }
+
+      return {
+        ok: true,
+        changed: true,
+        message: "Subscription plan changed successfully",
+      };
+    }
+
     const apiKey = process.env.LEMON_SECRET_KEY;
     const storeId = process.env.LEMON_STORE_ID;
 
@@ -602,5 +681,149 @@ export const createCheckout = action({
     }
 
     return { ok: true, url: checkoutUrl };
+  },
+});
+
+/* --------------------------------------------------------------
+ * Change Subscription Plan
+ * -------------------------------------------------------------- */
+
+export const changeSubscriptionPlan = action({
+  args: {
+    subscriptionId: v.string(),
+    variantId: v.string(),
+    productId: v.optional(v.string()), // يمكن تمرير product_id مباشرة
+    invoiceImmediately: v.optional(v.boolean()),
+    disableProrations: v.optional(v.boolean()),
+  },
+  handler: async (
+    ctx,
+    {
+      subscriptionId,
+      variantId,
+      productId: providedProductId,
+      invoiceImmediately,
+      disableProrations,
+    }
+  ) => {
+    const apiKey = process.env.LEMON_SECRET_KEY;
+
+    if (!apiKey) {
+      return {
+        ok: false,
+        error: "Missing Lemon Squeezy API credentials",
+      };
+    }
+
+    let productId = providedProductId;
+
+    // إذا لم يتم توفير product_id، نحاول الحصول عليه من variant
+    if (!productId) {
+      // الحصول على معلومات الـ variant للحصول على product_id
+      const variantRes = await fetch(
+        `https://api.lemonsqueezy.com/v1/variants/${variantId}?include=product`,
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/vnd.api+json",
+          },
+        }
+      );
+
+      if (!variantRes.ok) {
+        const errorText = await variantRes.text();
+        return {
+          ok: false,
+          error: "Variant not found",
+          details: errorText,
+        };
+      }
+
+      const variantData = await variantRes.json();
+
+      // محاولة الحصول على product_id من أماكن مختلفة
+      // الطريقة الأولى: من relationships
+      productId = variantData?.data?.relationships?.product?.data?.id;
+
+      // الطريقة الثانية: من included data
+      if (!productId && variantData?.included) {
+        const product = variantData.included.find(
+          (item: any) => item.type === "products"
+        );
+        productId = product?.id;
+      }
+
+      // الطريقة الثالثة: من attributes (إذا كان موجوداً)
+      if (!productId) {
+        productId = variantData?.data?.attributes?.product_id?.toString();
+      }
+
+      if (!productId) {
+        console.error(
+          "Variant data structure:",
+          JSON.stringify(variantData, null, 2)
+        );
+        return {
+          ok: false,
+          error: "Could not determine product ID for variant",
+          details: "Please check the variant data structure in the logs",
+        };
+      }
+    }
+
+    // بناء payload لتغيير الاشتراك
+    const payload: any = {
+      data: {
+        type: "subscriptions",
+        id: subscriptionId,
+        attributes: {
+          product_id: parseInt(productId),
+          variant_id: parseInt(variantId),
+        },
+      },
+    };
+
+    // إضافة خيارات proration إذا كانت محددة
+    if (invoiceImmediately !== undefined) {
+      payload.data.attributes.invoice_immediately = invoiceImmediately;
+    }
+    if (disableProrations !== undefined) {
+      payload.data.attributes.disable_prorations = disableProrations;
+    }
+
+    // تغيير خطة الاشتراك
+    const res = await fetch(
+      `https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/vnd.api+json",
+          "Content-Type": "application/vnd.api+json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText;
+      }
+
+      return {
+        ok: false,
+        error: "Failed to change subscription plan",
+        details: errorDetails,
+      };
+    }
+
+    return {
+      ok: true,
+      message: "Subscription plan changed successfully",
+    };
   },
 });

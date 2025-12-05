@@ -188,6 +188,18 @@ export default function PricingPage() {
 
       console.log("Checkout result:", result);
 
+      // إذا تم تغيير الاشتراك بنجاح (بدلاً من إنشاء checkout)
+      if (result.changed) {
+        toast.success(
+          result.message || "Subscription plan changed successfully"
+        );
+        // إعادة تحميل الصفحة لتحديث البيانات
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        return;
+      }
+
       if (result.url) {
         console.log("Redirecting to:", result.url);
         window.location.href = result.url;
