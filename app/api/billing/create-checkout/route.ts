@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // إذا كان يحاول الترقية (upgrade) - يجب توجيهه إلى portal URL
+      // إذا كان يحاول الترقية (upgrade)
       const subscription = await convex.query(api.subscriptions.getById, {
         subscriptionId: currentPlan.activeSubscriptionId,
       });
@@ -90,26 +90,22 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // استخدام portal URL المحفوظ في قاعدة البيانات
+      // محاولة استخدام portal URL المحفوظ في قاعدة البيانات
       const portalUrl =
         subscription.updateSubscriptionUrl || subscription.customerPortal;
 
-      if (!portalUrl) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "Customer portal URL not available",
-            hint: "Please contact support to upgrade your plan.",
-          },
-          { status: 500 }
-        );
+      // إذا كان portal URL موجوداً، نستخدمه
+      if (portalUrl) {
+        return NextResponse.json({
+          ok: true,
+          upgrade: true,
+          url: portalUrl,
+        });
       }
 
-      return NextResponse.json({
-        ok: true,
-        upgrade: true,
-        url: portalUrl,
-      });
+      // إذا لم يكن portal URL موجوداً، نستخدم checkout URL للترقية
+      // (سيتم إنشاء checkout جديد للخطة الجديدة)
+      // هذا سيسمح للمستخدم بالترقية حتى لو لم يكن portal URL محفوظاً
     }
 
     // (A) تأكد أن الـ store صحيح ومتاح بالمفتاح الحالي
