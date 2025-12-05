@@ -124,8 +124,17 @@ export default function EmployeesClient() {
       );
     }
 
-    // 2) block multi-org
-    if (userMemberships.data?.length && userMemberships.data.length > 1) {
+    // 2) Check if userMemberships is loaded (data is undefined while loading)
+    if (userMemberships.data === undefined) {
+      return (
+        <div className="flex justify-center items-center min-h-[calc(100vh-120px)]">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      );
+    }
+
+    // 3) block multi-org
+    if (userMemberships.data.length > 1) {
       return (
         <div className="p-8 text-center min-h-[calc(100vh-120px)]">
           <h2 className="text-xl font-bold text-red-500 mb-2">
@@ -138,8 +147,8 @@ export default function EmployeesClient() {
       );
     }
 
-    // 3) user has no orgs → create org UI
-    if (userMemberships.data?.length && userMemberships.data.length === 0) {
+    // 4) user has no orgs → create org UI
+    if (userMemberships.data.length === 0) {
       return (
         <CreateOrganizationUI
           createOrganization={createOrganization}
@@ -149,7 +158,7 @@ export default function EmployeesClient() {
       );
     }
 
-    // 4) Clerk switching → organization null temporarily
+    // 5) Clerk switching → organization null temporarily (but user has orgs)
     if (!organization) {
       return (
         <div className="flex justify-center items-center min-h-[calc(100vh-120px)]">
