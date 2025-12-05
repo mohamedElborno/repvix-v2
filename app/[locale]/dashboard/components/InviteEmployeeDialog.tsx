@@ -114,7 +114,7 @@ export default function InviteEmployeeDialog({
                 <SelectValue placeholder={t("selectRole")} />
               </SelectTrigger>
 
-              <SelectContent>
+            <SelectContent>
                 <SelectItem value="member">
                   <div className="flex items-center gap-2">
                     <UserIcon className="w-4 h-4" />
@@ -126,13 +126,6 @@ export default function InviteEmployeeDialog({
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4" />
                     {t("roles.admin")}
-                  </div>
-                </SelectItem>
-
-                <SelectItem value="owner">
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4" />
-                    {t("roles.owner")}
                   </div>
                 </SelectItem>
               </SelectContent>

@@ -103,6 +103,34 @@
       "tagline": "Impulsado por precisión, conocimiento y un toque de IA ✨"
     }
   },
+  "legal": {
+    "terms": {
+      "title": "Términos de servicio",
+      "intro": "Estos Términos de servicio regulan el acceso y uso de Repvix. Al utilizar el producto, aceptas estos términos.",
+      "useOfServiceTitle": "Uso del servicio",
+      "useOfService": "Te comprometes a usar Repvix únicamente para fines legales y de conformidad con todas las leyes y regulaciones aplicables. Eres responsable de todo el contenido que subas, incluidos los historiales de chat y los datos de clientes. Algunas funcionalidades solo están disponibles a través de planes de suscripción. Al cancelar una suscripción se detienen las renovaciones futuras y el acceso a los límites de uso de pago al finalizar el período de facturación en curso; los importes ya cobrados no se reembolsan automáticamente, y cualquier reembolso se gestiona conforme a las condiciones del proveedor de pagos correspondiente.",
+      "dataAndPrivacyTitle": "Datos y privacidad",
+      "dataAndPrivacy": "Analizamos las conversaciones que subes para generar informes e insights. Eres responsable de contar con los permisos necesarios para compartir esos datos. Los chats y análisis que subes dentro de una organización se consideran parte de los registros de dicha organización. Al eliminar tu cuenta personal o tu membresía, los datos de la organización no se eliminan automáticamente; los propietarios o administradores de la organización pueden solicitar la eliminación de la organización, lo que normalmente conlleva la eliminación permanente de los datos relacionados en nuestros sistemas, sujeto a las obligaciones legales de conservación aplicables. Para más detalles sobre cómo almacenamos y tratamos los datos, consulta nuestra Política de privacidad.",
+      "changesTitle": "Cambios en los términos",
+      "changes": "Podemos actualizar periódicamente estos Términos. El uso continuado de Repvix después de cualquier cambio implica que aceptas los Términos actualizados.",
+      "contactTitle": "Contacto",
+      "contact": "Si tienes preguntas sobre estos Términos, puedes contactarnos a través de los canales indicados en nuestro sitio web."
+    },
+    "privacy": {
+      "title": "Política de privacidad",
+      "intro": "Esta Política de privacidad explica cómo Repvix recopila, utiliza y protege tus datos cuando utilizas el servicio.",
+      "dataWeCollectTitle": "Datos que recopilamos",
+      "dataWeCollect": "Podemos recopilar información de cuenta (como nombre, correo electrónico y datos de la organización), datos de uso y las conversaciones de chat que decides subir. Esto puede incluir resultados de análisis y representaciones técnicas derivadas (por ejemplo, vectores numéricos utilizados para búsqueda y analítica), así como registros de facturación como identificadores de suscripción, facturas y estado de pago. También se puede recopilar automáticamente cierta información técnica y metadatos con fines de seguridad y analítica.",
+      "howWeUseDataTitle": "Cómo usamos los datos",
+      "howWeUseData": "Utilizamos tus datos para prestar y mejorar el servicio de Repvix, incluyendo la generación de análisis, insights e informes, el mantenimiento de la seguridad y la mejora de la experiencia del producto. Podemos apoyarnos en proveedores de servicios cuidadosamente seleccionados para llevar a cabo ciertas actividades de tratamiento en nuestro nombre, sujetos a garantías contractuales y legales adecuadas. No vendemos tus datos.",
+      "dataRetentionTitle": "Conservación de datos",
+      "dataRetention": "Los datos de chats y análisis pueden almacenarse para que puedas revisarlos o gestionarlos desde tu panel. Si eliminas tu cuenta personal, eliminamos tus credenciales de acceso y tus membresías, pero los registros de la organización (incluidos chats y análisis) pueden seguir conservándose bajo el control de los administradores de dicha organización. Cuando una organización es eliminada por un administrador autorizado, en general eliminamos los chats, mensajes, análisis y registros de facturación asociados, salvo cuando la normativa nos obligue a conservar determinada información por motivos legales o de seguridad.",
+      "yourRightsTitle": "Tus derechos",
+      "yourRights": "Según tu jurisdicción, puedes tener derecho a acceder, corregir o eliminar tus datos personales. Ponte en contacto con nosotros si deseas ejercer alguno de estos derechos.",
+      "contactTitle": "Contacto",
+      "contact": "Si tienes dudas sobre esta Política de privacidad o sobre cómo gestionamos tus datos, contáctanos mediante la información disponible en nuestro sitio web."
+    }
+  },
   "header": {
     "hero": "Inicio",
     "features": "Características",
@@ -117,7 +145,8 @@
     "signUp": "Registrarse",
     "signIn": "Iniciar Sesión",
     "logoAlt": "Logotipo de Repvix",
-    "brandName": "Repvix"
+    "brandName": "Repvix",
+    "beta": "BETA"
   },
   "metadata": {
     "title": "Repvix – Análisis de Chats con IA para Equipos de Soporte y Ventas | Insights Multilingües",
@@ -198,6 +227,15 @@
       "contactUs": "Contáctanos",
       "currentPlan": "Plan Actual",
       "willContactYou": "Te contactaremos pronto",
+      "errors": {
+        "notSignedIn": "Inicia sesión primero.",
+        "noOrganization": "Falta la organización. Actualiza y asegúrate de seleccionar una organización.",
+        "notAdmin": "Solo los administradores pueden gestionar la facturación.",
+        "notAdminShort": "Sin permiso",
+        "checkoutFailed": "No se pudo iniciar el pago. Inténtalo de nuevo.",
+        "portalFailed": "No se pudo abrir el portal de facturación.",
+        "alreadySubscribed": "Ya tienes una suscripción activa para este plan."
+      },
       "feature": "Característica",
       "featureLabels": {
         "f1": "Análisis diarios",
@@ -296,7 +334,6 @@
     "high": "Alto",
     "noData": "No hay datos disponibles",
     "riskScore": "Puntuación de Riesgo",
-    "peakHours": "Horas Pico",
     "noPeakHoursData": "Aún no hay datos de horas pico disponibles. Se necesitan más conversaciones para generar estadísticas.",
     "agentLeaderboard": "Clasificación de Agentes",
     "noAgentData": "Aún no hay datos de rendimiento de agentes disponibles. Se necesitan más conversaciones para generar estadísticas.",
@@ -335,6 +372,19 @@
     "generatingAnalysis": "Generando análisis... Esto puede tardar un momento.",
     "analysisGenerated": "¡Análisis generado con éxito!",
     "analysisError": "Error al generar el análisis",
+    "analysisRateLimit24h": "Puedes generar un análisis global cada 24 horas. Inténtalo de nuevo en ~{hours} h.",
+    "faqs": {
+      "title": "Preguntas frecuentes desde tus datos",
+      "subtitle": "Genera preguntas y respuestas concisas a partir de tus análisis agregados.",
+      "generate": "Generar FAQs",
+      "generating": "Generando preguntas frecuentes a partir de tus análisis...",
+      "success": "FAQs generadas con éxito",
+      "error": "Error al generar las FAQs",
+      "rateLimitStarter": "Puedes generar preguntas frecuentes una vez cada 7 días en Starter. Inténtalo de nuevo en ~{days} días ({hours} h).",
+      "rateLimitPro": "Puedes generar preguntas frecuentes una vez al día en los planes superiores. Inténtalo de nuevo en ~{hours} h.",
+      "planRequired": "Mejora tu plan para habilitar las FAQs",
+      "empty": "Aún no hay FAQs. Genéralas desde tus análisis."
+    },
     "chatsVolume": "Volumen de Conversaciones",
     "lastDays": "Últimos {days} días",
     "loadingChartData": "Cargando datos del gráfico...",
@@ -541,7 +591,34 @@
     "verifying": "Verificando...",
     "verify": "Verificar",
     "account": "Cuenta",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "deleteAccount": {
+      "title": "Eliminar cuenta",
+      "description": "Esto eliminará solo tus membresías y tu cuenta. Las organizaciones, chats y análisis permanecen intactos.",
+      "confirmButton": "Eliminar cuenta",
+      "cancelButton": "Cancelar",
+      "dialogTitle": "¿Estás seguro?",
+      "dialogDescription": "Esta acción es irreversible. Solo se eliminarán tu cuenta y tus membresías.",
+      "success": "Cuenta eliminada correctamente.",
+      "errors": {
+        "notSignedIn": "Primero inicia sesión.",
+        "deleteFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
+        "reverifyNeeded": "Se requiere verificación adicional. Completa la verificación de seguridad y vuelve a intentarlo."
+      }
+    },
+    "deleteEverything": {
+      "title": "Eliminar organización y cuenta",
+      "description": "Esto borrará la organización, todos los chats, análisis, embeddings, membresías, suscripciones y tu cuenta.",
+      "confirmButton": "Eliminar todo",
+      "cancelButton": "Cancelar",
+      "dialogTitle": "¿Totalmente seguro?",
+      "dialogDescription": "Esta acción es irreversible. Se eliminarán todos los datos de la organización y tu cuenta.",
+      "success": "Organización y cuenta eliminadas correctamente.",
+      "errors": {
+        "deleteFailed": "No se pudo eliminar la organización y la cuenta. Inténtalo de nuevo.",
+        "reverifyNeeded": "Se requiere verificación adicional. Completa la verificación de seguridad y vuelve a intentarlo."
+      }
+    }
   },
   "team": {
     "title": "Mi Equipo",
@@ -644,6 +721,12 @@
     "subscriptionManagement": "Gestión de Suscripción",
     "managePayment": "Gestionar Métodos de Pago",
     "cancelSubscription": "Cancelar Suscripción",
-    "portalDescription": "Serás redirigido a nuestro portal de facturación para gestionar tu suscripción y métodos de pago."
+    "portalDescription": "Serás redirigido a nuestro portal de facturación para gestionar tu suscripción y métodos de pago.",
+    "errors": {
+      "notSignedIn": "Primero inicia sesión.",
+      "noOrganization": "Falta la organización. Actualiza y asegúrate de seleccionar una.",
+      "notAdmin": "Solo los administradores pueden gestionar la facturación.",
+      "portalFailed": "La URL del portal de facturación no está disponible. Inténtalo de nuevo."
+    }
   }
 }

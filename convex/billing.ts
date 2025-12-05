@@ -1,12 +1,18 @@
 import { v } from "convex/values";
-import { action, mutation, query } from "./_generated/server";
+import {
+  action,
+  query,
+  internalMutation,
+  internalQuery,
+  mutation,
+} from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
+import { assertOrgRole } from "./lib/guard";
+import { requireOrgMembership } from "./auth";
 
-/* --------------------------------------------------------------
- * Helper Functions
- * -------------------------------------------------------------- */
+// === Helper Functions ======================================================
 
 function mapLemonStatus(
   s: string
@@ -134,7 +140,7 @@ export const getCurrentPlan = query({
 });
 
 /**
- * التحقق من وجود اشتراك نشط في variant معين
+ * Check if the org already has an active subscription for a given variant.
  */
 export const hasActiveSubscriptionForVariant = query({
   args: {
@@ -142,7 +148,8 @@ export const hasActiveSubscriptionForVariant = query({
     variantId: v.string(),
   },
   handler: async (ctx, { organizationId, variantId }) => {
-    // البحث عن اشتراكات نشطة للمنظمة في هذا الـ variant
+    await requireOrgMembership(ctx, organizationId);
+
     const activeStatuses = ["active", "on_trial"];
 
     const subscriptions = await ctx.db
@@ -150,7 +157,6 @@ export const hasActiveSubscriptionForVariant = query({
       .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
       .collect();
 
-    // التحقق من وجود اشتراك نشط في نفس الـ variant
     const hasActive = subscriptions.some(
       (sub) =>
         sub.variantId === variantId &&
@@ -162,13 +168,14 @@ export const hasActiveSubscriptionForVariant = query({
 });
 
 /**
- * الحصول على الاشتراك النشط الحالي للمنظمة
+ * Get the current active subscription for an organization.
  */
 export const getActiveSubscription = query({
   args: {
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const activeStatuses = ["active", "on_trial"];
 
     const subscriptions = await ctx.db
@@ -176,7 +183,6 @@ export const getActiveSubscription = query({
       .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
       .collect();
 
-    // البحث عن أول اشتراك نشط
     const activeSub = subscriptions.find((sub) =>
       activeStatuses.includes(sub.status.toLowerCase())
     );
@@ -195,6 +201,7 @@ export const getActiveSubscription = query({
 export const getBillingPortalData = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const org = await ctx.db.get(organizationId);
     if (!org) return { plan: null, limits: null };
 
@@ -239,23 +246,36 @@ export const getBillingPortalData = query({
  * Insert Webhook Event
  * -------------------------------------------------------------- */
 
-export const ingestWebhook = mutation({
+export const ingestWebhook = internalMutation({
   args: { eventName: v.string(), lemonId: v.string(), payload: v.any() },
   handler: async (ctx, args) => {
-    const dup = await ctx.db
+    const webhookId = args.payload?.meta?.webhook_id as string | undefined;
+    const dedupeKey = webhookId ?? `${args.eventName}:${args.lemonId}`;
+
+    const dupByWebhook = webhookId
+      ? await ctx.db
+          .query("webhookEvents")
+          .withIndex("by_webhookId", (q: any) => q.eq("webhookId", webhookId))
+          .first()
+      : null;
+
+    const dupByLemon = await ctx.db
       .query("webhookEvents")
-      .withIndex("by_lemonId", (q: any) => q.eq("lemonId", args.lemonId))
+      .withIndex("by_lemonId", (q: any) => q.eq("lemonId", dedupeKey))
       .first();
 
-    if (!dup) {
-      await ctx.db.insert("webhookEvents", {
-        eventName: args.eventName,
-        lemonId: args.lemonId,
-        payload: args.payload,
-        receivedAt: Date.now(),
-        processed: false,
-      });
+    if (dupByWebhook || dupByLemon) {
+      return;
     }
+
+    await ctx.db.insert("webhookEvents", {
+      eventName: args.eventName,
+      lemonId: dedupeKey,
+      webhookId,
+      payload: args.payload,
+      receivedAt: Date.now(),
+      processed: false,
+    });
   },
 });
 
@@ -263,7 +283,7 @@ export const ingestWebhook = mutation({
  * Main Billing Webhook Processor
  * -------------------------------------------------------------- */
 
-export const handleEvent = mutation({
+export const handleEvent = internalMutation({
   args: { eventName: v.string(), payload: v.any() },
   handler: async (ctx, { eventName, payload }) => {
     const data = payload?.data ?? {};
@@ -338,7 +358,12 @@ export const handleEvent = mutation({
     /* -------------------------
      * SUBSCRIPTIONS
      * ------------------------- */
-    if (eventName.startsWith("subscription_")) {
+    // Subscription lifecycle events (create/update/cancel) — exclude payment events
+    const isSubscriptionLifecycle =
+      eventName.startsWith("subscription_") &&
+      !eventName.startsWith("subscription_payment_");
+
+    if (isSubscriptionLifecycle) {
       const subExternal = String(data?.id ?? "");
       const statusRaw = String(attr?.status ?? "none");
       const status = mapLemonStatus(statusRaw);
@@ -353,7 +378,7 @@ export const handleEvent = mutation({
       const trialEndsAt = ts(attr?.trial_ends_at);
 
       const subscriptionUpdate = {
-        status: statusRaw,
+        status,
         productId: attr?.product_id ? String(attr.product_id) : undefined,
         variantId: variantId ? String(variantId) : undefined,
         planName: attr?.variant_name ?? attr?.product_name,
@@ -364,17 +389,16 @@ export const handleEvent = mutation({
         updatedAt: Date.now(),
 
         // Important URLs
-        customerPortal: attr?.urls?.customer_portal ?? null,
-        updatePaymentMethodUrl: attr?.urls?.update_payment_method ?? null,
+        customerPortal: attr?.urls?.customer_portal || undefined,
+        updatePaymentMethodUrl: attr?.urls?.update_payment_method || undefined,
         updateSubscriptionUrl:
-          attr?.urls?.customer_portal_update_subscription ?? null,
+          attr?.urls?.customer_portal_update_subscription || undefined,
       };
 
       if (!organizationId) {
         console.error(
           `Cannot process subscription ${subExternal}: organizationId is null. orgRef: ${orgRef}, event: ${eventName}`
         );
-        // لا نستمر إذا لم نجد organizationId
         return;
       }
 
@@ -407,20 +431,18 @@ export const handleEvent = mutation({
 
       // Update org billing info
       const tier = getTier(subscriptionUpdate.variantId ?? null);
+      const isCancelled = status === "cancelled" || status === "expired";
 
       if (tier) {
         const { limits } = mapVariantToPlan(subscriptionUpdate.variantId);
 
-        // عند الإلغاء، نحتفظ بالباقة والحدود حتى نهاية الفترة
-        // لكن نحدث billingStatus إلى "cancelled"
         const orgUpdate: any = {
           billingStatus: status,
-          activeSubscriptionId: subscriptionId,
+          activeSubscriptionId: isCancelled ? undefined : subscriptionId,
           renewsAt,
         };
 
-        // إذا لم يكن ملغى، نحدث الباقة والحدود
-        if (status !== "cancelled") {
+        if (!isCancelled) {
           orgUpdate.planTier = tier;
           orgUpdate.limits = {
             members:
@@ -434,16 +456,21 @@ export const handleEvent = mutation({
             features: limits.features,
             support: limits.support,
           };
+        } else {
+          orgUpdate.planTier = undefined;
+          orgUpdate.limits = undefined;
         }
 
         await ctx.db.patch(organizationId, orgUpdate);
         console.log(
           `Updated organization ${organizationId} with tier ${tier} and status ${status}`
         );
-      } else if (status === "cancelled") {
-        // إذا كان ملغى وليس لدينا tier، نحدث فقط billingStatus
+      } else if (isCancelled) {
         await ctx.db.patch(organizationId, {
           billingStatus: status,
+          activeSubscriptionId: undefined,
+          planTier: undefined,
+          limits: undefined,
         });
       } else {
         console.warn(
@@ -465,20 +492,9 @@ export const handleEvent = mutation({
           ? "payment_failed"
           : "paid";
 
-      await ctx.db.insert("invoices", {
-        organizationId,
-        lemonInvoiceId: lemonId,
-        subscriptionId: undefined,
-        amountCents: cents(attr?.total ?? 0) * (isRefund ? -1 : 1),
-        currency: attr?.currency ?? "USD",
-        status: invoiceStatus,
-        issuedAt: ts(attr?.created_at) ?? Date.now(),
-        paidAt: ts(attr?.paid_at),
-        meta: attr,
-        createdAt: Date.now(),
-      });
+      let subscriptionRef: Id<"subscriptions"> | undefined = undefined;
 
-      if (!isFailed && attr?.subscription_id) {
+      if (attr?.subscription_id) {
         const subId = String(attr.subscription_id);
 
         const existing = await ctx.db
@@ -487,6 +503,7 @@ export const handleEvent = mutation({
           .first();
 
         if (existing) {
+          subscriptionRef = existing._id;
           const newRenew = ts(attr?.renews_at) ?? existing.renewsAt;
 
           await ctx.db.patch(existing._id, {
@@ -520,24 +537,46 @@ export const handleEvent = mutation({
           }
         }
       }
+
+      await ctx.db.insert("invoices", {
+        organizationId,
+        lemonInvoiceId: lemonId,
+        subscriptionId: subscriptionRef,
+        amountCents: cents(attr?.total ?? 0) * (isRefund ? -1 : 1),
+        currency: attr?.currency ?? "USD",
+        status: invoiceStatus,
+        issuedAt: ts(attr?.created_at) ?? Date.now(),
+        paidAt: ts(attr?.paid_at),
+        meta: attr,
+        createdAt: Date.now(),
+      });
     }
 
     /* -------------------------
      * Mark Webhook Processed
      * ------------------------- */
-    const ev = await ctx.db
-      .query("webhookEvents")
-      .withIndex("by_lemonId", (q: any) => q.eq("lemonId", lemonId))
-      .first();
+    const webhookId = payload?.meta?.webhook_id as string | undefined;
+    const ev =
+      (webhookId &&
+        (await ctx.db
+          .query("webhookEvents")
+          .withIndex("by_webhookId", (q: any) => q.eq("webhookId", webhookId))
+          .first())) ||
+      (await ctx.db
+        .query("webhookEvents")
+        .withIndex("by_lemonId", (q: any) =>
+          q.eq("lemonId", webhookId ? `${eventName}:${lemonId}` : lemonId)
+        )
+        .first());
 
     if (ev) {
       await ctx.db.patch(ev._id, { processed: true });
       console.log(
-        `Marked webhook event ${ev._id} (lemonId: ${lemonId}) as processed`
+        `Marked webhook event ${ev._id} (lemonId: ${ev.lemonId}) as processed`
       );
     } else {
       console.warn(
-        `Webhook event with lemonId ${lemonId} not found in database`
+        `Webhook event with key ${webhookId ?? lemonId} not found in database`
       );
     }
   },
@@ -546,7 +585,7 @@ export const handleEvent = mutation({
 /* --------------------------------------------------------------
  * Manual Webhook Processing (for testing/debugging)
  * -------------------------------------------------------------- */
-export const processUnprocessedWebhooks = mutation({
+export const processUnprocessedWebhooks = internalMutation({
   args: {},
   handler: async (ctx) => {
     const events = await ctx.db
@@ -558,7 +597,7 @@ export const processUnprocessedWebhooks = mutation({
 
     for (const ev of events) {
       try {
-        await ctx.runMutation(api.billing.handleEvent, {
+        await ctx.runMutation(internal.billing.handleEvent, {
           eventName: ev.eventName,
           payload: ev.payload,
         });
@@ -592,14 +631,23 @@ export const createCheckout = action({
     ctx,
     { organizationId, clerkUserId, variantId, userEmail }
   ) => {
-    if (!organizationId || !clerkUserId || !variantId) {
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller || caller.subject !== clerkUserId) {
+      return { ok: false, error: "Unauthorized" };
+    }
+
+    const viewerRole = await ctx.runQuery(api.billing.getViewerRole, {
+      organizationId,
+      clerkUserId,
+    });
+    if (viewerRole !== "admin") {
       return {
         ok: false,
-        error: "Missing required fields",
+        error: "Insufficient permissions",
+        code: "FORBIDDEN",
       };
     }
 
-    // التحقق من وجود اشتراك نشط في نفس الباقة
     const hasActive = await ctx.runQuery(
       api.billing.hasActiveSubscriptionForVariant,
       {
@@ -629,7 +677,7 @@ export const createCheckout = action({
       };
     }
 
-    // (A) تأكد أن الـ store صحيح ومتاح بالمفتاح الحالي
+    // (A) Ensure the store is reachable with the provided API key
     {
       const checkStore = await fetch(
         `https://api.lemonsqueezy.com/v1/stores/${storeId}`,
@@ -650,7 +698,7 @@ export const createCheckout = action({
       }
     }
 
-    // (B) تأكد أن الـ variant موجود وتابع لنفس البيئة والـ store
+    // (B) Ensure the variant exists and belongs to the same store/environment
     {
       const checkVariant = await fetch(
         `https://api.lemonsqueezy.com/v1/variants/${variantId}`,
@@ -673,13 +721,11 @@ export const createCheckout = action({
         };
       }
 
-      // تحقق أن الـ variant مرتبط بنفس الـ store
       const variantData = await checkVariant.json();
       const variantStoreId =
         variantData?.data?.relationships?.product?.data?.id;
 
-      // ملاحظة: قد نحتاج للتحقق من product ثم store، لكن هذا يعتمد على بنية Lemon API
-      // للآن نكتفي بالتحقق من وجود الـ variant
+      // Note: we might need a product-to-store check depending on Lemon API shape
     }
 
     // Create Checkout
@@ -752,7 +798,23 @@ export const redirectToBillingPortal = action({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, { organizationId }) => {
-    // نتحقق أولاً أن للمنظمة اشتراكاً فعّالاً (active أو on_trial)
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller) {
+      return { ok: false, error: "Unauthorized", code: "UNAUTHENTICATED" };
+    }
+
+    const viewerRole = await ctx.runQuery(api.billing.getViewerRole, {
+      organizationId,
+      clerkUserId: caller.subject,
+    });
+    if (viewerRole !== "admin") {
+      return {
+        ok: false,
+        error: "Insufficient permissions",
+        code: "FORBIDDEN",
+      };
+    }
+
     const activeSub = await ctx.runQuery(api.billing.getActiveSubscription, {
       organizationId,
     });
@@ -766,7 +828,6 @@ export const redirectToBillingPortal = action({
       };
     }
 
-    // بوابة التحكّم في الاشتراك في Lemon Squeezy (Customer Billing Portal)
     const portalUrl = "https://repvix.lemonsqueezy.com/billing";
 
     return {
@@ -788,10 +849,26 @@ export const createBillingPortal = action({
     code?: string;
     url?: string;
   }> => {
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller) {
+      return { ok: false, error: "Unauthorized", code: "UNAUTHENTICATED" };
+    }
+
+    const viewerRole = await ctx.runQuery(api.billing.getViewerRole, {
+      organizationId,
+      clerkUserId: caller.subject,
+    });
+    if (viewerRole !== "admin") {
+      return {
+        ok: false,
+        error: "Insufficient permissions",
+        code: "FORBIDDEN",
+      };
+    }
+
     const apiKey = process.env.LEMON_SECRET_KEY;
     if (!apiKey) throw new Error("Missing Lemon Squeezy API credentials");
 
-    // نجيب الاشتراك النشط من Convex (اللي فيه lemonSubscriptionId)
     const activeSub = await ctx.runQuery(api.billing.getActiveSubscription, {
       organizationId,
     });
@@ -804,7 +881,18 @@ export const createBillingPortal = action({
       };
     }
 
-    // نستدعي Lemon: GET /v1/subscriptions/:id للحصول على URLs موقعة
+    // Fallback: use stored portal URL if available before hitting Lemon API.
+    const storedSub = await ctx.runQuery(api.subscriptions.getByOrg, {
+      organizationId,
+    });
+    if (storedSub?.customerPortal) {
+      return {
+        ok: true,
+        error: "",
+        url: storedSub.customerPortal,
+      };
+    }
+
     const subRes = await fetch(
       `https://api.lemonsqueezy.com/v1/subscriptions/${activeSub.lemonSubscriptionId}`,
       {
@@ -828,9 +916,7 @@ export const createBillingPortal = action({
     const subJson = await subRes.json();
     const urls = subJson?.data?.attributes?.urls ?? {};
 
-    // الدوكيومنت يقول customer_portal يحتوي على:
-    // https://your-store.lemonsqueezy.com/billing?user=...&expires=...&signature=...
-    const portalUrl = urls.customer_portal;
+    const portalUrl = urls.customer_portal || storedSub?.customerPortal;
 
     if (!portalUrl) {
       return {
@@ -846,5 +932,222 @@ export const createBillingPortal = action({
       url: portalUrl,
       code: "CUSTOMER_PORTAL_URL_MISSING",
     };
+  },
+});
+
+// === Account Deletion =======================================================
+
+export const deleteAccountAndData = action({
+  args: { organizationId: v.id("organizations") },
+  handler: async (
+    ctx,
+    { organizationId }
+  ): Promise<{ ok: boolean; error?: string; code?: string }> => {
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller) {
+      return { ok: false, error: "Unauthorized", code: "UNAUTHENTICATED" };
+    }
+
+    const viewerRole = await ctx.runQuery(api.billing.getViewerRole, {
+      organizationId,
+      clerkUserId: caller.subject,
+    });
+    if (viewerRole !== "admin") {
+      return {
+        ok: false,
+        error: "Insufficient permissions",
+        code: "FORBIDDEN",
+      };
+    }
+
+    const org = (await ctx.runQuery(internal.billing.getOrgById, {
+      organizationId,
+    })) as { clerkOrgId?: string } | null;
+
+    // Cancel active subscription if exists
+    const activeSub = await ctx.runQuery(api.billing.getActiveSubscription, {
+      organizationId,
+    });
+
+    if (activeSub?.lemonSubscriptionId) {
+      const apiKey = process.env.LEMON_SECRET_KEY;
+      if (!apiKey) {
+        return { ok: false, error: "Missing Lemon Squeezy API credentials" };
+      }
+
+      try {
+        await fetch(
+          `https://api.lemonsqueezy.com/v1/subscriptions/${activeSub.lemonSubscriptionId}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              Accept: "application/vnd.api+json",
+              "Content-Type": "application/vnd.api+json",
+            },
+            body: JSON.stringify({
+              data: {
+                id: activeSub.lemonSubscriptionId,
+                type: "subscriptions",
+                attributes: { cancelled: true },
+              },
+            }),
+          }
+        );
+      } catch (error) {
+        console.error("Failed to cancel Lemon subscription", error);
+        // Continue deletion even if cancel fails
+      }
+    }
+
+    if (org?.clerkOrgId) {
+      const clerkKey = process.env.CLERK_SECRET_KEY;
+      if (!clerkKey) {
+        return { ok: false, error: "Missing Clerk secret key" };
+      }
+      try {
+        await fetch(
+          `https://api.clerk.com/v1/organizations/${org.clerkOrgId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${clerkKey}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      } catch (error) {
+        console.error("Failed to delete Clerk organization", error);
+        return { ok: false, error: "Failed to delete Clerk organization" };
+      }
+    }
+
+    // Delete organization-related data in Convex via internal mutation
+    return await ctx.runMutation(internal.billing.deleteOrgData, {
+      organizationId,
+    });
+  },
+});
+
+export const deleteOrgData = internalMutation({
+  args: { organizationId: v.id("organizations") },
+  handler: async (
+    ctx,
+    { organizationId }
+  ): Promise<{ ok: boolean; error?: string }> => {
+    // Gather chats for this org to cascade delete chatMessages & embeddings
+    const chats = await ctx.db
+      .query("chats")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect();
+    const chatIds = chats.map((c) => c._id);
+
+    // Delete chatMessages and messageEmbeddings per chatId
+    for (const chatId of chatIds) {
+      const chatMessages = await ctx.db
+        .query("chatMessages")
+        .withIndex("by_chat", (q: any) => q.eq("chatId", chatId))
+        .collect();
+      for (const msg of chatMessages) {
+        await ctx.db.delete(msg._id);
+      }
+
+      const embeddings = await ctx.db
+        .query("messageEmbeddings")
+        .withIndex("by_chat", (q: any) => q.eq("chatId", chatId))
+        .collect()
+        .catch(() => [] as any[]);
+      for (const emb of embeddings) {
+        await ctx.db.delete(emb._id);
+      }
+    }
+
+    const tablesToDeleteByOrg = [
+      "subscriptions",
+      "invoices",
+      "billingCustomers",
+      "organizationMembers",
+      "chatAnalyses",
+      "globalAnalyses",
+      "chatMessages",
+      "chats",
+      "messages",
+      "webhookEvents",
+    ] as const;
+
+    for (const table of tablesToDeleteByOrg) {
+      let items: any[] = [];
+      try {
+        items = await ctx.db
+          .query(table as any)
+          .withIndex("by_org", (q: any) =>
+            q.eq("organizationId", organizationId)
+          )
+          .collect();
+      } catch {
+        // Fallback: full scan then filter by organizationId when index missing.
+        const all = await ctx.db.query(table as any).collect();
+        items = all.filter((x) => x.organizationId === organizationId);
+      }
+
+      for (const item of items) {
+        await ctx.db.delete(item._id);
+      }
+    }
+
+    await ctx.db.delete(organizationId);
+    return { ok: true };
+  },
+});
+
+export const getOrgById = internalQuery({
+  args: { organizationId: v.id("organizations") },
+  handler: async (ctx, { organizationId }) => {
+    return await ctx.db.get(organizationId);
+  },
+});
+
+// Delete only the caller's membership(s) without touching org data
+export const deleteUserAccount = action({
+  args: {},
+  handler: async (ctx): Promise<{ ok: boolean; error?: string }> => {
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller) {
+      return { ok: false, error: "Unauthorized" };
+    }
+
+    await ctx.runMutation(internal.billing.deleteUserData, {
+      clerkUserId: caller.subject,
+    });
+
+    return { ok: true };
+  },
+});
+
+export const deleteUserData = internalMutation({
+  args: { clerkUserId: v.string() },
+  handler: async (ctx, { clerkUserId }) => {
+    // Remove all memberships for this user across orgs
+    const memberships = await ctx.db
+      .query("organizationMembers")
+      .withIndex("by_user", (q: any) => q.eq("clerkUserId", clerkUserId))
+      .collect();
+
+    for (const m of memberships) {
+      await ctx.db.delete(m._id);
+    }
+
+    // Remove billing customers entries tied to this user if any
+    const billingCustomers = await ctx.db
+      .query("billingCustomers")
+      .withIndex("by_org", (q: any) => q.eq("clerkUserId", clerkUserId))
+      .collect()
+      .catch(() => [] as any[]);
+
+    for (const c of billingCustomers) {
+      await ctx.db.delete(c._id);
+    }
+
+    return { ok: true };
   },
 });

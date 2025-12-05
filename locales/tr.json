@@ -103,6 +103,34 @@
       "tagline": "Doğruluk, içgörü ve biraz da yapay zekâ ile hazırlandı ✨"
     }
   },
+  "legal": {
+    "terms": {
+      "title": "Hizmet Şartları",
+      "intro": "Bu Hizmet Şartları, Repvix’e erişiminizi ve kullanımınızı düzenler. Ürünü kullanarak bu şartları kabul etmiş olursunuz.",
+      "useOfServiceTitle": "Hizmetin kullanımı",
+      "useOfService": "Repvix’i yalnızca yasal amaçlarla ve yürürlükteki tüm yasa ve düzenlemelere uygun şekilde kullanmayı kabul edersiniz. Sohbet kayıtları ve müşteri verileri dâhil olmak üzere yüklediğiniz tüm içerikten siz sorumlusunuz. Bazı özellikler yalnızca abonelik planları kapsamında sunulur. Bir aboneliği iptal ettiğinizde, mevcut fatura döneminin sonunda yenilemeler ve ücretli kullanım limitlerine erişim durdurulur; önceden tahsil edilen tutarlar otomatik olarak iade edilmez ve olası iadeler ilgili ödeme sağlayıcısının koşullarına göre değerlendirilir.",
+      "dataAndPrivacyTitle": "Veri ve gizlilik",
+      "dataAndPrivacy": "Yüklediğiniz sohbetleri analiz ederek raporlar ve içgörüler üretiriz. Bu verileri paylaşmak için gerekli izinlere sahip olduğunuzdan emin olmak sizin sorumluluğunuzdadır. Bir organizasyon içinde yüklediğiniz sohbetler ve analizler, o organizasyonun kayıtlarının bir parçası olarak değerlendirilir. Kişisel hesabınızı veya üyeliğinizi silmeniz, organizasyon verilerini otomatik olarak silmez; organizasyonun sahibi veya yöneticileri organizasyonun silinmesini talep edebilir ve bu durum, yasal saklama yükümlülükleri saklı kalmak kaydıyla, ilgili verilerin sistemlerimizden kalıcı olarak silinmesine yol açar. Verilerin nasıl saklandığı ve işlendiğine dair daha fazla bilgi için lütfen Gizlilik Politikamızı inceleyin.",
+      "changesTitle": "Şartlardaki değişiklikler",
+      "changes": "Bu Şartları zaman zaman güncelleyebiliriz. Repvix’i kullanmaya devam etmeniz, güncellenmiş Şartları kabul ettiğiniz anlamına gelir.",
+      "contactTitle": "İletişim",
+      "contact": "Bu Şartlarla ilgili sorularınız için web sitemizde belirtilen iletişim kanallarından bize ulaşabilirsiniz."
+    },
+    "privacy": {
+      "title": "Gizlilik Politikası",
+      "intro": "Bu Gizlilik Politikası, Repvix’in hizmeti kullanırken verilerinizi nasıl topladığını, kullandığını ve koruduğunu açıklar.",
+      "dataWeCollectTitle": "Topladığımız veriler",
+      "dataWeCollect": "Hesap bilgileri (örneğin ad, e-posta ve organizasyon bilgileri), kullanım verileri ve yüklemeyi tercih ettiğiniz sohbet içerikleri toplanabilir. Buna analiz sonuçları ve bunlardan türetilen teknik gösterimler (örneğin arama ve analitik için kullanılan sayısal vektörler) ile abonelik kimlikleri, faturalar ve ödeme durumu gibi faturalandırma kayıtları dâhil olabilir. Güvenlik ve analitik amaçlarla belirli teknik veriler ve metaveriler de otomatik olarak toplanabilir.",
+      "howWeUseDataTitle": "Verileri nasıl kullanıyoruz",
+      "howWeUseData": "Verilerinizi Repvix hizmetini sunmak ve iyileştirmek, analizler, içgörüler ve raporlar üretmek, güvenliği sağlamak ve ürün deneyimini geliştirmek için kullanırız. Bazı işlemleri bizim adımıza yürütmeleri için, sözleşmesel ve yasal güvencelere tabi dikkatle seçilmiş hizmet sağlayıcılarla çalışabiliriz. Verilerinizi satmayız.",
+      "dataRetentionTitle": "Veri saklama",
+      "dataRetention": "Sohbet verileri ve analizler, daha sonra panelinizden görüntüleyebilmeniz veya yönetebilmeniz için saklanabilir. Kişisel hesabınızı sildiğinizde, hesap kimlik bilgileriniz ve üyelikleriniz kaldırılır; ancak organizasyon kayıtları (sohbetler ve analizler dâhil) ilgili organizasyon yöneticilerinin kontrolü altında tutulmaya devam edebilir. Yetkili bir yönetici tarafından bir organizasyon silindiğinde, ilgili sohbetler, mesajlar, analizler ve faturalandırma kayıtları genellikle silinir; ancak yasal veya güvenlik gerekçeleriyle belirli bilgileri daha uzun süre saklamamız gerekebilir.",
+      "yourRightsTitle": "Haklarınız",
+      "yourRights": "Bulunduğunuz ülkenin mevzuatına bağlı olarak, kişisel verilerinize erişme, düzeltme veya silme haklarına sahip olabilirsiniz. Bu hakları kullanmak isterseniz bizimle iletişime geçin.",
+      "contactTitle": "İletişim",
+      "contact": "Bu Gizlilik Politikası veya veri işleme yöntemlerimiz hakkında sorularınız varsa, web sitemizdeki iletişim bilgilerimiz üzerinden bizimle irtibata geçebilirsiniz."
+    }
+  },
   "dashboard": {
     "welcome": "Tekrar Hoş Geldin",
     "uploadChat": "Sohbet Yükle",
@@ -168,6 +196,15 @@
       "contactUs": "Bize Ulaş",
       "currentPlan": "Mevcut Plan",
       "willContactYou": "Yakında sizinle iletişime geçeceğiz",
+      "errors": {
+        "notSignedIn": "Lütfen önce giriş yapın.",
+        "noOrganization": "Organizasyon eksik. Yenileyin ve bir organizasyon seçtiğinizden emin olun.",
+        "notAdmin": "Yalnızca organizasyon yöneticileri faturalamayı yönetebilir.",
+        "notAdminShort": "İzin yok",
+        "checkoutFailed": "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
+        "portalFailed": "Faturalama portalı açılamadı.",
+        "alreadySubscribed": "Bu plan için zaten aktif bir aboneliğiniz var."
+      },
       "feature": "Özellik",
       "featureLabels": {
         "f1": "Günlük Analizler",
@@ -266,7 +303,6 @@
     "high": "Yüksek",
     "noData": "Veri mevcut değil",
     "riskScore": "Risk Skoru",
-    "peakHours": "Yoğun Saatler",
     "noPeakHoursData": "Henüz yoğun saat verisi yok. İstatistik oluşturmak için daha fazla konuşma gerekiyor.",
     "agentLeaderboard": "Temsilci Sıralaması",
     "noAgentData": "Henüz temsilci performans verisi yok. İstatistik oluşturmak için daha fazla konuşma gerekiyor.",
@@ -305,6 +341,19 @@
     "generatingAnalysis": "Analiz oluşturuluyor... Bu biraz zaman alabilir.",
     "analysisGenerated": "Analiz başarıyla oluşturuldu!",
     "analysisError": "Analiz oluşturulamadı",
+    "analysisRateLimit24h": "Her 24 saatte bir genel analiz oluşturabilirsiniz. Lütfen ~{hours} saat sonra tekrar deneyin.",
+    "faqs": {
+      "title": "Verilerinizden SSS",
+      "subtitle": "Toplu analizlerinizden kısa soru-cevaplar üretin.",
+      "generate": "SSS Oluştur",
+      "generating": "Analizlerinizden SSS oluşturuluyor...",
+      "success": "SSS başarıyla oluşturuldu",
+      "error": "SSS oluşturulamadı",
+      "rateLimitStarter": "Starter planında her 7 günde bir SSS oluşturabilirsiniz. Lütfen ~{days} gün ({hours} saat) sonra tekrar deneyin.",
+      "rateLimitPro": "Daha yüksek planlarda günde bir kez SSS oluşturabilirsiniz. Lütfen ~{hours} saat sonra tekrar deneyin.",
+      "planRequired": "SSS için planınızı yükseltin",
+      "empty": "Henüz SSS yok. Analizlerinizden oluşturun."
+    },
     "chatsVolume": "Sohbet Hacmi",
     "lastDays": "Son {days} gün",
     "loadingChartData": "Grafik verileri yükleniyor...",
@@ -516,7 +565,34 @@
     "verifying": "Doğrulanıyor...",
     "verify": "Doğrula",
     "account": "Hesap",
-    "logout": "Çıkış Yap"
+    "logout": "Çıkış Yap",
+    "deleteAccount": {
+      "title": "Hesabı sil",
+      "description": "Bu işlem yalnızca üyeliklerinizi ve hesabınızı siler. Organizasyonlar, sohbetler ve analizler kalır.",
+      "confirmButton": "Hesabı sil",
+      "cancelButton": "İptal",
+      "dialogTitle": "Emin misiniz?",
+      "dialogDescription": "Bu işlem geri alınamaz. Yalnızca hesabınız ve üyelikleriniz silinir.",
+      "success": "Hesap başarıyla silindi.",
+      "errors": {
+        "notSignedIn": "Lütfen önce giriş yapın.",
+        "deleteFailed": "Hesap silinemedi. Lütfen tekrar deneyin.",
+        "reverifyNeeded": "Ek doğrulama gerekiyor. Güvenlik adımını tamamlayın ve tekrar deneyin."
+      }
+    },
+    "deleteEverything": {
+      "title": "Organizasyon ve hesabı sil",
+      "description": "Bu işlem organizasyonu, tüm sohbetleri, analizleri, embeddings, üyelikleri, abonelikleri ve hesabınızı siler.",
+      "confirmButton": "Her şeyi sil",
+      "cancelButton": "İptal",
+      "dialogTitle": "Kesin emin misiniz?",
+      "dialogDescription": "Bu işlem geri alınamaz. Tüm organizasyon verileri ve hesabınız silinecek.",
+      "success": "Organizasyon ve hesap başarıyla silindi.",
+      "errors": {
+        "deleteFailed": "Organizasyon ve hesap silinemedi. Lütfen tekrar deneyin.",
+        "reverifyNeeded": "Ek doğrulama gerekiyor. Güvenlik adımını tamamlayın ve tekrar deneyin."
+      }
+    }
   },
   "team": {
     "title": "Ekibim",
@@ -619,7 +695,13 @@
     "subscriptionManagement": "Abonelik Yönetimi",
     "managePayment": "Ödeme Yöntemlerini Yönet",
     "cancelSubscription": "Aboneliği İptal Et",
-    "portalDescription": "Aboneliğinizi ve ödeme yöntemlerinizi yönetmek için faturalandırma portalımıza yönlendirileceksiniz."
+    "portalDescription": "Aboneliğinizi ve ödeme yöntemlerinizi yönetmek için faturalandırma portalımıza yönlendirileceksiniz.",
+    "errors": {
+      "notSignedIn": "Lütfen önce giriş yapın.",
+      "noOrganization": "Organizasyon eksik. Yenileyin ve bir organizasyon seçtiğinizden emin olun.",
+      "notAdmin": "Yalnızca organizasyon yöneticileri faturalamayı yönetebilir.",
+      "portalFailed": "Faturalama portalı bağlantısı kullanılamıyor. Lütfen tekrar deneyin."
+    }
   },
   "header": {
     "hero": "Ana Sayfa",
@@ -635,7 +717,8 @@
     "signUp": "Kaydol",
     "signIn": "Giriş Yap",
     "logoAlt": "Repvix logosu",
-    "brandName": "Repvix"
+    "brandName": "Repvix",
+    "beta": "BETA"
   },
   "locale": {
     "arabic": "Arapça",

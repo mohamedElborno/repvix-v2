@@ -33,11 +33,11 @@ export function SiteHeader() {
   const isProtectedRoute = pathname?.includes("/protected");
 
   const publicLinks = [
-    { href: "#hero", label: t("hero"), icon: Home },
-    { href: "#features", label: t("features"), icon: Sparkles },
-    { href: "#howItWorks", label: t("howItWorks"), icon: Briefcase },
-    { href: "#pricing", label: t("pricing"), icon: Tag },
-    { href: "#faq", label: t("faq"), icon: HelpCircle },
+    { href: `/${locale}/#hero`, label: t("hero"), icon: Home },
+    { href: `/${locale}/#features`, label: t("features"), icon: Sparkles },
+    { href: `/${locale}/#howItWorks`, label: t("howItWorks"), icon: Briefcase },
+    { href: `/${locale}/#pricing`, label: t("pricing"), icon: Tag },
+    { href: `/${locale}/#faq`, label: t("faq"), icon: HelpCircle },
   ];
 
   const protectedLinks = [
@@ -60,6 +60,9 @@ export function SiteHeader() {
 
   const links = isProtectedRoute ? protectedLinks : publicLinks;
 
+  // Check if current locale is RTL (Arabic)
+  const isRTL = locale === "ar";
+
   return (
     <div className="sticky max-w-[90vw] 2xl:max-w-[1400px] mx-auto flex items-center justify-center top-4 z-50 gap-2">
       <GlassElement
@@ -74,7 +77,7 @@ export function SiteHeader() {
         depth={2}
       >
         {/* Logo - Left side */}
-        <div className="flex items-center pointer-events-auto p-4">
+        <div className="flex items-center pointer-events-auto p-4 relative">
           <Image
             src={`/logo.svg`}
             alt={t("logoAlt") || "Repvix logo"}
@@ -82,6 +85,12 @@ export function SiteHeader() {
             height={500}
             className="h-8 w-auto dark:invert shrink-0 hover:scale-105 transition-all duration-300 cursor-pointer hover:rotate-6"
           />
+          {/* Beta Badge */}
+          <span
+            className={`absolute -top-1 ${isRTL ? "-left-1" : "-right-1"} bg-gradient-to-r from-purple-600 to-purple-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-lg border border-purple-400/30`}
+          >
+            {t("beta")}
+          </span>
         </div>
 
         {/* Navigation - Center */}

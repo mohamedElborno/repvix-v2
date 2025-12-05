@@ -39,7 +39,7 @@ export const getOrgCapabilities = query({
 });
 
 /**
- * حساب عدد التحليلات اليومية للمنظمة
+ * Count how many analyses the org has created today.
  */
 export const getDailyAnalysisCount = query({
   args: { organizationId: v.id("organizations") },
@@ -49,7 +49,6 @@ export const getDailyAnalysisCount = query({
     startOfDay.setHours(0, 0, 0, 0);
     const startOfDayMs = startOfDay.getTime();
 
-    // حساب عدد التحليلات التي تم إنشاؤها اليوم
     const analyses = await ctx.db
       .query("chatAnalyses")
       .withIndex("by_org_createdAt", (q) =>
@@ -62,7 +61,7 @@ export const getDailyAnalysisCount = query({
 });
 
 /**
- * التحقق من إمكانية إجراء تحليل جديد
+ * Determine if the org can perform another analysis today.
  */
 export const canPerformAnalysis = query({
   args: { organizationId: v.id("organizations") },
@@ -82,7 +81,6 @@ export const canPerformAnalysis = query({
     const limits = limitsForTier(org.planTier);
     const dailyLimit = limits.dailyAnalyses;
 
-    // إذا كان الحد غير محدود
     if (dailyLimit === "unlimited") {
       return {
         allowed: true,
@@ -93,7 +91,6 @@ export const canPerformAnalysis = query({
       };
     }
 
-    // حساب عدد التحليلات اليوم
     const now = Date.now();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);

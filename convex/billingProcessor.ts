@@ -1,5 +1,5 @@
 import { internalQuery, internalMutation } from "./_generated/server";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 
 export const unprocessed = internalQuery(async (ctx) => {
   return await ctx.db
@@ -11,25 +11,27 @@ export const unprocessed = internalQuery(async (ctx) => {
 export const processOne = internalMutation(
   async (ctx, { event }: { event: any }) => {
     try {
-      // نفّذ الحدث
-      await ctx.runMutation(api.billing.handleEvent, {
+      await ctx.runMutation(internal.billing.handleEvent, {
         eventName: event.eventName,
         payload: event.payload,
       });
 
-      // handleEvent يقوم بتحديث processed بنفسه، لكن نتأكد هنا أيضاً
-      // في حالة فشل handleEvent في تحديث processed
-      const updated = await ctx.db
-        .query("webhookEvents")
-        .withIndex("by_lemonId", (q) => q.eq("lemonId", event.lemonId))
-        .first();
+      const updated =
+        (event.webhookId &&
+          (await ctx.db
+            .query("webhookEvents")
+            .withIndex("by_webhookId", (q) => q.eq("webhookId", event.webhookId))
+            .first())) ||
+        (await ctx.db
+          .query("webhookEvents")
+          .withIndex("by_lemonId", (q) => q.eq("lemonId", event.lemonId))
+          .first());
 
       if (updated && !updated.processed) {
         await ctx.db.patch(updated._id, { processed: true });
       }
     } catch (error) {
       console.error(`Error processing webhook event ${event._id}:`, error);
-      // لا نحدّث processed في حالة الخطأ حتى يمكن إعادة المحاولة
       throw error;
     }
   }

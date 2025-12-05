@@ -27,6 +27,14 @@ export default function PricingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
+  const viewerRole = useQuery(
+    api.billing.getViewerRole,
+    convexOrgId && user?.id
+      ? { organizationId: convexOrgId, clerkUserId: user.id }
+      : "skip"
+  );
+  const isAdmin = viewerRole === "admin";
+
   // التحقق من الاشتراكات النشطة لكل باقة
   const hasActiveBasic = useQuery(
     api.billing.hasActiveSubscriptionForVariant,
@@ -156,8 +164,20 @@ export default function PricingPage() {
   const checkout = async (variantId: string) => {
     setLoadingPlan(variantId);
 
-    if (!variantId || !convexOrgId || !user?.id) {
-      toast.error("Error");
+    if (!user?.id) {
+      toast.error(t("errors.notSignedIn"));
+      setLoadingPlan(null);
+      return;
+    }
+
+    if (!convexOrgId) {
+      toast.error(t("errors.noOrganization"));
+      setLoadingPlan(null);
+      return;
+    }
+
+    if (!isAdmin) {
+      toast.error(t("errors.notAdmin"));
       setLoadingPlan(null);
       return;
     }
@@ -170,7 +190,7 @@ export default function PricingPage() {
         });
 
         if (!result.ok || !result.url) {
-          toast.error(result.error || "Unable to open billing portal");
+          toast.error(result.error || t("errors.portalFailed"));
           return;
         }
 
@@ -187,7 +207,11 @@ export default function PricingPage() {
       });
 
       if (!result.ok || !result.url) {
-        toast.error(result.error || "Unable to start checkout");
+        if (result.code === "ALREADY_SUBSCRIBED") {
+          toast.error(t("errors.alreadySubscribed"));
+        } else {
+          toast.error(result.error || t("errors.checkoutFailed"));
+        }
         return;
       }
 
@@ -251,8 +275,10 @@ export default function PricingPage() {
                         disabled={
                           billing?.planTier === plan.id ||
                           hasActiveSubscription(String(plan.variantId)) ||
-                          loadingPlan === plan.variantId
+                          loadingPlan === plan.variantId ||
+                          !isAdmin
                         }
+                        title={!isAdmin ? t("errors.notAdmin") : undefined}
                         size="sm"
                         className={`w-full mt-4 ${
                           plan.popular
@@ -262,6 +288,11 @@ export default function PricingPage() {
                       >
                         {plan.price === t("customPrice") ? (
                           t("contactUs")
+                        ) : !isAdmin ? (
+                          <span className="inline-flex items-center justify-center gap-1">
+                            {t("errors.notAdminShort")}
+                            <Info className="w-4 h-4" />
+                          </span>
                         ) : billing?.planTier === plan.id ||
                           hasActiveSubscription(String(plan.variantId)) ? (
                           t("currentPlan")

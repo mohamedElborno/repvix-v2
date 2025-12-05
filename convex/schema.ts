@@ -645,6 +645,7 @@ export default defineSchema({
   // Global FAQs
   // =============================
   globalFaqs: defineTable({
+    organizationId: v.id("organizations"),
     analysisId: v.optional(v.id("userGlobalAnalysis")),
     question: v.string(),
     answer: v.optional(v.string()),
@@ -655,6 +656,7 @@ export default defineSchema({
     lastSeen: v.number(),
     createdAt: v.number(),
   })
+    .index("by_org", ["organizationId"])
     .index("by_analysis", ["analysisId"])
     .index("by_question", ["question"]),
 
@@ -677,11 +679,13 @@ export default defineSchema({
   webhookEvents: defineTable({
     eventName: v.string(),
     lemonId: v.string(),
+    webhookId: v.optional(v.string()),
     payload: v.any(),
     receivedAt: v.number(),
     processed: v.boolean(),
   })
     .index("by_lemonId", ["lemonId"])
+    .index("by_webhookId", ["webhookId"])
     .index("by_processed", ["processed"]),
 
   billingCustomers: defineTable({

@@ -13,13 +13,14 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
-import { useOrganization } from "@clerk/nextjs";
+import { useQuery, useAction } from "convex/react";
+import { useOrganization, useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 
 export default function BillingPage() {
   const t = useTranslations("billing");
   const { organization } = useOrganization();
+  const { user } = useUser();
   const locale = useLocale();
   const router = useRouter();
 
@@ -38,14 +39,55 @@ export default function BillingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
-  const manageBilling = () => {
-    // استخدام customerPortal URL من Lemon Squeezy
-    // هذا الرابط يحتوي على جميع خيارات إدارة الاشتراك (تغيير الخطة، الدفع، الإلغاء)
-    if (!sub?.customerPortal) {
-      toast.error("Billing portal URL not available");
+  const viewerRole = useQuery(
+    api.billing.getViewerRole,
+    convexOrgId && user?.id
+      ? { organizationId: convexOrgId, clerkUserId: user.id }
+      : "skip"
+  );
+  const isAdmin = viewerRole === "admin";
+
+  const createBillingPortal = useAction(api.billing.createBillingPortal);
+
+  const [isManaging, setIsManaging] = useState(false);
+
+  const manageBilling = async () => {
+    if (!user?.id) {
+      toast.error(t("errors.notSignedIn"));
       return;
     }
-    window.location.href = sub.customerPortal;
+    if (!convexOrgId) {
+      toast.error(t("errors.noOrganization"));
+      return;
+    }
+    if (!isAdmin) {
+      toast.error(t("errors.notAdmin"));
+      return;
+    }
+
+    const portalUrl =
+      sub?.customerPortal && sub.customerPortal.length > 0
+        ? sub.customerPortal
+        : null;
+
+    if (portalUrl) {
+      window.location.href = portalUrl;
+      return;
+    }
+
+    setIsManaging(true);
+    try {
+      const result = await createBillingPortal({ organizationId: convexOrgId });
+      if (!result.ok || !result.url) {
+        toast.error(result.error || t("errors.portalFailed"));
+        return;
+      }
+      window.location.href = result.url;
+    } catch (error: any) {
+      toast.error(error?.message || t("errors.portalFailed"));
+    } finally {
+      setIsManaging(false);
+    }
   };
 
   const goToPricing = () => {
@@ -94,9 +136,10 @@ export default function BillingPage() {
                 </div>
                 <Button
                   onClick={manageBilling}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  disabled={isManaging}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-60"
                 >
-                  {t("manageSubscription")}
+                  {isManaging ? t("loading") : t("manageSubscription")}
                 </Button>
               </div>
             ) : (
@@ -194,16 +237,17 @@ export default function BillingPage() {
             <div className="space-y-3">
               <Button
                 onClick={manageBilling}
+                disabled={isManaging}
                 variant="outline"
-                className="w-full border-border hover:bg-muted"
+                className="w-full border-border hover:bg-muted disabled:opacity-60"
               >
-                {t("managePayment")}
+                {isManaging ? t("loading") : t("managePayment")}
               </Button>
 
               <Button
                 onClick={manageBilling}
                 variant="outline"
-                disabled={!sub?.customerPortal}
+                disabled={!sub?.customerPortal && isManaging}
                 className="w-full border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/10 disabled:opacity-50"
               >
                 {t("cancelSubscription")}

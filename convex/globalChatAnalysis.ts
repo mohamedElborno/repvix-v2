@@ -24,15 +24,38 @@ export const runFullGlobalAnalysis = action({
     ctx,
     args
   ): Promise<{
-    analysisId: Id<"globalAnalyses">;
-    processingTimeMs: number;
-    tokenInputCount: number | undefined;
-    tokenOutputCount: number | undefined;
+    ok: boolean;
+    code?: string;
+    remainingHours?: number;
+    analysisId?: Id<"globalAnalyses">;
+    processingTimeMs?: number;
+    tokenInputCount?: number | undefined;
+    tokenOutputCount?: number | undefined;
   }> => {
-    return await ctx.runAction(internal.globalChatAnalysis.analyzeGlobalChats, {
+    // Rate limit: one global analysis per org per day (24h window)
+    const latest = await ctx.runQuery(api.globalAnalysis.getLatestByOrg, {
+      organizationId: args.organizationId,
+    });
+    const lastCreatedAt = latest?.analysis?.createdAt;
+    if (lastCreatedAt) {
+      const now = Date.now();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      if (now - lastCreatedAt < oneDayMs) {
+        const remainingMs = oneDayMs - (now - lastCreatedAt);
+        const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+        return {
+          ok: false,
+          code: "RATE_LIMIT_GLOBAL_ANALYSIS",
+          remainingHours,
+        };
+      }
+    }
+
+    const res = await ctx.runAction(internal.globalChatAnalysis.analyzeGlobalChats, {
       organizationId: args.organizationId,
       analysisLanguage: args.language,
     });
+    return { ok: true, ...res };
   },
 });
 

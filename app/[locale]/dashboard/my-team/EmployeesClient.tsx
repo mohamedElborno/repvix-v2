@@ -254,15 +254,23 @@ export default function EmployeesClient() {
             isOpen={showInvite}
             onClose={() => setShowInvite(false)}
             onSubmit={async (email: string, role: string) => {
-              const clerkRole = role === "  admin" ? "org:admin" : "org:member";
-
-              await organization.inviteMember({
-                emailAddress: email,
-                role: clerkRole,
-              });
-
-              toast.success(t("invitationSent"));
-              router.refresh();
+              const normalizedRole = role === "admin" ? "org:admin" : "org:member";
+              try {
+                await organization.inviteMember({
+                  emailAddress: email,
+                  role: normalizedRole,
+                });
+                toast.success(t("invitationSent"));
+                router.refresh();
+              } catch (error: any) {
+                console.error("inviteMember error:", error);
+                toast.error(
+                  error?.errors?.[0]?.message ||
+                    error?.message ||
+                    t("invitationFailed") ||
+                    "Failed to send invitation"
+                );
+              }
             }}
           />
         )}

@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useUser, useReverification } from "@clerk/nextjs";
+import {
+  useUser,
+  useReverification,
+  useOrganization,
+  useClerk,
+} from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +20,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconCamera, IconUser, IconMail } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { api } from "@/convex/_generated/api";
+import { useAction, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -26,8 +33,77 @@ import {
 export default function ProfileClient() {
   const t = useTranslations("profile");
   const { user } = useUser();
+  const { organization } = useOrganization();
+  const { openUserProfile } = useClerk();
+  const convexOrgId = useQuery(
+    api.orgs.getByClerkId,
+    organization?.id ? { clerkOrgId: organization.id } : "skip"
+  );
+
+  const viewerRole = useQuery(
+    api.billing.getViewerRole,
+    convexOrgId && user?.id
+      ? { organizationId: convexOrgId, clerkUserId: user.id }
+      : "skip"
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const performReverifiedDelete = useReverification(async () => {
+    if (!user) {
+      toast.error(t("deleteAccount.errors.notSignedIn"));
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const isAdmin = viewerRole === "admin" && convexOrgId;
+      const result = isAdmin
+        ? await deleteAccountAndData({ organizationId: convexOrgId as any })
+        : await deleteUserAccount({});
+
+      if (!result?.ok) {
+        toast.error(result?.error || t("deleteAccount.errors.deleteFailed"));
+        return;
+      }
+
+      await user.delete();
+      toast.success(
+        isAdmin ? t("deleteEverything.success") : t("deleteAccount.success")
+      );
+      window.location.href = "/";
+    } catch (error: any) {
+      console.error("Delete account failed", error);
+      const msg =
+        error?.errors?.[0]?.message ||
+        error?.message ||
+        (typeof error === "string" ? error : "");
+      if (
+        msg?.toLowerCase().includes("additional verification") ||
+        msg?.toLowerCase().includes("verification") ||
+        msg?.toLowerCase().includes("reverification")
+      ) {
+        toast.error(
+          viewerRole === "admin"
+            ? t("deleteEverything.errors.reverifyNeeded")
+            : t("deleteAccount.errors.reverifyNeeded")
+        );
+        // Open Clerk profile to trigger security verification UI if available
+        openUserProfile?.({}) as any;
+      } else {
+        toast.error(
+          msg ||
+            (viewerRole === "admin"
+              ? t("deleteEverything.errors.deleteFailed")
+              : t("deleteAccount.errors.deleteFailed"))
+        );
+      }
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  });
 
   // Use Clerk's reverification hook
   const performReverifiedAction = useReverification(
@@ -42,6 +118,9 @@ export default function ProfileClient() {
       toast.success(t("saveSuccess"));
     }
   );
+
+  const deleteAccountAndData = useAction(api.billing.deleteAccountAndData);
+  const deleteUserAccount = useAction(api.billing.deleteUserAccount);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -320,6 +399,10 @@ export default function ProfileClient() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    await performReverifiedDelete();
+  };
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -513,9 +596,79 @@ export default function ProfileClient() {
                 {isLoading ? t("saving") : t("saveChanges")}
               </Button>
             </div>
+
+            <div className="border-t border-border pt-6 mt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-destructive">
+                    {viewerRole === "admin"
+                      ? t("deleteEverything.title")
+                      : t("deleteAccount.title")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {viewerRole === "admin"
+                      ? t("deleteEverything.description")
+                      : t("deleteAccount.description")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting
+                    ? t("loading")
+                    : viewerRole === "admin"
+                      ? t("deleteEverything.confirmButton")
+                      : t("deleteAccount.confirmButton")}
+                </Button>
+              </div>
+            </div>
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {viewerRole === "admin"
+                ? t("deleteEverything.dialogTitle")
+                : t("deleteAccount.dialogTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {viewerRole === "admin"
+                ? t("deleteEverything.dialogDescription")
+                : t("deleteAccount.dialogDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              {viewerRole === "admin"
+                ? t("deleteEverything.cancelButton")
+                : t("deleteAccount.cancelButton")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting
+                ? t("loading")
+                : viewerRole === "admin"
+                  ? t("deleteEverything.confirmButton")
+                  : t("deleteAccount.confirmButton")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

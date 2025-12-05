@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Instagram, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { IconBrandInstagram, IconBrandX, IconMail } from "@tabler/icons-react";
 
 export default function Footer() {
   const t = useTranslations("home.footer");
   const year = new Date().getFullYear();
-
+  const locale = useLocale();
   const nav = {
     product: [
       { href: "#features", label: t("features") || "Features" },
@@ -18,9 +17,12 @@ export default function Footer() {
       { href: "#faq", label: t("faq") || "FAQ" },
     ],
     company: [
-      { href: "/terms", label: t("terms") || "Terms" },
-      { href: "/privacy", label: t("privacy") || "Privacy" },
-      { href: "mailto:contact@example.com", label: t("contact") || "Contact" },
+      { href: `/${locale}/terms`, label: t("terms") || "Terms" },
+      { href: `/${locale}/privacy`, label: t("privacy") || "Privacy" },
+      {
+        href: "mailto:contact@example.com",
+        label: t("contact") || "Contact",
+      },
     ],
   };
 

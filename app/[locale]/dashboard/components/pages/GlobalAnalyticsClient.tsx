@@ -6,6 +6,7 @@ import { useOrganization } from "@clerk/nextjs";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { limitsForTier, type PlanTier } from "@/convex/billingPlan";
 import { toast } from "sonner";
 import {
   TrendingUp,
@@ -24,6 +25,7 @@ import {
   AlertCircle,
   Shield,
   Zap,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -166,6 +168,7 @@ export default function GlobalAnalyticsClient() {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>(locale);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingFaqs, setIsGeneratingFaqs] = useState(false);
 
   // Get convexOrgId from Clerk org ID
   const convexOrgId = useQuery(
@@ -179,6 +182,20 @@ export default function GlobalAnalyticsClient() {
   );
 
   const runFull = useAction(api.globalChatAnalysis.runFullGlobalAnalysis);
+  const generateFaqs = useAction(api.faqs.generateFaqs);
+  const faqs = useQuery(
+    api.faqs.list,
+    convexOrgId ? { organizationId: convexOrgId } : "skip"
+  );
+  const currentPlan = useQuery(
+    api.billing.getCurrentPlan,
+    convexOrgId ? { organizationId: convexOrgId } : "skip"
+  );
+
+  const hasAutoFaqs = useMemo(() => {
+    const tier = (currentPlan?.planTier ?? "basic") as PlanTier;
+    return limitsForTier(tier).features.autoFaqs;
+  }, [currentPlan?.planTier]);
 
   const analysis: GlobalAnalysis | null = latest?.analysis ?? null;
   // Only show loading if we have an orgId and the query is still loading
@@ -214,7 +231,7 @@ export default function GlobalAnalyticsClient() {
           "Generating analysis... This may take a moment.",
         { id: "generating-analysis" }
       );
-      await runFull({
+      const result = await runFull({
         organizationId: convexOrgId,
         language: selectedLanguage as
           | "ar"
@@ -225,19 +242,122 @@ export default function GlobalAnalyticsClient() {
           | "hi"
           | "ja",
       });
-      toast.success(
-        t("analysisGenerated") || "Analysis generated successfully!",
-        { id: "generating-analysis" }
-      );
+      if (result?.ok === false && result.code === "RATE_LIMIT_GLOBAL_ANALYSIS") {
+        const hours = result.remainingHours ?? 24;
+        toast.error(
+          t("analysisRateLimit24h", { hours }) ||
+            `You can generate one global analysis every 24 hours. Try again in ~${hours}h.`,
+          { id: "generating-analysis" }
+        );
+      } else {
+        toast.success(
+          t("analysisGenerated") || "Analysis generated successfully!",
+          { id: "generating-analysis" }
+        );
+      }
     } catch (error) {
       console.error("Error generating analysis:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : t("analysisError") || "Failed to generate analysis";
-      toast.error(errorMessage, { id: "generating-analysis" });
+      const parsed = parseError(error);
+      if (parsed?.code === "RATE_LIMIT_GLOBAL_ANALYSIS") {
+        const hours = parsed.remainingHours ?? 24;
+        toast.error(
+          t("analysisRateLimit24h", { hours }) ||
+            `You can generate one global analysis every 24 hours. Try again in ~${hours}h.`,
+          { id: "generating-analysis" }
+        );
+      } else {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : t("analysisError") || "Failed to generate analysis";
+        toast.error(errorMessage, { id: "generating-analysis" });
+      }
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateFaqs = async () => {
+    if (!convexOrgId) {
+      toast.error(t("noOrganization") || "No organization found");
+      return;
+    }
+    if (!hasAutoFaqs) {
+      toast.error(
+        t("faqs.planRequired") || "Upgrade your plan to generate FAQs"
+      );
+      return;
+    }
+    setIsGeneratingFaqs(true);
+    toast.loading(
+      t("faqs.generating") || "Generating FAQs from your analyses...",
+      { id: "generating-faqs" }
+    );
+    try {
+      const result = await generateFaqs({
+        organizationId: convexOrgId,
+        language: selectedLanguage as
+          | "ar"
+          | "en"
+          | "tr"
+          | "fr"
+          | "es"
+          | "hi"
+          | "ja",
+      });
+      if (result?.ok === false) {
+        if (result.code === "FAQ_RATE_LIMIT_STARTER") {
+          const days = result.remainingDays ?? 7;
+          const hours = result.remainingHours ?? days * 24;
+          toast.error(
+            t("faqs.rateLimitStarter", { days, hours }) ||
+              `FAQs can be generated once every 7 days on Starter. Try again in ~${days} days (${hours}h).`,
+            { id: "generating-faqs" }
+          );
+        } else if (result.code === "FAQ_RATE_LIMIT_PRO") {
+          const hours = result.remainingHours ?? 24;
+          toast.error(
+            t("faqs.rateLimitPro", { hours }) ||
+              `FAQs can be generated once per day on higher plans. Try again in ~${hours}h.`,
+            { id: "generating-faqs" }
+          );
+        } else {
+          toast.error(t("faqs.error") || "Failed to generate FAQs", {
+            id: "generating-faqs",
+          });
+        }
+      } else {
+        toast.success(t("faqs.success") || "FAQs generated successfully!", {
+          id: "generating-faqs",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating FAQs:", error);
+      const parsed = parseError(error);
+      if (parsed?.code === "FAQ_RATE_LIMIT_STARTER") {
+        const days = parsed.remainingDays ?? 7;
+        const hours = parsed.remainingHours ?? days * 24;
+        toast.error(
+          t("faqs.rateLimitStarter", { days, hours }) ||
+            `FAQs can be generated once every 7 days on Starter. Try again in ~${days} days (${hours}h).`,
+          { id: "generating-faqs" }
+        );
+      } else if (parsed?.code === "FAQ_RATE_LIMIT_PRO") {
+        const hours = parsed.remainingHours ?? 24;
+        toast.error(
+          t("faqs.rateLimitPro", { hours }) ||
+            `FAQs can be generated once per day on higher plans. Try again in ~${hours}h.`,
+          { id: "generating-faqs" }
+        );
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : t("faqs.error") || "Failed to generate FAQs";
+        toast.error(message, { id: "generating-faqs" });
+      }
+    } finally {
+      setIsGeneratingFaqs(false);
     }
   };
 
@@ -967,6 +1087,75 @@ export default function GlobalAnalyticsClient() {
                 </div>
               )}
 
+            {/* FAQs */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-blue-500/10 to-purple-600/20 dark:from-purple-600/30 dark:via-blue-500/20 dark:to-purple-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+              <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
+                <div className="flex items-start gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
+                    <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-indigo-600 dark:from-white dark:via-purple-200 dark:to-indigo-200 bg-clip-text text-transparent mb-2">
+                      {t("faqs.title") || "FAQs from your data"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {t("faqs.subtitle") ||
+                        "Generate frequently asked questions based on your aggregated analyses."}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleGenerateFaqs}
+                    disabled={!hasAutoFaqs || isGeneratingFaqs}
+                    className="bg-purple-600 hover:bg-purple-600/90 text-white"
+                  >
+                    {isGeneratingFaqs ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 mr-2" />
+                    )}
+                    {hasAutoFaqs
+                      ? t("faqs.generate") || "Generate FAQs"
+                      : t("faqs.planRequired") || "Upgrade plan for FAQs"}
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {faqs && faqs.length > 0 ? (
+                    faqs.map((faq, index) => (
+                      <div
+                        key={`${faq._id}-${index}`}
+                        className="bg-muted/50 rounded-xl p-4 border border-border hover:border-purple-500/40 transition-all duration-300"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mt-0.5">
+                            <span className="text-xs font-bold text-purple-500">
+                              {index + 1}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <p className="text-sm font-semibold text-foreground leading-snug">
+                              {faq.question}
+                            </p>
+                            {faq.answer && (
+                              <p className="text-sm text-muted-foreground leading-relaxed">
+                                {faq.answer}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-muted/40 rounded-xl p-4 border border-dashed border-border text-sm text-muted-foreground">
+                      {t("faqs.empty") ||
+                        "No FAQs yet. Generate them from your analyses."}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Analysis Date */}
             <div className="bg-card rounded-xl p-4 border border-border shadow-sm">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -1037,4 +1226,15 @@ export default function GlobalAnalyticsClient() {
       )}
     </div>
   );
+}
+
+function parseError(error: unknown): { code?: string; [key: string]: any } | null {
+  if (error instanceof Error && typeof error.message === "string") {
+    try {
+      return JSON.parse(error.message);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }

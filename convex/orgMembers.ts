@@ -1,8 +1,9 @@
 // convex/orgMembers.ts
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, requireOrgMembership, requireUser } from "./auth";
-import type { Id } from "./_generated/dataModel";
+import { requireOrgMembership, requireUser } from "./auth";
+import { limitsForTier } from "./billingPlan";
+import { Id } from "./_generated/dataModel";
 
 /**
  * Get one member by Convex Id with strict org-boundary checks
@@ -62,11 +63,9 @@ export const updateMemberInfo = mutation({
 
     const orgId = target.organizationId;
 
-    // هوية المستخدم الحالي
     const caller = await ctx.auth.getUserIdentity();
     if (!caller) throw new Error("Unauthorized.");
 
-    // عضوية المستخدم الحالي داخل المنظمة
     const callerMembership = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", caller.subject))
@@ -81,20 +80,12 @@ export const updateMemberInfo = mutation({
     const isCallerAdmin = callerRole === "admin";
     const isSelf = caller.subject === target.clerkUserId;
 
-    // ---------------------------------------------------------------------
-    // 1) تعديل الدور (role) → يتطلب أن يكون Caller = Admin
-    // ---------------------------------------------------------------------
     if (args.role !== undefined && args.role !== target.role) {
       if (!isCallerAdmin) {
         throw new Error("Only admins can change member roles.");
       }
     }
 
-    // ---------------------------------------------------------------------
-    // 2) تعديل الاسم أو الإيميل → مسموح فقط في حال:
-    //    * المستخدم يعدّل نفسه
-    //    * أو Caller = Admin
-    // ---------------------------------------------------------------------
     if (!isSelf && !isCallerAdmin) {
       throw new Error("Insufficient permissions to update another member.");
     }
@@ -127,11 +118,6 @@ export const addMemberFromInvite = mutation({
     role: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
-    // هذا يُستدعى من webhook عن طريق server client
-    // وبالتالي لا نستخدم requireUser/requireAdmin هنا
-    // (الأمان الحقيقي يكون بالتحقق من توقيع Clerk في Route نفسه)
-
-    // تأكد أن العضو غير مضاف مسبقاً
     const existing = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
@@ -158,7 +144,9 @@ export const addMemberFromInvite = mutation({
       return existing._id;
     }
 
-    // عضو جديد
+    // عضو جديد - تحقق من حدود الخطة لعدد الأعضاء
+    await assertMemberCapacity(ctx, args.organizationId, 1);
+
     const id = await ctx.db.insert("organizationMembers", {
       organizationId: args.organizationId,
       clerkUserId: args.clerkUserId,
@@ -172,3 +160,29 @@ export const addMemberFromInvite = mutation({
     return id;
   },
 });
+
+async function assertMemberCapacity(
+  ctx: any,
+  organizationId: Id<"organizations">,
+  incoming: number
+) {
+  const org = await ctx.db.get(organizationId);
+  if (!org) throw new Error("Organization not found");
+
+  const memberLimit =
+    org.limits?.members !== undefined
+      ? org.limits.members
+      : limitsForTier((org.planTier as any) || "basic").members;
+
+  if (memberLimit === undefined || memberLimit === "unlimited") return;
+
+  const currentCount = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+    .collect()
+    .then((arr: any[]) => arr.length);
+
+  if (currentCount + incoming > memberLimit) {
+    throw new Error("Member limit reached for your current plan.");
+  }
+}

@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 const http = httpRouter();
 
@@ -57,7 +57,7 @@ export const lemonWebhook = httpAction(async (ctx, request) => {
 
   const payload = JSON.parse(rawBody);
 
-  await ctx.runMutation(api.billing.ingestWebhook, {
+  await ctx.runMutation(internal.billing.ingestWebhook, {
     eventName,
     lemonId: payload?.data?.id ?? "unknown",
     payload,

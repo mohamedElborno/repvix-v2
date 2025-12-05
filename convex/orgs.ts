@@ -3,6 +3,8 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin, requireOrgMembership } from "./auth";
+import { limitsForTier } from "./billingPlan";
+import { Id } from "./_generated/dataModel";
 
 export const getByClerkId = query({
   args: { clerkOrgId: v.string() },
@@ -77,30 +79,33 @@ export const syncOrganizationMembers = mutation({
       .first();
     if (!org) throw new Error("Organization not found.");
 
-    // ✅ هوية المستخدم الحالي من JWT الخاص بـ Clerk
     const caller = await ctx.auth.getUserIdentity();
     if (!caller) throw new Error("Unauthorized.");
 
-    // نحاول إيجاد عضويته في Convex
     let callerMembership = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", caller.subject))
       .filter((q) => q.eq(q.field("organizationId"), org._id))
       .first();
 
-    // ✅ إذا لم نجد عضوية في Convex لكن المستخدم فعلاً عضو في المنظمة في Clerk
     if (!callerMembership) {
       const fromClerk = args.members.find(
         (m) => m.clerkUserId === caller.subject
       );
 
       if (!fromClerk) {
-        // المستخدم ليس عضوًا فعليًا في المنظمة في Clerk → Unauthorized حقيقية
         throw new Error("Not a member of this organization.");
       }
 
-      // ✨ أنشئ عضوية جديدة في Convex بناءً على بيانات Clerk
-      const role = normalizeRole(fromClerk.role); // تستخدم الدالة اللي فوق الملف
+      const role = normalizeRole(fromClerk.role);
+
+      await assertMemberCapacity(
+        ctx,
+        org._id,
+        org.planTier,
+        (org as any).limits?.members,
+        1
+      );
 
       await ctx.db.insert("organizationMembers", {
         organizationId: org._id,
@@ -111,12 +116,7 @@ export const syncOrganizationMembers = mutation({
         role,
         joinedAt: Date.now(),
       });
-
-      // لا حاجة لإسناد النتيجة لـ callerMembership
-      // يكفينا أننا تأكدنا أنه الآن عضو في المنظمة
     }
-
-    // 👇 باقي الكود كما هو
 
     const existingMembers = await ctx.db
       .query("organizationMembers")
@@ -124,6 +124,19 @@ export const syncOrganizationMembers = mutation({
       .collect();
 
     const existingMap = new Map(existingMembers.map((m) => [m.clerkUserId, m]));
+
+    const memberLimit = await resolveMemberLimit(
+      org.planTier,
+      (org as any).limits?.members
+    );
+    const newMembers = args.members.filter(
+      (m) => !existingMap.has(m.clerkUserId)
+    );
+    if (memberLimit !== undefined && memberLimit !== "unlimited") {
+      if (existingMembers.length + newMembers.length > memberLimit) {
+        throw new Error("Member limit reached for your current plan.");
+      }
+    }
 
     for (const member of args.members) {
       const current = existingMap.get(member.clerkUserId);
@@ -161,6 +174,37 @@ export const syncOrganizationMembers = mutation({
     return true;
   },
 });
+
+async function assertMemberCapacity(
+  ctx: any,
+  organizationId: Id<"organizations">,
+  planTier?: string,
+  storedLimit?: number | "unlimited",
+  incoming = 1
+) {
+  const limit = await resolveMemberLimit(planTier, storedLimit);
+  if (limit === undefined || limit === "unlimited") return;
+
+  const currentCount = await ctx.db
+    .query("organizationMembers")
+    .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+    .collect()
+    .then((arr: any[]) => arr.length);
+
+  if (currentCount + incoming > limit) {
+    throw new Error("Member limit reached for your current plan.");
+  }
+}
+
+async function resolveMemberLimit(
+  planTier?: string,
+  storedLimit?: number | "unlimited"
+): Promise<number | "unlimited" | undefined> {
+  if (storedLimit !== undefined) return storedLimit;
+  const tier = (planTier as any) || "basic";
+  const limits = limitsForTier(tier);
+  return limits.members;
+}
 
 /**
  * Get organization members by Clerk organization ID
@@ -207,23 +251,20 @@ export const getOrganizationMembers = query({
 export const updateMemberRole = mutation({
   args: {
     organizationId: v.id("organizations"),
-    clerkUserId: v.string(), // مُعرِّف الموظف الذي سيتم تعديل بياناته
+    clerkUserId: v.string(),
     newRole: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
-    // 1. 🔒 التحقق الأمني: يجب أن يكون المستخدم الحالي مديرًا أو مالكًا.
     await requireAdmin(ctx, args.organizationId);
 
-    // 2. البحث عن العضوية في Convex
     const membership = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", args.clerkUserId))
       .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
       .first();
 
-    if (!membership) throw new Error("العضو غير موجود في هذه المنظمة.");
+    if (!membership) throw new Error("Member not found in this organization.");
 
-    // 3. 🔒 منع تغيير دور Owner الوحيد
     if (membership.role === "admin" && args.newRole !== "admin") {
       const allAdmins = await ctx.db
         .query("organizationMembers")
@@ -238,13 +279,10 @@ export const updateMemberRole = mutation({
       }
     }
 
-    // 4. تطبيق التعديل على Convex
     await ctx.db.patch(membership._id, {
       role: args.newRole as "admin" | "member",
     });
 
-    // 5. ملاحظة مهمة: تحديث Clerk (يجب أن يتم هذا في الـ Frontend أو Webhook)
-    // لا يمكن لدوال Convex تعديل Clerk مباشرة.
     return true;
   },
 });

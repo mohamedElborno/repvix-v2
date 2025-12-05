@@ -103,6 +103,34 @@
       "tagline": "Propulsé par la précision, la clarté et un peu d’IA ✨"
     }
   },
+  "legal": {
+    "terms": {
+      "title": "Conditions d’utilisation",
+      "intro": "Les présentes Conditions d’utilisation régissent votre accès à Repvix et son utilisation. En utilisant le service, vous acceptez ces conditions.",
+      "useOfServiceTitle": "Utilisation du service",
+      "useOfService": "Vous vous engagez à utiliser Repvix uniquement à des fins légales et conformément aux lois et réglementations en vigueur. Vous êtes responsable de tout contenu que vous téléchargez, y compris les transcriptions de conversations et les données clients. Certaines fonctionnalités sont proposées dans le cadre de formules d’abonnement. La résiliation d’un abonnement met fin aux renouvellements futurs et à l’accès aux quotas payants à la fin de la période de facturation en cours ; les montants déjà facturés ne sont pas remboursés automatiquement, et tout remboursement éventuel est traité conformément aux conditions du prestataire de paiement concerné.",
+      "dataAndPrivacyTitle": "Données et confidentialité",
+      "dataAndPrivacy": "Nous analysons les conversations que vous importez afin de générer des rapports et des insights. Il vous incombe de disposer des droits nécessaires pour partager ces données. Les conversations et analyses que vous importez au sein d’une organisation sont traitées comme faisant partie des registres de cette organisation. La suppression de votre compte personnel ou de votre adhésion ne supprime pas automatiquement les données de l’organisation ; les propriétaires ou administrateurs de l’organisation peuvent demander la suppression de l’organisation, ce qui entraîne généralement la suppression définitive des données associées dans nos systèmes, sous réserve de nos obligations légales de conservation. Pour plus de détails sur le stockage et le traitement des données, veuillez consulter notre Politique de confidentialité.",
+      "changesTitle": "Modifications des conditions",
+      "changes": "Nous pouvons mettre à jour ces Conditions périodiquement. La poursuite de l’utilisation de Repvix après une mise à jour vaut acceptation des Conditions révisées.",
+      "contactTitle": "Contact",
+      "contact": "Pour toute question concernant ces Conditions, vous pouvez nous contacter via les canaux indiqués sur notre site."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "intro": "Cette Politique de confidentialité explique comment Repvix collecte, utilise et protège vos données lorsque vous utilisez notre service.",
+      "dataWeCollectTitle": "Données collectées",
+      "dataWeCollect": "Nous pouvons collecter des informations de compte (par exemple nom, e‑mail et informations sur l’organisation), des données d’utilisation et les conversations que vous choisissez de télécharger. Cela peut inclure les résultats d’analyses et des représentations techniques dérivées (par exemple, des vecteurs numériques utilisés pour la recherche et l’analytique), ainsi que des enregistrements de facturation tels que des identifiants d’abonnement, des factures et des statuts de paiement. Certaines métadonnées et informations techniques peuvent également être collectées automatiquement à des fins de sécurité et d’analytique.",
+      "howWeUseDataTitle": "Utilisation des données",
+      "howWeUseData": "Nous utilisons vos données pour fournir et améliorer le service Repvix, notamment pour générer des analyses, des insights et des rapports, assurer la sécurité et optimiser l’expérience produit. Nous pouvons faire appel à des prestataires de services soigneusement sélectionnés pour effectuer certaines opérations de traitement pour notre compte, dans le cadre de garanties contractuelles et légales appropriées. Nous ne vendons pas vos données.",
+      "dataRetentionTitle": "Conservation des données",
+      "dataRetention": "Les données de conversations et d’analyses peuvent être conservées afin que vous puissiez les consulter ou les gérer depuis votre tableau de bord. Lorsque vous supprimez votre compte personnel, nous supprimons vos identifiants de connexion et vos adhésions, mais les enregistrements de l’organisation (y compris les conversations et analyses) peuvent continuer d’être conservés sous le contrôle des administrateurs de cette organisation. Lorsqu’une organisation est supprimée par un administrateur autorisé, nous supprimons en principe les conversations, messages, analyses et enregistrements de facturation associés, sauf si nous devons conserver certaines informations pour des raisons légales ou de sécurité.",
+      "yourRightsTitle": "Vos droits",
+      "yourRights": "Selon votre juridiction, vous pouvez disposer de droits d’accès, de rectification ou de suppression de vos données personnelles. Contactez-nous si vous souhaitez exercer l’un de ces droits.",
+      "contactTitle": "Contact",
+      "contact": "Pour toute question concernant cette Politique de confidentialité ou notre traitement des données, veuillez nous contacter via les informations disponibles sur notre site."
+    }
+  },
   "header": {
     "hero": "Accueil",
     "features": "Fonctionnalités",
@@ -117,7 +145,8 @@
     "signUp": "Créer un compte",
     "signIn": "Connexion",
     "logoAlt": "Logo Repvix",
-    "brandName": "Repvix"
+    "brandName": "Repvix",
+    "beta": "BÊTA"
   },
   "metadata": {
     "title": "Repvix – Analyse IA des conversations clients et commerciales | Insights multilingues",
@@ -198,6 +227,15 @@
       "contactUs": "Nous contacter",
       "currentPlan": "Plan actuel",
       "willContactYou": "Nous vous contacterons bientôt",
+      "errors": {
+        "notSignedIn": "Veuillez d'abord vous connecter.",
+        "noOrganization": "Organisation manquante. Actualisez et assurez-vous d'en sélectionner une.",
+        "notAdmin": "Seuls les administrateurs de l'organisation peuvent gérer la facturation.",
+        "notAdminShort": "Pas d'autorisation",
+        "checkoutFailed": "Impossible de lancer le paiement. Réessayez.",
+        "portalFailed": "Impossible d'ouvrir le portail de facturation.",
+        "alreadySubscribed": "Vous avez déjà un abonnement actif pour cette offre."
+      },
       "feature": "Fonctionnalité",
       "featureLabels": {
         "f1": "Analyses quotidiennes",
@@ -296,7 +334,6 @@
     "high": "Élevé",
     "noData": "Aucune donnée disponible",
     "riskScore": "Score de Risque",
-    "peakHours": "Heures de Pointe",
     "noPeakHoursData": "Aucune donnée d'heures de pointe disponible pour le moment. Plus de conversations sont nécessaires pour générer des statistiques.",
     "agentLeaderboard": "Classement des Agents",
     "noAgentData": "Aucune donnée de performance des agents disponible pour le moment. Plus de conversations sont nécessaires pour générer des statistiques.",
@@ -335,6 +372,19 @@
     "generatingAnalysis": "Génération de l'analyse en cours... Cela peut prendre un moment.",
     "analysisGenerated": "Analyse générée avec succès !",
     "analysisError": "Échec de la génération de l'analyse",
+    "analysisRateLimit24h": "Vous pouvez générer une analyse globale toutes les 24 heures. Réessayez dans ~{hours} h.",
+    "faqs": {
+      "title": "FAQs issues de vos données",
+      "subtitle": "Générez des questions/réponses concises à partir de vos analyses agrégées.",
+      "generate": "Générer les FAQs",
+      "generating": "Génération des FAQs à partir de vos analyses...",
+      "success": "FAQs générées avec succès",
+      "error": "Échec de génération des FAQs",
+      "rateLimitStarter": "Vous pouvez générer des FAQs une fois tous les 7 jours sur l'offre Starter. Réessayez dans ~{days} jours ({hours} h).",
+      "rateLimitPro": "Vous pouvez générer des FAQs une fois par jour sur les offres supérieures. Réessayez dans ~{hours} h.",
+      "planRequired": "Mettez à niveau votre offre pour activer les FAQs",
+      "empty": "Aucune FAQ pour le moment. Générez-les depuis vos analyses."
+    },
     "chatsVolume": "Volume des Conversations",
     "lastDays": "Derniers {days} jours",
     "loadingChartData": "Chargement des données du graphique...",
@@ -541,7 +591,34 @@
     "verifying": "Vérification...",
     "verify": "Vérifier",
     "account": "Compte",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "deleteAccount": {
+      "title": "Supprimer le compte",
+      "description": "Cela supprimera vos adhésions et votre compte uniquement. Les organisations, discussions et analyses restent intactes.",
+      "confirmButton": "Supprimer le compte",
+      "cancelButton": "Annuler",
+      "dialogTitle": "Êtes-vous sûr ?",
+      "dialogDescription": "Action irréversible. Seuls votre compte et vos adhésions seront supprimés.",
+      "success": "Compte supprimé avec succès.",
+      "errors": {
+        "notSignedIn": "Veuillez d'abord vous connecter.",
+        "deleteFailed": "Échec de la suppression du compte. Réessayez.",
+        "reverifyNeeded": "Vérification supplémentaire requise. Terminez le contrôle de sécurité puis réessayez."
+      }
+    },
+    "deleteEverything": {
+      "title": "Supprimer l'organisation et le compte",
+      "description": "Cela supprimera l'organisation, tous les chats, analyses, embeddings, adhésions, abonnements et votre compte.",
+      "confirmButton": "Tout supprimer",
+      "cancelButton": "Annuler",
+      "dialogTitle": "Absolument sûr ?",
+      "dialogDescription": "Action irréversible. Toutes les données de l'organisation et votre compte seront supprimés.",
+      "success": "Organisation et compte supprimés avec succès.",
+      "errors": {
+        "deleteFailed": "Échec de la suppression de l'organisation et du compte. Réessayez.",
+        "reverifyNeeded": "Vérification supplémentaire requise. Terminez le contrôle de sécurité puis réessayez."
+      }
+    }
   },
   "team": {
     "title": "Mon équipe",
@@ -644,6 +721,12 @@
     "subscriptionManagement": "Gestion de l'Abonnement",
     "managePayment": "Gérer les Méthodes de Paiement",
     "cancelSubscription": "Annuler l'Abonnement",
-    "portalDescription": "Vous serez redirigé vers notre portail de facturation pour gérer votre abonnement et vos méthodes de paiement."
+    "portalDescription": "Vous serez redirigé vers notre portail de facturation pour gérer votre abonnement et vos méthodes de paiement.",
+    "errors": {
+      "notSignedIn": "Veuillez d'abord vous connecter.",
+      "noOrganization": "Organisation manquante. Actualisez et assurez-vous d'en sélectionner une.",
+      "notAdmin": "Seuls les administrateurs de l'organisation peuvent gérer la facturation.",
+      "portalFailed": "URL du portail de facturation indisponible. Réessayez."
+    }
   }
 }

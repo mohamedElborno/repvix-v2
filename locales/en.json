@@ -103,6 +103,34 @@
       "tagline": "Powered by precision, insight, and a bit of AI ✨"
     }
   },
+  "legal": {
+    "terms": {
+      "title": "Terms of Service",
+      "intro": "These Terms of Service govern your access to and use of Repvix. By using the product, you agree to these terms.",
+      "useOfServiceTitle": "Use of the Service",
+      "useOfService": "You agree to use Repvix only for lawful purposes and in accordance with all applicable laws and regulations. You are responsible for any content you upload, including chat transcripts and customer data. Certain features are available under subscription plans. Cancelling a subscription stops future renewals and access to paid limits at the end of the current billing period; amounts already charged are not automatically refunded, and any refund is handled in accordance with the applicable payment provider’s terms.",
+      "dataAndPrivacyTitle": "Data & Privacy",
+      "dataAndPrivacy": "We analyze your uploaded conversations to generate insights and reports. You are responsible for ensuring you have the right to share this data. Chat data and analyses that you upload within an organization are treated as part of that organization’s records. Deleting your personal account or membership does not automatically delete organization data; organization owners or admins may delete the organization, which typically results in permanent deletion of related data from our systems, subject to any legal retention requirements. For more details on how we store and process data, please review our Privacy Policy.",
+      "changesTitle": "Changes to These Terms",
+      "changes": "We may update these Terms from time to time. Continued use of Repvix after updates means you accept the revised Terms.",
+      "contactTitle": "Contact",
+      "contact": "If you have any questions about these Terms, you can contact us through the channels listed on our website."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "This Privacy Policy explains how Repvix collects, uses, and protects your data when you use our service.",
+      "dataWeCollectTitle": "Data We Collect",
+      "dataWeCollect": "We may collect account information (such as name, email, and organization details), usage data, and the chat conversations you choose to upload. This may include analysis results and derived technical representations (for example, numerical vectors used for search and analytics), as well as billing-related records such as subscription identifiers, invoices, and payment status. Some metadata may also be collected automatically for security and analytics.",
+      "howWeUseDataTitle": "How We Use Data",
+      "howWeUseData": "We use your data to provide and improve the Repvix service, including generating analyses, insights, and reports, maintaining security, and improving product experience. We may rely on carefully selected service providers to perform certain processing activities on our behalf, subject to contractual and legal safeguards. We do not sell your data.",
+      "dataRetentionTitle": "Data Retention",
+      "dataRetention": "Chat data and analyses may be stored so you can revisit them or manage them from your dashboard. If you delete your personal account, we remove your account credentials and memberships, but organization records (including chats and analyses) may continue to be retained under the control of that organization’s administrators. When an organization is deleted by an authorized administrator, we generally delete associated chats, messages, analyses, and billing records, except where we are required to retain certain information for legal or security reasons.",
+      "yourRightsTitle": "Your Rights",
+      "yourRights": "Depending on your jurisdiction, you may have rights to access, correct, or delete your personal data. Contact us if you wish to exercise any of these rights.",
+      "contactTitle": "Contact",
+      "contact": "If you have questions about this Privacy Policy or our data practices, please reach out through the contact information on our website."
+    }
+  },
   "header": {
     "hero": "Home",
     "features": "Features",
@@ -117,7 +145,8 @@
     "signUp": "Sign Up",
     "signIn": "Sign In",
     "logoAlt": "Repvix logo",
-    "brandName": "Repvix"
+    "brandName": "Repvix",
+    "beta": "BETA"
   },
   "dashboard": {
     "welcome": "Welcome Back",
@@ -184,6 +213,15 @@
       "contactUs": "Contact Us",
       "currentPlan": "Current Plan",
       "willContactYou": "We will contact you soon",
+      "errors": {
+        "notSignedIn": "Please sign in first.",
+        "noOrganization": "Organization is missing. Please refresh and ensure you selected an organization.",
+        "notAdmin": "Only org admins can manage billing.",
+        "notAdminShort": "No permission",
+        "checkoutFailed": "Unable to start checkout. Please try again.",
+        "portalFailed": "Unable to open billing portal.",
+        "alreadySubscribed": "You already have an active subscription for this plan."
+      },
       "feature": "Feature",
       "featureLabels": {
         "f1": "Daily Analyses",
@@ -320,6 +358,19 @@
     "generatingAnalysis": "Generating analysis... This may take a moment.",
     "analysisGenerated": "Analysis generated successfully!",
     "analysisError": "Failed to generate analysis",
+    "analysisRateLimit24h": "You can generate one global analysis every 24 hours. Try again in ~{hours}h.",
+    "faqs": {
+      "title": "FAQs from your data",
+      "subtitle": "Generate concise questions and answers from your aggregated chat insights.",
+      "generate": "Generate FAQs",
+      "generating": "Generating FAQs from your analyses...",
+      "success": "FAQs generated successfully!",
+      "error": "Failed to generate FAQs",
+      "rateLimitStarter": "You can generate FAQs once every 7 days on Starter. Try again in ~{days} days ({hours}h).",
+      "rateLimitPro": "You can generate FAQs once per day on higher plans. Try again in ~{hours}h.",
+      "planRequired": "Upgrade plan for FAQs",
+      "empty": "No FAQs yet. Generate them from your analyses."
+    },
     "chatsVolume": "Chats Volume",
     "lastDays": "Last {days} days",
     "loadingChartData": "Loading chart data...",
@@ -540,7 +591,36 @@
     "verifying": "Verifying...",
     "verify": "Verify",
     "account": "Account",
-    "logout": "Log out"
+    "logout": "Log out",
+    "deleteAccount": {
+      "title": "Delete account",
+      "description": "This will remove your org memberships and delete your account. Your chats, analyses, and organizations remain intact.",
+      "confirmButton": "Delete account",
+      "cancelButton": "Cancel",
+      "dialogTitle": "Are you sure?",
+      "dialogDescription": "This action is irreversible. Your account and memberships will be removed.",
+      "success": "Account deleted successfully.",
+      "errors": {
+        "notSignedIn": "Please sign in first.",
+        "deleteFailed": "Failed to delete account. Please try again.",
+        "reverifyNeeded":
+          "Additional verification is required. Complete the security check, then retry."
+      }
+    },
+    "deleteEverything": {
+      "title": "Delete organization and account",
+      "description": "This will delete the organization, all chats, analyses, embeddings, memberships, subscriptions, and your account.",
+      "confirmButton": "Delete everything",
+      "cancelButton": "Cancel",
+      "dialogTitle": "Are you absolutely sure?",
+      "dialogDescription": "This action is irreversible. All organization data and your account will be removed.",
+      "success": "Organization and account deleted successfully.",
+      "errors": {
+        "deleteFailed": "Failed to delete organization and account. Please try again.",
+        "reverifyNeeded":
+          "Additional verification is required. Complete the security check, then retry."
+      }
+    }
   },
   "team": {
     "title": "My Team",
@@ -643,6 +723,12 @@
     "subscriptionManagement": "Subscription Management",
     "managePayment": "Manage Payment Methods",
     "cancelSubscription": "Cancel Subscription",
-    "portalDescription": "You will be redirected to our billing portal to manage your subscription and payment methods."
+    "portalDescription": "You will be redirected to our billing portal to manage your subscription and payment methods.",
+    "errors": {
+      "notSignedIn": "Please sign in first.",
+      "noOrganization": "Organization is missing. Refresh and make sure you selected one.",
+      "notAdmin": "Only org admins can manage billing.",
+      "portalFailed": "Billing portal URL not available. Please try again."
+    }
   }
 }
