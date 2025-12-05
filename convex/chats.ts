@@ -167,6 +167,76 @@ export const createChatWithMessages = mutation({
   },
 });
 
+export const deleteChat = mutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, { chatId }) => {
+    const user = await requireUser(ctx);
+    const chat = await ctx.db.get(chatId);
+    if (!chat) throw new Error("Chat not found");
+
+    // Ensure membership in the org that owns the chat
+    await requireOrgMembership(ctx, chat.organizationId);
+
+    // Cascade delete messages, embeddings, analyses, then chat
+    await ctx.runMutation(internal.chats.deleteChatCascade, { chatId });
+    return { ok: true };
+  },
+});
+
+export const deleteChatCascade = internalMutation({
+  args: { chatId: v.id("chats") },
+  handler: async (ctx, { chatId }) => {
+    const chat = await ctx.db.get(chatId);
+    if (!chat) return { ok: false, error: "Chat not found" };
+
+    // Delete message embeddings linked to this chat
+    const embeddings = await ctx.db
+      .query("messageEmbeddings")
+      .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+      .collect();
+    for (const emb of embeddings) {
+      await ctx.db.delete(emb._id);
+    }
+
+    // Delete chat messages
+    const messages = await ctx.db
+      .query("chatMessages")
+      .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+      .collect();
+    for (const msg of messages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    // Delete chat analyses
+    const analyses = await ctx.db
+      .query("chatAnalyses")
+      .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+      .collect();
+    for (const a of analyses) {
+      await ctx.db.delete(a._id);
+    }
+
+    // Delete chat analysis data table if exists (best-effort)
+    try {
+      const analysisData = await ctx.db
+        .query("chatAnalysisData" as any)
+        .filter((q: any) => q.eq(q.field("chatId"), chatId))
+        .collect();
+      for (const ad of analysisData) {
+        await ctx.db.delete(ad._id);
+      }
+    } catch (_err) {
+      // ignore if table/index not present
+    }
+
+    // Finally delete chat
+    await ctx.db.delete(chatId);
+    return { ok: true };
+  },
+});
+
 export const getChatWithMessages = query({
   args: {
     chatId: v.id("chats"),

@@ -12,16 +12,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import UploadChatDialog from "../UploadChatDialog";
-import ChatListItem, { ChatListItemData } from "../ChatListItem";
-import InviteEmployeeDialog from "../InviteEmployeeDialog";
+import ChatListItem from "../ChatListItem";
 import { useTranslations } from "next-intl";
 import type { DashboardClientProps } from "../../types/dashboard";
 import { useUser } from "@clerk/nextjs";
 import type { Id } from "@/convex/_generated/dataModel";
-import { useQuery, useAction, usePaginatedQuery } from "convex/react";
+import {
+  useQuery,
+  useAction,
+  usePaginatedQuery,
+  useMutation,
+} from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useLocale } from "next-intl";
 import { useRef, useCallback } from "react";
+import { toast } from "sonner";
 
 // Lazy load الرسوم البيانية لتحسين الأداء - تحميل فقط عند الحاجة
 const ChatVolume = dynamic(() => import("../ChatVolume"), {
@@ -125,6 +130,8 @@ export default function DashboardClient({
     api.globalAnalysis.getLatestByOrg,
     organizationId ? { organizationId } : "skip"
   );
+
+  const deleteChat = useMutation(api.chats.deleteChat);
 
   // جلب جميع الرسائل لكل المحادثات للبحث النصي
   const chatIds = useMemo(() => safeChats.map((chat) => chat._id), [safeChats]);
@@ -378,19 +385,14 @@ export default function DashboardClient({
 
   const handleDeleteChat = async (chatId: Id<"chats">) => {
     try {
-      const response = await fetch(`/api/chats/${chatId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete chat");
-      }
-
-      // The paginated query will automatically update when the chat is deleted
-      // No need to manually update the list
-    } catch (error) {
+      await deleteChat({ chatId });
+      toast.success(t("chatDeleted") || "Chat deleted");
+      // paginated query will refresh automatically
+    } catch (error: any) {
       console.error("Error deleting chat:", error);
-      alert("Failed to delete chat");
+      toast.error(
+        error?.message || t("chatDeleteFailed") || "Failed to delete chat"
+      );
     }
   };
   return (
