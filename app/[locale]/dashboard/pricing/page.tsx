@@ -27,8 +27,6 @@ export default function PricingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
-  const createCheckout = useAction(api.billing.createCheckout);
-
   // التحقق من الاشتراكات النشطة لكل باقة
   const hasActiveBasic = useQuery(
     api.billing.hasActiveSubscriptionForVariant,
@@ -152,7 +150,8 @@ export default function PricingPage() {
 
   // Get all unique feature keys across all plans
   const featureKeys = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
-  console.log("currentPlan", billing);
+  const createCheckout = useAction(api.billing.createCheckout);
+  const openBillingPortal = useAction(api.billing.createBillingPortal);
 
   const checkout = async (variantId: string) => {
     setLoadingPlan(variantId);
@@ -164,6 +163,22 @@ export default function PricingPage() {
     }
 
     try {
+      // 1) إذا عند المنظمة خطة حالية (planTier موجود) → إدارة الاشتراك، ليس اشتراك جديد
+      if (billing?.planTier) {
+        const result = await openBillingPortal({
+          organizationId: convexOrgId,
+        });
+
+        if (!result.ok || !result.url) {
+          toast.error(result.error || "Unable to open billing portal");
+          return;
+        }
+
+        window.location.href = result.url;
+        return;
+      }
+
+      // 2) لا يوجد اشتراك → اشتراك جديد
       const result = await createCheckout({
         organizationId: convexOrgId,
         clerkUserId: user.id,
@@ -171,33 +186,14 @@ export default function PricingPage() {
         userEmail: user?.primaryEmailAddress?.emailAddress ?? undefined,
       });
 
-      if (!result.ok) {
-        if (result.code === "ALREADY_SUBSCRIBED") {
-          toast.error(
-            result.error ||
-              "You already have an active subscription for this plan",
-            {
-              description: result.hint,
-            }
-          );
-        } else {
-          throw new Error(result.error || "Failed to create checkout");
-        }
+      if (!result.ok || !result.url) {
+        toast.error(result.error || "Unable to start checkout");
         return;
       }
 
-      console.log("Checkout result:", result);
-
-      if (result.url) {
-        console.log("Redirecting to checkout:", result.url);
-        window.location.href = result.url;
-        return;
-      }
-
-      toast.error("Unexpected billing response: No checkout URL received");
+      window.location.href = result.url;
     } catch (err: any) {
-      console.error("Checkout error:", err);
-      toast.error(err.message || "Failed to create checkout");
+      toast.error(err.message || "Something went wrong");
     } finally {
       setLoadingPlan(null);
     }

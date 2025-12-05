@@ -650,44 +650,69 @@ export const createCheckout = action({
 });
 
 /* --------------------------------------------------------------
- * Get Billing Portal URL
+ * Redirect to Billing Portal (manage / cancel subscription)
  * -------------------------------------------------------------- */
 
-export const getBillingPortalUrl = action({
+export const redirectToBillingPortal = action({
   args: {
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, { organizationId }) => {
-    const apiKey = process.env.LEMON_SECRET_KEY;
-
-    if (!apiKey) {
-      return {
-        ok: false,
-        error: "Missing Lemon Squeezy API credentials",
-      };
-    }
-
-    // الحصول على الاشتراك النشط
-    const activeSubscription: {
-      lemonSubscriptionId: string;
-      variantId: string | null;
-      productId: string | null;
-      status: string;
-    } | null = await ctx.runQuery(api.billing.getActiveSubscription, {
+    // نتحقق أولاً أن للمنظمة اشتراكاً فعّالاً (active أو on_trial)
+    const activeSub = await ctx.runQuery(api.billing.getActiveSubscription, {
       organizationId,
     });
 
-    if (!activeSubscription) {
+    if (!activeSub) {
       return {
         ok: false,
-        error: "No active subscription found",
-        hint: "You need an active subscription to access the billing portal",
+        error: "No active subscription for this organization",
+        code: "NO_ACTIVE_SUBSCRIPTION",
+        hint: "You can only access the billing portal if you already have an active subscription.",
       };
     }
 
-    // الحصول على معلومات الاشتراك من Lemon Squeezy API
-    const res: Response = await fetch(
-      `https://api.lemonsqueezy.com/v1/subscriptions/${activeSubscription.lemonSubscriptionId}`,
+    // بوابة التحكّم في الاشتراك في Lemon Squeezy (Customer Billing Portal)
+    const portalUrl = "https://repvix.lemonsqueezy.com/billing";
+
+    return {
+      ok: true,
+      url: portalUrl,
+    };
+  },
+});
+
+export const createBillingPortal = action({
+  args: { organizationId: v.id("organizations") },
+  handler: async (
+    ctx,
+    { organizationId }
+  ): Promise<{
+    ok: boolean;
+    error: string;
+    details?: string;
+    code?: string;
+    url?: string;
+  }> => {
+    const apiKey = process.env.LEMON_SECRET_KEY;
+    if (!apiKey) throw new Error("Missing Lemon Squeezy API credentials");
+
+    // نجيب الاشتراك النشط من Convex (اللي فيه lemonSubscriptionId)
+    const activeSub = await ctx.runQuery(api.billing.getActiveSubscription, {
+      organizationId,
+    });
+
+    if (!activeSub || !activeSub.lemonSubscriptionId) {
+      return {
+        ok: false,
+        error: "No active subscription for this organization",
+        code: "NO_ACTIVE_SUBSCRIPTION",
+      };
+    }
+
+    // نستدعي Lemon: GET /v1/subscriptions/:id للحصول على URLs موقعة
+    const subRes = await fetch(
+      `https://api.lemonsqueezy.com/v1/subscriptions/${activeSub.lemonSubscriptionId}`,
       {
         method: "GET",
         headers: {
@@ -697,34 +722,35 @@ export const getBillingPortalUrl = action({
       }
     );
 
-    if (!res.ok) {
-      const errorText: string = await res.text();
-      let errorDetails: any;
-      try {
-        errorDetails = JSON.parse(errorText);
-      } catch {
-        errorDetails = errorText;
-      }
-
+    if (!subRes.ok) {
+      const errText = await subRes.text();
       return {
         ok: false,
-        error: "Failed to get subscription details",
-        details: errorDetails,
+        error: "Failed to fetch subscription from Lemon",
+        details: errText ?? undefined,
       };
     }
 
-    const json = await res.json();
-    const customerPortalUrl =
-      json?.data?.attributes?.urls?.customer_portal ?? null;
+    const subJson = await subRes.json();
+    const urls = subJson?.data?.attributes?.urls ?? {};
 
-    if (!customerPortalUrl) {
+    // الدوكيومنت يقول customer_portal يحتوي على:
+    // https://your-store.lemonsqueezy.com/billing?user=...&expires=...&signature=...
+    const portalUrl = urls.customer_portal;
+
+    if (!portalUrl) {
       return {
         ok: false,
-        error: "Billing portal URL not available",
-        hint: "The subscription may not have a customer portal URL yet",
+        error: "Customer portal URL missing from Lemon API",
+        details: subJson?.data?.attributes?.urls?.customer_portal ?? undefined,
       };
     }
 
-    return { ok: true, url: customerPortalUrl };
+    return {
+      ok: true,
+      error: "",
+      url: portalUrl,
+      code: "CUSTOMER_PORTAL_URL_MISSING",
+    };
   },
 });

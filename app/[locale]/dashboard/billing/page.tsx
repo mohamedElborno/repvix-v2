@@ -13,7 +13,7 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { useQuery, useAction } from "convex/react";
+import { useQuery } from "convex/react";
 import { useOrganization } from "@clerk/nextjs";
 import { toast } from "sonner";
 
@@ -38,46 +38,14 @@ export default function BillingPage() {
     convexOrgId ? { organizationId: convexOrgId } : "skip"
   );
 
-  const getBillingPortalUrl = useAction(api.billing.getBillingPortalUrl);
-  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
-
-  const manageBilling = async () => {
-    if (!convexOrgId) {
-      toast.error("Error: Organization not found");
+  const manageBilling = () => {
+    // استخدام customerPortal URL من Lemon Squeezy
+    // هذا الرابط يحتوي على جميع خيارات إدارة الاشتراك (تغيير الخطة، الدفع، الإلغاء)
+    if (!sub?.customerPortal) {
+      toast.error("Billing portal URL not available");
       return;
     }
-
-    // محاولة استخدام customerPortal من قاعدة البيانات أولاً
-    if (sub?.customerPortal) {
-      window.location.href = sub.customerPortal;
-      return;
-    }
-
-    // إذا لم يكن متاحاً في قاعدة البيانات، نحصل عليه من API
-    setIsLoadingPortal(true);
-    try {
-      const result = await getBillingPortalUrl({
-        organizationId: convexOrgId,
-      });
-
-      if (!result.ok) {
-        toast.error(result.error || "Failed to get billing portal URL", {
-          description: result.hint,
-        });
-        return;
-      }
-
-      if (result.url) {
-        window.location.href = result.url;
-      } else {
-        toast.error("Billing portal URL not available");
-      }
-    } catch (err: any) {
-      console.error("Get billing portal error:", err);
-      toast.error(err.message || "Failed to get billing portal URL");
-    } finally {
-      setIsLoadingPortal(false);
-    }
+    window.location.href = sub.customerPortal;
   };
 
   const goToPricing = () => {
@@ -126,17 +94,9 @@ export default function BillingPage() {
                 </div>
                 <Button
                   onClick={manageBilling}
-                  disabled={isLoadingPortal}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                 >
-                  {isLoadingPortal ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    t("manageSubscription")
-                  )}
+                  {t("manageSubscription")}
                 </Button>
               </div>
             ) : (
@@ -243,17 +203,10 @@ export default function BillingPage() {
               <Button
                 onClick={manageBilling}
                 variant="outline"
-                disabled={isLoadingPortal}
+                disabled={!sub?.customerPortal}
                 className="w-full border-red-500/50 text-red-600 dark:text-red-400 hover:bg-red-500/10 disabled:opacity-50"
               >
-                {isLoadingPortal ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  t("cancelSubscription")
-                )}
+                {t("cancelSubscription")}
               </Button>
             </div>
 
