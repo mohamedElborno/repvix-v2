@@ -148,6 +148,91 @@
     "tryDifferentSearch": "Arama terimlerini değiştirerek tekrar dene",
     "uploadFirstChat": "İlk sohbetini yükleyerek içgörüler elde etmeye başla",
     "uploadNewChat": "Yeni Sohbet Yükle",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Çok negatif",
+        "negative": "Negatif",
+        "neutral": "Nötr",
+        "positive": "Pozitif",
+        "very_positive": "Çok pozitif"
+      },
+      "riskLevel": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      },
+      "primaryIntent": {
+        "complaint": "Şikayet",
+        "pre_sales_question": "Satış öncesi soru",
+        "technical_issue": "Teknik sorun",
+        "refund_request": "İade talebi",
+        "cancellation": "İptal",
+        "billing_issue": "Faturalama sorunu",
+        "account_issue": "Hesap sorunu",
+        "feedback": "Geri bildirim",
+        "timeline_confirmation": "Zaman çizelgesi onayı",
+        "other": "Diğer"
+      },
+      "salesStage": {
+        "none": "Yok",
+        "awareness": "Farkındalık",
+        "consideration": "Değerlendirme",
+        "decision": "Karar",
+        "post_purchase": "Satın alma sonrası"
+      },
+      "objection": {
+        "price": "Fiyat",
+        "features": "Özellikler",
+        "complexity": "Karmaşıklık",
+        "trust": "Güven",
+        "timing": "Zamanlama",
+        "other": "Diğer"
+      },
+      "rootCause": {
+        "product": "Ürün",
+        "policy": "Politika",
+        "billing": "Faturalama",
+        "ux": "Kullanıcı deneyimi",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Beklenti uyumsuzluğu",
+        "other": "Diğer"
+      },
+      "evidencePurpose": {
+        "frustration": "Hayal kırıklığı",
+        "satisfaction": "Memnuniyet",
+        "objection": "İtiraz",
+        "appreciation": "Takdir",
+        "threat": "Tehdit",
+        "other": "Diğer"
+      },
+      "severity": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek",
+        "critical": "Kritik"
+      },
+      "priority": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      },
+      "actionArea": {
+        "support_process": "Destek süreci",
+        "product": "Ürün",
+        "billing": "Faturalama",
+        "onboarding": "Onboarding",
+        "policy": "Politika",
+        "ux": "Kullanıcı deneyimi"
+      },
+      "outcomeStatus": {
+        "resolved": "Çözüldü",
+        "partially_resolved": "Kısmen çözüldü",
+        "unresolved": "Çözülmedi",
+        "escalated": "Yükseltildi",
+        "pending_customer": "Müşteri bekleniyor",
+        "pending_internal": "İç onay bekleniyor"
+      }
+    },
     "chatTitle": "Sohbet Başlığı",
     "chatTitlePlaceholder": "Bu sohbet için bir başlık gir...",
     "uploadFile": "Dosya Yükle",
@@ -164,6 +249,25 @@
     "delete": "Sil",
     "confirmDelete": "Silmeyi Onayla",
     "thisActionCannotBeUndone": "Bu işlem geri alınamaz. Sohbet ve tüm mesajlar kalıcı olarak silinecektir.",
+    "feedback": {
+      "title": "Geri bildiriminizi paylaşın",
+      "subtitle": "Nelerin iyi çalıştığını ve neyi geliştirebileceğimizi söyleyin.",
+      "category": "Kategori",
+      "categories": {
+        "bug": "Hata / sorun",
+        "idea": "Fikir / özellik isteği",
+        "praise": "Övgü",
+        "other": "Diğer"
+      },
+      "placeholderLabel": "Mesaj",
+      "placeholder": "Geri bildiriminizi buraya yazın...",
+      "submit": "Geri bildirim gönder",
+      "submitting": "Gönderiliyor...",
+      "success": "Teşekkürler! Geri bildiriminiz gönderildi.",
+      "error": "Geri bildirim gönderilemedi. Lütfen tekrar deneyin.",
+      "required": "Lütfen önce geri bildiriminizi yazın.",
+      "noOrg": "Geri bildirim göndermeden önce bir organizasyon oluşturun veya seçin"
+    },
     "chats": {
       "statusOpen": "Açık",
       "statusClosed": "Kapalı",
@@ -388,7 +492,20 @@
     "failedToImportChat": "Sohbet içe aktarılamadı",
     "failedToUploadChat": "Sohbet yüklenemedi",
     "count": "Sayı",
-    "score": "Puan"
+    "score": "Puan",
+    "downloadPdf": "PDF İndir",
+    "generatingPdf": "PDF oluşturuluyor...",
+    "pdfDownloaded": "PDF başarıyla indirildi",
+    "pdfError": "PDF oluşturulamadı",
+    "downloadMarkdown": "Markdown Dışa Aktar",
+    "downloadMarkdownSuccess": "Markdown dışa aktarıldı",
+    "exportMarkdownPlan": "Markdown dışa aktarmak için planınızı yükseltin",
+    "report": {
+      "agent": "Temsilci",
+      "score": "Skor",
+      "strengths": "Güçlü yönler",
+      "improvements": "İyileştirmeler"
+    }
   },
   "metadata": {
     "title": "Repvix – Müşteri Desteği ve Satış Ekipleri için Yapay Zekâ Sohbet Analizi | Çok Dilli İçgörüler",
@@ -405,6 +522,91 @@
     "analyzing": "Analiz Ediliyor",
     "analyzeChat": "Sohbeti Analiz Et",
     "analysis": "Analiz",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Çok negatif",
+        "negative": "Negatif",
+        "neutral": "Nötr",
+        "positive": "Pozitif",
+        "very_positive": "Çok pozitif"
+      },
+      "riskLevel": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      },
+      "primaryIntent": {
+        "complaint": "Şikayet",
+        "pre_sales_question": "Satış öncesi soru",
+        "technical_issue": "Teknik sorun",
+        "refund_request": "İade talebi",
+        "cancellation": "İptal",
+        "billing_issue": "Faturalama sorunu",
+        "account_issue": "Hesap sorunu",
+        "feedback": "Geri bildirim",
+        "timeline_confirmation": "Zaman çizelgesi onayı",
+        "other": "Diğer"
+      },
+      "salesStage": {
+        "none": "Yok",
+        "awareness": "Farkındalık",
+        "consideration": "Değerlendirme",
+        "decision": "Karar",
+        "post_purchase": "Satın alma sonrası"
+      },
+      "objection": {
+        "price": "Fiyat",
+        "features": "Özellikler",
+        "complexity": "Karmaşıklık",
+        "trust": "Güven",
+        "timing": "Zamanlama",
+        "other": "Diğer"
+      },
+      "rootCause": {
+        "product": "Ürün",
+        "policy": "Politika",
+        "billing": "Faturalama",
+        "ux": "Kullanıcı deneyimi",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Beklenti uyumsuzluğu",
+        "other": "Diğer"
+      },
+      "evidencePurpose": {
+        "frustration": "Hayal kırıklığı",
+        "satisfaction": "Memnuniyet",
+        "objection": "İtiraz",
+        "appreciation": "Takdir",
+        "threat": "Tehdit",
+        "other": "Diğer"
+      },
+      "severity": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek",
+        "critical": "Kritik"
+      },
+      "priority": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      },
+      "actionArea": {
+        "support_process": "Destek süreci",
+        "product": "Ürün",
+        "billing": "Faturalama",
+        "onboarding": "Onboarding",
+        "policy": "Politika",
+        "ux": "Kullanıcı deneyimi"
+      },
+      "outcomeStatus": {
+        "resolved": "Çözüldü",
+        "partially_resolved": "Kısmen çözüldü",
+        "unresolved": "Çözülmedi",
+        "escalated": "Yükseltildi",
+        "pending_customer": "Müşteri bekleniyor",
+        "pending_internal": "İç onay bekleniyor"
+      }
+    },
     "analysisOutcome": "Sonuç Özeti",
     "status": "Durum",
     "confidence": "Güven Düzeyi",

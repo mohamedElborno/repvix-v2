@@ -25,7 +25,7 @@ import {
 } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useLocale } from "next-intl";
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 import { toast } from "sonner";
 
 // Lazy load الرسوم البيانية لتحسين الأداء - تحميل فقط عند الحاجة
@@ -97,14 +97,19 @@ const SentimentDistribution = dynamic(
 export default function DashboardClient({
   initialChats,
 }: DashboardClientProps) {
-  const t = useTranslations("dashboard");
+  const locale = useLocale();
   const { user } = useUser();
+  const t = useTranslations("dashboard");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [kpiData, setKpiData] = useState<any>(null);
   const [isLoadingKPIs, setIsLoadingKPIs] = useState(true);
   const [useSemanticSearch, setUseSemanticSearch] = useState(false);
-  const locale = useLocale();
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackCategory, setFeedbackCategory] = useState<
+    "bug" | "idea" | "praise" | "other"
+  >("idea");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Get organizationId from initial chats
@@ -132,6 +137,7 @@ export default function DashboardClient({
   );
 
   const deleteChat = useMutation(api.chats.deleteChat);
+  const submitFeedback = useMutation(api.feedbacks.submitFeedback);
 
   // جلب جميع الرسائل لكل المحادثات للبحث النصي
   const chatIds = useMemo(() => safeChats.map((chat) => chat._id), [safeChats]);
@@ -395,6 +401,38 @@ export default function DashboardClient({
       );
     }
   };
+
+  const handleSubmitFeedback = async () => {
+    if (!organizationId) {
+      toast.error(
+        t("feedback.noOrg") ||
+          "Please create or select an organization before sending feedback"
+      );
+      return;
+    }
+
+    if (!feedbackMessage.trim()) {
+      toast.error(t("feedback.required") || "Please write your feedback first");
+      return;
+    }
+
+    setIsSubmittingFeedback(true);
+    try {
+      await submitFeedback({
+        organizationId,
+        message: feedbackMessage.trim(),
+        category: feedbackCategory,
+      });
+      setFeedbackMessage("");
+      setFeedbackCategory("idea");
+      toast.success(t("feedback.success") || "Thanks! Feedback sent.");
+    } catch (error: any) {
+      console.error("Error submitting feedback:", error);
+      toast.error(t("feedback.error") || "Failed to submit feedback");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
   return (
     <div className="min-h-[calc(100vh-120px)]">
       {/* Header with gradient background */}
@@ -569,6 +607,71 @@ export default function DashboardClient({
             </div> */}
           </div>
         ) : null}
+
+        {/* Feedback box */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-indigo-500/20 rounded-2xl blur-xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+          <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl border border-border dark:border-amber-500/30 p-4 sm:p-6">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="space-y-1">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                  {t("feedback.title")}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("feedback.subtitle")}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <label className="text-sm text-muted-foreground sm:w-32">
+                  {t("feedback.category")}
+                </label>
+                <select
+                  value={feedbackCategory}
+                  onChange={(e) =>
+                    setFeedbackCategory(
+                      e.target.value as "bug" | "idea" | "praise" | "other"
+                    )
+                  }
+                  className="w-full sm:flex-1 bg-muted/60 dark:bg-muted/40 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                >
+                  <option value="bug">{t("feedback.categories.bug")}</option>
+                  <option value="idea">{t("feedback.categories.idea")}</option>
+                  <option value="praise">
+                    {t("feedback.categories.praise")}
+                  </option>
+                  <option value="other">
+                    {t("feedback.categories.other")}
+                  </option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">
+                  {t("feedback.placeholderLabel")}
+                </label>
+                <textarea
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  rows={4}
+                  placeholder={t("feedback.placeholder")}
+                  className="w-full bg-muted/60 dark:bg-muted/40 border border-border rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSubmitFeedback}
+                  disabled={isSubmittingFeedback}
+                  className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground shadow-lg shadow-purple-500/30 transition-all duration-300"
+                >
+                  {isSubmittingFeedback
+                    ? t("feedback.submitting")
+                    : t("feedback.submit")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Chats List */}
         <div id="chats-section" className="relative group scroll-mt-24">

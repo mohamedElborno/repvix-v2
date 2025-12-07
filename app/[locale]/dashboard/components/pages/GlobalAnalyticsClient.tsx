@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useOrganization } from "@clerk/nextjs";
 import { useQuery, useAction } from "convex/react";
@@ -26,6 +26,7 @@ import {
   Shield,
   Zap,
   HelpCircle,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,55 +45,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-
-// Type based on schema.ts
-type GlobalAnalysis = {
-  _id: Id<"globalAnalyses">;
-  organizationId: Id<"organizations">;
-  analysisLanguage: string;
-  analysisVersion: string;
-  modelVersion?: string;
-  createdAt: number;
-  updatedAt: number;
-  overallSummary: string;
-  overallSentiment:
-    | "very_negative"
-    | "negative"
-    | "neutral"
-    | "positive"
-    | "very_positive";
-  customerSatisfactionScore?: number;
-  peakHours?: Array<{ hour: number; count: number }>;
-  commonTopics?: string[];
-  commonIssues?: string[];
-  riskScore?: number;
-  churnRiskLevel?: "low" | "medium" | "high";
-  agentLeaderboard?: Array<{
-    agentId: string;
-    score: number;
-    strengthSummary: string;
-    improvementSummary: string;
-  }>;
-  operationalInsights?: string[];
-  productInsights?: string[];
-  improvementActions?: Array<{
-    priority: "low" | "medium" | "high";
-    title: string;
-    description: string;
-  }>;
-  aiRawOutput?: any;
-  tokenInputCount?: number;
-  tokenOutputCount?: number;
-};
-
-const SENTIMENT_TREND_COLORS: Record<string, string> = {
-  تحسن: "#10b981",
-  تراجع: "#ef4444",
-  ثابت: "#6366f1",
-  improving: "#10b981",
-  declining: "#ef4444",
-  stable: "#6366f1",
-};
+import { GlobalAnalysisReport } from "../GlobalAnalysisReport";
+import { useExportMarkdown } from "../../hooks/useExportMarkdown";
+import type { GlobalAnalysis } from "../../types/dashboard";
 
 const CHART_COLORS = [
   "#8b5cf6",
@@ -104,63 +59,6 @@ const CHART_COLORS = [
   "#06b6d4",
 ];
 
-const EVIDENCE_TYPE_COLORS: Record<string, string> = {
-  frustration: "#ef4444",
-  appreciation: "#10b981",
-  objection: "#f59e0b",
-};
-
-// Helper function to format milliseconds
-function formatMs(ms?: number): string {
-  if (!ms) return "N/A";
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  if (hours > 0) {
-    return `${hours}h ${minutes % 60}m`;
-  }
-  if (minutes > 0) {
-    return `${minutes}m ${seconds % 60}s`;
-  }
-  return `${seconds}s`;
-}
-
-// Evidence Sample Component
-function EvidenceSample({
-  evidence,
-  index,
-}: {
-  evidence: { type: string; quote: string };
-  index: number;
-}) {
-  const color = EVIDENCE_TYPE_COLORS[evidence.type] || "#6366f1";
-  return (
-    <div className="group/item bg-zinc-900/50 rounded-xl p-4 border border-zinc-700/30 hover:border-purple-500/50 transition-all duration-300">
-      <div className="flex items-start gap-3">
-        <div
-          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5"
-          style={{ backgroundColor: color + "20", borderColor: color + "40" }}
-        >
-          <MessageSquare className="w-4 h-4" style={{ color }} />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span
-              className="text-xs font-semibold uppercase px-2 py-0.5 rounded"
-              style={{ backgroundColor: color + "20", color }}
-            >
-              {evidence.type}
-            </span>
-          </div>
-          <p className="text-gray-300 text-sm leading-relaxed break-words italic">
-            "{evidence.quote}"
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function GlobalAnalyticsClient() {
   const t = useTranslations("dashboard");
   const locale = useLocale();
@@ -169,6 +67,8 @@ export default function GlobalAnalyticsClient() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>(locale);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingFaqs, setIsGeneratingFaqs] = useState(false);
+  const analysisRef = useRef<HTMLDivElement>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Get convexOrgId from Clerk org ID
   const convexOrgId = useQuery(
@@ -195,6 +95,11 @@ export default function GlobalAnalyticsClient() {
   const hasAutoFaqs = useMemo(() => {
     const tier = (currentPlan?.planTier ?? "basic") as PlanTier;
     return limitsForTier(tier).features.autoFaqs;
+  }, [currentPlan?.planTier]);
+
+  const canExportMarkdown = useMemo(() => {
+    const tier = (currentPlan?.planTier ?? "basic") as PlanTier;
+    return limitsForTier(tier).exports.includes("md");
   }, [currentPlan?.planTier]);
 
   const analysis: GlobalAnalysis | null = latest?.analysis ?? null;
@@ -242,7 +147,10 @@ export default function GlobalAnalyticsClient() {
           | "hi"
           | "ja",
       });
-      if (result?.ok === false && result.code === "RATE_LIMIT_GLOBAL_ANALYSIS") {
+      if (
+        result?.ok === false &&
+        result.code === "RATE_LIMIT_GLOBAL_ANALYSIS"
+      ) {
         const hours = result.remainingHours ?? 24;
         toast.error(
           t("analysisRateLimit24h", { hours }) ||
@@ -433,6 +341,18 @@ export default function GlobalAnalyticsClient() {
       },
     } satisfies ChartConfig;
   }, [t]);
+
+  const handleDownloadPDF = () => {
+    window.print();
+  };
+
+  const handleDownloadMarkdown = useExportMarkdown({
+    analysis,
+    memberIdToName,
+    canExportMarkdown,
+    t,
+  });
+
   return (
     <div className="min-h-[calc(100vh-110px)]">
       {/* Header */}
@@ -455,16 +375,33 @@ export default function GlobalAnalyticsClient() {
             </div>
             <div className="flex items-center gap-3">
               {analysis && (
-                <Button
-                  onClick={() => handleGenerate(true)}
-                  disabled={isGenerating}
-                  className="group relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 mr-2 ${isGenerating ? "animate-spin" : ""} group-hover:rotate-180 transition-transform duration-500`}
-                  />
-                  {t("regenerate") || "Regenerate"}
-                </Button>
+                <>
+                  <Button
+                    onClick={handleDownloadPDF}
+                    className="group relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {t("downloadPdf") || "Download PDF"}
+                  </Button>
+                  <Button
+                    onClick={handleDownloadMarkdown}
+                    disabled={!canExportMarkdown}
+                    className="group relative bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-lg shadow-emerald-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/40 disabled:opacity-60"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {t("downloadMarkdown") || "Export Markdown"}
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerate(true)}
+                    disabled={isGenerating}
+                    className="group relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 ${isGenerating ? "animate-spin" : ""} group-hover:rotate-180 transition-transform duration-500`}
+                    />
+                    {t("regenerate") || "Regenerate"}
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -514,7 +451,10 @@ export default function GlobalAnalyticsClient() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4 sm:space-y-6 md:space-y-8">
+          <div
+            ref={analysisRef}
+            className="space-y-4 sm:space-y-6 md:space-y-8 p-1"
+          >
             {/* Executive Summary */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600/20 via-amber-500/10 to-yellow-600/20 dark:from-yellow-600/30 dark:via-amber-500/20 dark:to-yellow-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
@@ -1168,6 +1108,14 @@ export default function GlobalAnalyticsClient() {
                 </span>
               </div>
             </div>
+            {/* Printable Report Template - Hidden from view but used for PDF generation */}
+            {analysis && (
+              <GlobalAnalysisReport
+                ref={reportRef}
+                analysis={analysis}
+                memberIdToName={memberIdToName}
+              />
+            )}
           </div>
         )}
       </div>
@@ -1228,7 +1176,9 @@ export default function GlobalAnalyticsClient() {
   );
 }
 
-function parseError(error: unknown): { code?: string; [key: string]: any } | null {
+function parseError(
+  error: unknown
+): { code?: string; [key: string]: any } | null {
   if (error instanceof Error && typeof error.message === "string") {
     try {
       return JSON.parse(error.message);

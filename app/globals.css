@@ -200,3 +200,27 @@
 .PhoneInputCountrySelect:focus {
   outline: none !important;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-only,
+  .print-only * {
+    visibility: visible;
+  }
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white;
+    z-index: 9999;
+  }
+  @page {
+    margin: 0;
+    size: auto;
+  }
+}

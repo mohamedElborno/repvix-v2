@@ -165,6 +165,91 @@
     "tryDifferentSearch": "अपनी खोज शर्तें बदलने का प्रयास करें",
     "uploadFirstChat": "अपनी पहली चैट अपलोड करके अंतर्दृष्टियाँ प्राप्त करना शुरू करें",
     "uploadNewChat": "नई चैट अपलोड करें",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "अत्यंत नकारात्मक",
+        "negative": "नकारात्मक",
+        "neutral": "तटस्थ",
+        "positive": "सकारात्मक",
+        "very_positive": "अत्यंत सकारात्मक"
+      },
+      "riskLevel": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च"
+      },
+      "primaryIntent": {
+        "complaint": "शिकायत",
+        "pre_sales_question": "खरीद से पहले प्रश्न",
+        "technical_issue": "तकनीकी समस्या",
+        "refund_request": "रिफंड अनुरोध",
+        "cancellation": "रद्द करना",
+        "billing_issue": "बिलिंग समस्या",
+        "account_issue": "खाता समस्या",
+        "feedback": "प्रतिक्रिया",
+        "timeline_confirmation": "समय-सीमा की पुष्टि",
+        "other": "अन्य"
+      },
+      "salesStage": {
+        "none": "कोई नहीं",
+        "awareness": "जागरूकता",
+        "consideration": "विचार",
+        "decision": "निर्णय",
+        "post_purchase": "खरीद के बाद"
+      },
+      "objection": {
+        "price": "कीमत",
+        "features": "विशेषताएँ",
+        "complexity": "जटिलता",
+        "trust": "विश्वास",
+        "timing": "समय",
+        "other": "अन्य"
+      },
+      "rootCause": {
+        "product": "उत्पाद",
+        "policy": "नीति",
+        "billing": "बिलिंग",
+        "ux": "उपयोगकर्ता अनुभव",
+        "onboarding": "ऑनबोर्डिंग",
+        "expectation_mismatch": "अपेक्षा असंगति",
+        "other": "अन्य"
+      },
+      "evidencePurpose": {
+        "frustration": "हताशा",
+        "satisfaction": "संतुष्टि",
+        "objection": "आपत्ति",
+        "appreciation": "प्रशंसा",
+        "threat": "धमकी",
+        "other": "अन्य"
+      },
+      "severity": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च",
+        "critical": "गंभीर"
+      },
+      "priority": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च"
+      },
+      "actionArea": {
+        "support_process": "सपोर्ट प्रक्रिया",
+        "product": "उत्पाद",
+        "billing": "बिलिंग",
+        "onboarding": "ऑनबोर्डिंग",
+        "policy": "नीति",
+        "ux": "उपयोगकर्ता अनुभव"
+      },
+      "outcomeStatus": {
+        "resolved": "सुलझा",
+        "partially_resolved": "आंशिक रूप से सुलझा",
+        "unresolved": "सुलझा नहीं",
+        "escalated": "एस्कलेटेड",
+        "pending_customer": "ग्राहक से लंबित",
+        "pending_internal": "आंतरिक रूप से लंबित"
+      }
+    },
     "chatTitle": "चैट शीर्षक",
     "chatTitlePlaceholder": "इस चैट के लिए एक शीर्षक दर्ज करें...",
     "uploadFile": "फ़ाइल अपलोड करें",
@@ -181,6 +266,25 @@
     "delete": "हटाएँ",
     "confirmDelete": "हटाने की पुष्टि करें",
     "thisActionCannotBeUndone": "यह क्रिया वापस नहीं ली जा सकती। चैट स्थायी रूप से हटा दी जाएगी।",
+    "feedback": {
+      "title": "अपना फीडबैक साझा करें",
+      "subtitle": "हमें बताएं क्या अच्छा काम कर रहा है और क्या सुधारें।",
+      "category": "श्रेणी",
+      "categories": {
+        "bug": "त्रुटि / समस्या",
+        "idea": "विचार / सुविधा अनुरोध",
+        "praise": "प्रशंसा",
+        "other": "अन्य"
+      },
+      "placeholderLabel": "संदेश",
+      "placeholder": "अपना फीडबैक यहाँ लिखें...",
+      "submit": "फीडबैक भेजें",
+      "submitting": "भेजा जा रहा है...",
+      "success": "धन्यवाद! आपका फीडबैक भेजा गया।",
+      "error": "फीडबैक नहीं भेज सके, कृपया फिर से कोशिश करें।",
+      "required": "कृपया पहले अपना फीडबैक लिखें।",
+      "noOrg": "फीडबैक भेजने से पहले कोई संगठन बनाएँ या चुनें।"
+    },
     "chats": {
       "statusOpen": "खुला",
       "statusClosed": "बंद",
@@ -405,7 +509,20 @@
     "failedToImportChat": "चैट आयात करने में विफल",
     "failedToUploadChat": "चैट अपलोड करने में विफल",
     "count": "गिनती",
-    "score": "स्कोर"
+    "score": "स्कोर",
+    "downloadPdf": "PDF डाउनलोड करें",
+    "generatingPdf": "PDF तैयार हो रहा है...",
+    "pdfDownloaded": "PDF सफलतापूर्वक डाउनलोड हुआ",
+    "pdfError": "PDF बनाने में विफल",
+    "downloadMarkdown": "Markdown निर्यात करें",
+    "downloadMarkdownSuccess": "Markdown निर्यात हो गया",
+    "exportMarkdownPlan": "Markdown निर्यात करने के लिए अपनी योजना उन्नत करें",
+    "report": {
+      "agent": "एजेंट",
+      "score": "स्कोर",
+      "strengths": "मजबूत पक्ष",
+      "improvements": "सुधार"
+    }
   },
   "metadata": {
     "title": "Repvix – ग्राहक सहायता और बिक्री टीमों के लिए एआई चैट विश्लेषण | बहुभाषी वार्तालाप अंतर्दृष्टि",
@@ -431,6 +548,91 @@
     "analyzing": "विश्लेषण जारी है",
     "analyzeChat": "चैट का विश्लेषण करें",
     "analysis": "विश्लेषण",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "अत्यंत नकारात्मक",
+        "negative": "नकारात्मक",
+        "neutral": "तटस्थ",
+        "positive": "सकारात्मक",
+        "very_positive": "अत्यंत सकारात्मक"
+      },
+      "riskLevel": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च"
+      },
+      "primaryIntent": {
+        "complaint": "शिकायत",
+        "pre_sales_question": "खरीद से पहले प्रश्न",
+        "technical_issue": "तकनीकी समस्या",
+        "refund_request": "रिफंड अनुरोध",
+        "cancellation": "रद्द करना",
+        "billing_issue": "बिलिंग समस्या",
+        "account_issue": "खाता समस्या",
+        "feedback": "प्रतिक्रिया",
+        "timeline_confirmation": "समय-सीमा की पुष्टि",
+        "other": "अन्य"
+      },
+      "salesStage": {
+        "none": "कोई नहीं",
+        "awareness": "जागरूकता",
+        "consideration": "विचार",
+        "decision": "निर्णय",
+        "post_purchase": "खरीद के बाद"
+      },
+      "objection": {
+        "price": "कीमत",
+        "features": "विशेषताएँ",
+        "complexity": "जटिलता",
+        "trust": "विश्वास",
+        "timing": "समय",
+        "other": "अन्य"
+      },
+      "rootCause": {
+        "product": "उत्पाद",
+        "policy": "नीति",
+        "billing": "बिलिंग",
+        "ux": "उपयोगकर्ता अनुभव",
+        "onboarding": "ऑनबोर्डिंग",
+        "expectation_mismatch": "अपेक्षा असंगति",
+        "other": "अन्य"
+      },
+      "evidencePurpose": {
+        "frustration": "हताशा",
+        "satisfaction": "संतुष्टि",
+        "objection": "आपत्ति",
+        "appreciation": "प्रशंसा",
+        "threat": "धमकी",
+        "other": "अन्य"
+      },
+      "severity": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च",
+        "critical": "गंभीर"
+      },
+      "priority": {
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च"
+      },
+      "actionArea": {
+        "support_process": "सपोर्ट प्रक्रिया",
+        "product": "उत्पाद",
+        "billing": "बिलिंग",
+        "onboarding": "ऑनबोर्डिंग",
+        "policy": "नीति",
+        "ux": "उपयोगकर्ता अनुभव"
+      },
+      "outcomeStatus": {
+        "resolved": "सुलझा",
+        "partially_resolved": "आंशिक रूप से सुलझा",
+        "unresolved": "सुलझा नहीं",
+        "escalated": "एस्कलेटेड",
+        "pending_customer": "ग्राहक से लंबित",
+        "pending_internal": "आंतरिक रूप से लंबित"
+      }
+    },
     "analysisOutcome": "परिणाम सारांश",
     "status": "स्थिति",
     "confidence": "विश्वास स्तर",

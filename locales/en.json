@@ -165,6 +165,91 @@
     "tryDifferentSearch": "Try adjusting your search terms",
     "uploadFirstChat": "Start by uploading your first chat conversation to get insights",
     "uploadNewChat": "Upload New Chat",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Very negative",
+        "negative": "Negative",
+        "neutral": "Neutral",
+        "positive": "Positive",
+        "very_positive": "Very positive"
+      },
+      "riskLevel": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "primaryIntent": {
+        "complaint": "Complaint",
+        "pre_sales_question": "Pre-sales question",
+        "technical_issue": "Technical issue",
+        "refund_request": "Refund request",
+        "cancellation": "Cancellation",
+        "billing_issue": "Billing issue",
+        "account_issue": "Account issue",
+        "feedback": "Feedback",
+        "timeline_confirmation": "Timeline confirmation",
+        "other": "Other"
+      },
+      "salesStage": {
+        "none": "None",
+        "awareness": "Awareness",
+        "consideration": "Consideration",
+        "decision": "Decision",
+        "post_purchase": "Post-purchase"
+      },
+      "objection": {
+        "price": "Price",
+        "features": "Features",
+        "complexity": "Complexity",
+        "trust": "Trust",
+        "timing": "Timing",
+        "other": "Other"
+      },
+      "rootCause": {
+        "product": "Product",
+        "policy": "Policy",
+        "billing": "Billing",
+        "ux": "UX / usability",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Expectation mismatch",
+        "other": "Other"
+      },
+      "evidencePurpose": {
+        "frustration": "Frustration",
+        "satisfaction": "Satisfaction",
+        "objection": "Objection",
+        "appreciation": "Appreciation",
+        "threat": "Threat",
+        "other": "Other"
+      },
+      "severity": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "actionArea": {
+        "support_process": "Support process",
+        "product": "Product",
+        "billing": "Billing",
+        "onboarding": "Onboarding",
+        "policy": "Policy",
+        "ux": "UX / usability"
+      },
+      "outcomeStatus": {
+        "resolved": "Resolved",
+        "partially_resolved": "Partially resolved",
+        "unresolved": "Unresolved",
+        "escalated": "Escalated",
+        "pending_customer": "Pending customer",
+        "pending_internal": "Pending internal"
+      }
+    },
     "chatTitle": "Chat Title",
     "chatTitlePlaceholder": "Enter a title for this chat...",
     "uploadFile": "Upload File",
@@ -181,6 +266,25 @@
     "delete": "Delete",
     "confirmDelete": "Confirm Delete",
     "thisActionCannotBeUndone": "This action cannot be undone. The chat and all its messages will be permanently deleted.",
+    "feedback": {
+      "title": "Share your feedback",
+      "subtitle": "Tell us what is working well and what we should improve.",
+      "category": "Category",
+      "categories": {
+        "bug": "Bug / Issue",
+        "idea": "Idea / Feature request",
+        "praise": "Praise",
+        "other": "Other"
+      },
+      "placeholderLabel": "Message",
+      "placeholder": "Write your feedback here...",
+      "submit": "Send feedback",
+      "submitting": "Sending...",
+      "success": "Thanks! Your feedback was sent.",
+      "error": "Could not send feedback. Please try again.",
+      "required": "Please write your feedback first.",
+      "noOrg": "Please create or select an organization before sending feedback"
+    },
     "chats": {
       "statusOpen": "Open",
       "statusClosed": "Closed",
@@ -405,7 +509,20 @@
     "failedToImportChat": "Failed to import chat",
     "failedToUploadChat": "Failed to upload chat",
     "count": "Count",
-    "score": "Score"
+    "score": "Score",
+    "downloadPdf": "Download PDF",
+    "generatingPdf": "Generating PDF...",
+    "pdfDownloaded": "PDF downloaded successfully",
+    "pdfError": "Failed to generate PDF",
+    "downloadMarkdown": "Export Markdown",
+    "downloadMarkdownSuccess": "Markdown exported",
+    "exportMarkdownPlan": "Upgrade your plan to export Markdown",
+    "report": {
+      "agent": "Agent",
+      "score": "Score",
+      "strengths": "Strengths",
+      "improvements": "Improvements"
+    }
   },
   "metadata": {
     "title": "Repvix – AI Chat Analysis for Customer Support & Sales Teams | Multilingual Conversation Insights",
@@ -431,6 +548,91 @@
     "analyzing": "Analyzing",
     "analyzeChat": "Analyze Chat",
     "analysis": "Analysis",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Very negative",
+        "negative": "Negative",
+        "neutral": "Neutral",
+        "positive": "Positive",
+        "very_positive": "Very positive"
+      },
+      "riskLevel": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "primaryIntent": {
+        "complaint": "Complaint",
+        "pre_sales_question": "Pre-sales question",
+        "technical_issue": "Technical issue",
+        "refund_request": "Refund request",
+        "cancellation": "Cancellation",
+        "billing_issue": "Billing issue",
+        "account_issue": "Account issue",
+        "feedback": "Feedback",
+        "timeline_confirmation": "Timeline confirmation",
+        "other": "Other"
+      },
+      "salesStage": {
+        "none": "None",
+        "awareness": "Awareness",
+        "consideration": "Consideration",
+        "decision": "Decision",
+        "post_purchase": "Post-purchase"
+      },
+      "objection": {
+        "price": "Price",
+        "features": "Features",
+        "complexity": "Complexity",
+        "trust": "Trust",
+        "timing": "Timing",
+        "other": "Other"
+      },
+      "rootCause": {
+        "product": "Product",
+        "policy": "Policy",
+        "billing": "Billing",
+        "ux": "UX / usability",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Expectation mismatch",
+        "other": "Other"
+      },
+      "evidencePurpose": {
+        "frustration": "Frustration",
+        "satisfaction": "Satisfaction",
+        "objection": "Objection",
+        "appreciation": "Appreciation",
+        "threat": "Threat",
+        "other": "Other"
+      },
+      "severity": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "actionArea": {
+        "support_process": "Support process",
+        "product": "Product",
+        "billing": "Billing",
+        "onboarding": "Onboarding",
+        "policy": "Policy",
+        "ux": "UX / usability"
+      },
+      "outcomeStatus": {
+        "resolved": "Resolved",
+        "partially_resolved": "Partially resolved",
+        "unresolved": "Unresolved",
+        "escalated": "Escalated",
+        "pending_customer": "Pending customer",
+        "pending_internal": "Pending internal"
+      }
+    },
     "analysisOutcome": "Outcome Summary",
     "status": "Status",
     "confidence": "Confidence",
@@ -603,8 +805,7 @@
       "errors": {
         "notSignedIn": "Please sign in first.",
         "deleteFailed": "Failed to delete account. Please try again.",
-        "reverifyNeeded":
-          "Additional verification is required. Complete the security check, then retry."
+        "reverifyNeeded": "Additional verification is required. Complete the security check, then retry."
       }
     },
     "deleteEverything": {
@@ -617,8 +818,7 @@
       "success": "Organization and account deleted successfully.",
       "errors": {
         "deleteFailed": "Failed to delete organization and account. Please try again.",
-        "reverifyNeeded":
-          "Additional verification is required. Complete the security check, then retry."
+        "reverifyNeeded": "Additional verification is required. Complete the security check, then retry."
       }
     }
   },

@@ -26,6 +26,7 @@ export default function SentimentDistribution({
 }: SentimentDistributionProps) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
+  const sideBorderClass = locale === "ar" ? "md:border-r" : "md:border-l";
   // Colors that match the site theme (purple, pink, blue, orange palette)
   const colors = {
     positive: "hsl(142, 71%, 45%)", // Emerald green - matches positive sentiment
@@ -122,7 +123,7 @@ export default function SentimentDistribution({
   }, [percentages]);
 
   return (
-    <Card className="border-border bg-card flex flex-row h-[500px]">
+    <Card className="border-border bg-card flex flex-col md:flex-row h-auto md:h-[500px]">
       <div className="flex-1 flex flex-col p-4 md:p-5">
         <div className="flex items-center gap-3 mb-5 sm:mb-6">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 flex items-center justify-center">
@@ -136,7 +137,7 @@ export default function SentimentDistribution({
           {total > 0 ? (
             <ChartContainer
               config={chartConfig}
-              className="w-full h-full max-h-[300px] max-w-[300px]"
+              className="w-full h-[260px] md:h-full max-h-[340px] md:max-h-[300px] max-w-full md:max-w-[320px]"
             >
               <PieChart>
                 <ChartTooltip
@@ -191,7 +192,7 @@ export default function SentimentDistribution({
       </div>
       {total > 0 && (
         <div
-          className={`w-[200px] md:w-[240px] p-4 md:p-5 border-l border-border flex flex-col justify-center gap-3 ${locale === "ar" ? "border-r" : "border-l"}`}
+          className={`w-full md:w-[240px] p-4 md:p-5 border-t md:border-t-0 ${sideBorderClass} border-border flex flex-col justify-center gap-3 mt-4 md:mt-0`}
         >
           {chartData.map((item) => {
             const percentage = percentages[item.sentiment] || 0;

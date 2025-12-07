@@ -20,6 +20,7 @@ import type * as chats from "../chats.js";
 import type * as crons from "../crons.js";
 import type * as faqs from "../faqs.js";
 import type * as featureGate from "../featureGate.js";
+import type * as feedbacks from "../feedbacks.js";
 import type * as globalAnalysis from "../globalAnalysis.js";
 import type * as globalChatAnalysis from "../globalChatAnalysis.js";
 import type * as http from "../http.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   faqs: typeof faqs;
   featureGate: typeof featureGate;
+  feedbacks: typeof feedbacks;
   globalAnalysis: typeof globalAnalysis;
   globalChatAnalysis: typeof globalChatAnalysis;
   http: typeof http;

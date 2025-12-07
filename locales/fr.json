@@ -179,6 +179,91 @@
     "tryDifferentSearch": "Essayez de modifier vos termes de recherche",
     "uploadFirstChat": "Commencez par importer votre première conversation pour obtenir des insights",
     "uploadNewChat": "Importer une nouvelle conversation",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Très négatif",
+        "negative": "Négatif",
+        "neutral": "Neutre",
+        "positive": "Positif",
+        "very_positive": "Très positif"
+      },
+      "riskLevel": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé"
+      },
+      "primaryIntent": {
+        "complaint": "Plainte",
+        "pre_sales_question": "Question pré-vente",
+        "technical_issue": "Problème technique",
+        "refund_request": "Demande de remboursement",
+        "cancellation": "Annulation",
+        "billing_issue": "Problème de facturation",
+        "account_issue": "Problème de compte",
+        "feedback": "Retour / feedback",
+        "timeline_confirmation": "Confirmation du délai",
+        "other": "Autre"
+      },
+      "salesStage": {
+        "none": "Aucun",
+        "awareness": "Sensibilisation",
+        "consideration": "Considération",
+        "decision": "Décision",
+        "post_purchase": "Post-achat"
+      },
+      "objection": {
+        "price": "Prix",
+        "features": "Fonctionnalités",
+        "complexity": "Complexité",
+        "trust": "Confiance",
+        "timing": "Calendrier",
+        "other": "Autre"
+      },
+      "rootCause": {
+        "product": "Produit",
+        "policy": "Politique",
+        "billing": "Facturation",
+        "ux": "Expérience utilisateur",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Décalage des attentes",
+        "other": "Autre"
+      },
+      "evidencePurpose": {
+        "frustration": "Frustration",
+        "satisfaction": "Satisfaction",
+        "objection": "Objection",
+        "appreciation": "Appréciation",
+        "threat": "Menace",
+        "other": "Autre"
+      },
+      "severity": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé",
+        "critical": "Critique"
+      },
+      "priority": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé"
+      },
+      "actionArea": {
+        "support_process": "Processus de support",
+        "product": "Produit",
+        "billing": "Facturation",
+        "onboarding": "Onboarding",
+        "policy": "Politique",
+        "ux": "Expérience utilisateur"
+      },
+      "outcomeStatus": {
+        "resolved": "Résolu",
+        "partially_resolved": "Partiellement résolu",
+        "unresolved": "Non résolu",
+        "escalated": "Escaladé",
+        "pending_customer": "En attente client",
+        "pending_internal": "En attente interne"
+      }
+    },
     "chatTitle": "Titre de la conversation",
     "chatTitlePlaceholder": "Entrez un titre pour cette conversation...",
     "uploadFile": "Téléverser un fichier",
@@ -195,6 +280,25 @@
     "delete": "Supprimer",
     "confirmDelete": "Confirmer la suppression",
     "thisActionCannotBeUndone": "Cette action est irréversible. La conversation et tous ses messages seront définitivement supprimés.",
+    "feedback": {
+      "title": "Partager votre retour",
+      "subtitle": "Dites-nous ce qui fonctionne et ce que nous pouvons améliorer.",
+      "category": "Catégorie",
+      "categories": {
+        "bug": "Bug / problème",
+        "idea": "Idée / demande de fonctionnalité",
+        "praise": "Compliment",
+        "other": "Autre"
+      },
+      "placeholderLabel": "Message",
+      "placeholder": "Écrivez votre retour ici...",
+      "submit": "Envoyer le retour",
+      "submitting": "Envoi...",
+      "success": "Merci ! Votre retour a été envoyé.",
+      "error": "Impossible d'envoyer le retour. Réessayez.",
+      "required": "Veuillez écrire votre retour d'abord.",
+      "noOrg": "Veuillez créer ou sélectionner une organisation avant d'envoyer un retour"
+    },
     "chats": {
       "statusOpen": "Ouverte",
       "statusClosed": "Fermée",
@@ -419,7 +523,20 @@
     "failedToImportChat": "Échec de l'importation de la conversation",
     "failedToUploadChat": "Échec du téléversement de la conversation",
     "count": "Nombre",
-    "score": "Score"
+    "score": "Score",
+    "downloadPdf": "Télécharger le PDF",
+    "generatingPdf": "Génération du PDF...",
+    "pdfDownloaded": "PDF téléchargé avec succès",
+    "pdfError": "Échec de génération du PDF",
+    "downloadMarkdown": "Exporter en Markdown",
+    "downloadMarkdownSuccess": "Markdown exporté",
+    "exportMarkdownPlan": "Améliorez votre plan pour exporter en Markdown",
+    "report": {
+      "agent": "Agent",
+      "score": "Score",
+      "strengths": "Points forts",
+      "improvements": "Axes d'amélioration"
+    }
   },
   "chat": {
     "back": "Retour",
@@ -431,6 +548,91 @@
     "analyzing": "Analyse en cours",
     "analyzeChat": "Analyser la conversation",
     "analysis": "Analyse",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Très négatif",
+        "negative": "Négatif",
+        "neutral": "Neutre",
+        "positive": "Positif",
+        "very_positive": "Très positif"
+      },
+      "riskLevel": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé"
+      },
+      "primaryIntent": {
+        "complaint": "Plainte",
+        "pre_sales_question": "Question pré-vente",
+        "technical_issue": "Problème technique",
+        "refund_request": "Demande de remboursement",
+        "cancellation": "Annulation",
+        "billing_issue": "Problème de facturation",
+        "account_issue": "Problème de compte",
+        "feedback": "Retour / feedback",
+        "timeline_confirmation": "Confirmation du délai",
+        "other": "Autre"
+      },
+      "salesStage": {
+        "none": "Aucun",
+        "awareness": "Sensibilisation",
+        "consideration": "Considération",
+        "decision": "Décision",
+        "post_purchase": "Post-achat"
+      },
+      "objection": {
+        "price": "Prix",
+        "features": "Fonctionnalités",
+        "complexity": "Complexité",
+        "trust": "Confiance",
+        "timing": "Calendrier",
+        "other": "Autre"
+      },
+      "rootCause": {
+        "product": "Produit",
+        "policy": "Politique",
+        "billing": "Facturation",
+        "ux": "Expérience utilisateur",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Décalage des attentes",
+        "other": "Autre"
+      },
+      "evidencePurpose": {
+        "frustration": "Frustration",
+        "satisfaction": "Satisfaction",
+        "objection": "Objection",
+        "appreciation": "Appréciation",
+        "threat": "Menace",
+        "other": "Autre"
+      },
+      "severity": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé",
+        "critical": "Critique"
+      },
+      "priority": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé"
+      },
+      "actionArea": {
+        "support_process": "Processus de support",
+        "product": "Produit",
+        "billing": "Facturation",
+        "onboarding": "Onboarding",
+        "policy": "Politique",
+        "ux": "Expérience utilisateur"
+      },
+      "outcomeStatus": {
+        "resolved": "Résolu",
+        "partially_resolved": "Partiellement résolu",
+        "unresolved": "Non résolu",
+        "escalated": "Escaladé",
+        "pending_customer": "En attente client",
+        "pending_internal": "En attente interne"
+      }
+    },
     "analysisOutcome": "Résumé des résultats",
     "status": "Statut",
     "confidence": "Confiance",

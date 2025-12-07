@@ -661,6 +661,26 @@ export default defineSchema({
     .index("by_question", ["question"]),
 
   // =============================
+  // Feedback
+  // =============================
+  feedbacks: defineTable({
+    organizationId: v.optional(v.id("organizations")),
+    clerkUserId: v.string(),
+    email: v.optional(v.string()),
+    message: v.string(),
+    category: v.union(
+      v.literal("bug"),
+      v.literal("idea"),
+      v.literal("praise"),
+      v.literal("other")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_user", ["clerkUserId"])
+    .index("by_org_created", ["organizationId", "createdAt"]),
+
+  // =============================
   // Profiles (optional - if you want to store user profiles)
   // =============================
   profiles: defineTable({

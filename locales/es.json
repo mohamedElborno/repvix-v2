@@ -179,6 +179,91 @@
     "tryDifferentSearch": "Prueba con otros términos de búsqueda",
     "uploadFirstChat": "Comienza subiendo tu primera conversación para obtener análisis",
     "uploadNewChat": "Subir Nuevo Chat",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Muy negativo",
+        "negative": "Negativo",
+        "neutral": "Neutral",
+        "positive": "Positivo",
+        "very_positive": "Muy positivo"
+      },
+      "riskLevel": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto"
+      },
+      "primaryIntent": {
+        "complaint": "Queja",
+        "pre_sales_question": "Pregunta pre-venta",
+        "technical_issue": "Problema técnico",
+        "refund_request": "Solicitud de reembolso",
+        "cancellation": "Cancelación",
+        "billing_issue": "Problema de facturación",
+        "account_issue": "Problema de cuenta",
+        "feedback": "Comentarios",
+        "timeline_confirmation": "Confirmación de plazos",
+        "other": "Otro"
+      },
+      "salesStage": {
+        "none": "Ninguno",
+        "awareness": "Conocimiento",
+        "consideration": "Consideración",
+        "decision": "Decisión",
+        "post_purchase": "Post-compra"
+      },
+      "objection": {
+        "price": "Precio",
+        "features": "Funciones",
+        "complexity": "Complejidad",
+        "trust": "Confianza",
+        "timing": "Plazos",
+        "other": "Otro"
+      },
+      "rootCause": {
+        "product": "Producto",
+        "policy": "Política",
+        "billing": "Facturación",
+        "ux": "Experiencia de usuario",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Desajuste de expectativas",
+        "other": "Otro"
+      },
+      "evidencePurpose": {
+        "frustration": "Frustración",
+        "satisfaction": "Satisfacción",
+        "objection": "Objeción",
+        "appreciation": "Agradecimiento",
+        "threat": "Amenaza",
+        "other": "Otro"
+      },
+      "severity": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto",
+        "critical": "Crítico"
+      },
+      "priority": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto"
+      },
+      "actionArea": {
+        "support_process": "Proceso de soporte",
+        "product": "Producto",
+        "billing": "Facturación",
+        "onboarding": "Onboarding",
+        "policy": "Política",
+        "ux": "Experiencia de usuario"
+      },
+      "outcomeStatus": {
+        "resolved": "Resuelto",
+        "partially_resolved": "Parcialmente resuelto",
+        "unresolved": "No resuelto",
+        "escalated": "Escalado",
+        "pending_customer": "Pendiente del cliente",
+        "pending_internal": "Pendiente interno"
+      }
+    },
     "chatTitle": "Título del Chat",
     "chatTitlePlaceholder": "Introduce un título para este chat...",
     "uploadFile": "Subir Archivo",
@@ -195,6 +280,25 @@
     "delete": "Eliminar",
     "confirmDelete": "Confirmar eliminación",
     "thisActionCannotBeUndone": "Esta acción no se puede deshacer. El chat y todos sus mensajes serán eliminados permanentemente.",
+    "feedback": {
+      "title": "Comparte tu feedback",
+      "subtitle": "Cuéntanos qué funciona y qué podemos mejorar.",
+      "category": "Categoría",
+      "categories": {
+        "bug": "Error / problema",
+        "idea": "Idea / solicitud de función",
+        "praise": "Agradecimiento",
+        "other": "Otro"
+      },
+      "placeholderLabel": "Mensaje",
+      "placeholder": "Escribe tu feedback aquí...",
+      "submit": "Enviar feedback",
+      "submitting": "Enviando...",
+      "success": "¡Gracias! Tu feedback fue enviado.",
+      "error": "No pudimos enviar el feedback. Inténtalo de nuevo.",
+      "required": "Por favor escribe tu feedback primero.",
+      "noOrg": "Crea o selecciona una organización antes de enviar feedback"
+    },
     "chats": {
       "statusOpen": "Abierto",
       "statusClosed": "Cerrado",
@@ -419,7 +523,20 @@
     "failedToImportChat": "Error al importar la conversación",
     "failedToUploadChat": "Error al subir la conversación",
     "count": "Cantidad",
-    "score": "Puntuación"
+    "score": "Puntuación",
+    "downloadPdf": "Descargar PDF",
+    "generatingPdf": "Generando PDF...",
+    "pdfDownloaded": "PDF descargado con éxito",
+    "pdfError": "Error al generar PDF",
+    "downloadMarkdown": "Exportar Markdown",
+    "downloadMarkdownSuccess": "Markdown exportado",
+    "exportMarkdownPlan": "Mejora tu plan para exportar Markdown",
+    "report": {
+      "agent": "Agente",
+      "score": "Puntuación",
+      "strengths": "Fortalezas",
+      "improvements": "Mejoras"
+    }
   },
   "chat": {
     "back": "Volver",
@@ -431,6 +548,91 @@
     "analyzing": "Analizando",
     "analyzeChat": "Analizar Chat",
     "analysis": "Análisis",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "Muy negativo",
+        "negative": "Negativo",
+        "neutral": "Neutral",
+        "positive": "Positivo",
+        "very_positive": "Muy positivo"
+      },
+      "riskLevel": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto"
+      },
+      "primaryIntent": {
+        "complaint": "Queja",
+        "pre_sales_question": "Pregunta pre-venta",
+        "technical_issue": "Problema técnico",
+        "refund_request": "Solicitud de reembolso",
+        "cancellation": "Cancelación",
+        "billing_issue": "Problema de facturación",
+        "account_issue": "Problema de cuenta",
+        "feedback": "Comentarios",
+        "timeline_confirmation": "Confirmación de plazos",
+        "other": "Otro"
+      },
+      "salesStage": {
+        "none": "Ninguno",
+        "awareness": "Conocimiento",
+        "consideration": "Consideración",
+        "decision": "Decisión",
+        "post_purchase": "Post-compra"
+      },
+      "objection": {
+        "price": "Precio",
+        "features": "Funciones",
+        "complexity": "Complejidad",
+        "trust": "Confianza",
+        "timing": "Plazos",
+        "other": "Otro"
+      },
+      "rootCause": {
+        "product": "Producto",
+        "policy": "Política",
+        "billing": "Facturación",
+        "ux": "Experiencia de usuario",
+        "onboarding": "Onboarding",
+        "expectation_mismatch": "Desajuste de expectativas",
+        "other": "Otro"
+      },
+      "evidencePurpose": {
+        "frustration": "Frustración",
+        "satisfaction": "Satisfacción",
+        "objection": "Objeción",
+        "appreciation": "Agradecimiento",
+        "threat": "Amenaza",
+        "other": "Otro"
+      },
+      "severity": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto",
+        "critical": "Crítico"
+      },
+      "priority": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto"
+      },
+      "actionArea": {
+        "support_process": "Proceso de soporte",
+        "product": "Producto",
+        "billing": "Facturación",
+        "onboarding": "Onboarding",
+        "policy": "Política",
+        "ux": "Experiencia de usuario"
+      },
+      "outcomeStatus": {
+        "resolved": "Resuelto",
+        "partially_resolved": "Parcialmente resuelto",
+        "unresolved": "No resuelto",
+        "escalated": "Escalado",
+        "pending_customer": "Pendiente del cliente",
+        "pending_internal": "Pendiente interno"
+      }
+    },
     "analysisOutcome": "Resumen del Resultado",
     "status": "Estado",
     "confidence": "Confianza",

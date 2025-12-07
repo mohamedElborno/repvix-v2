@@ -165,6 +165,91 @@
     "tryDifferentSearch": "検索用語を変更してみてください",
     "uploadFirstChat": "インサイトを取得するために、まず最初のチャット会話をアップロードしてください",
     "uploadNewChat": "新しいチャットをアップロード",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "非常にネガティブ",
+        "negative": "ネガティブ",
+        "neutral": "中立",
+        "positive": "ポジティブ",
+        "very_positive": "非常にポジティブ"
+      },
+      "riskLevel": {
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      },
+      "primaryIntent": {
+        "complaint": "苦情",
+        "pre_sales_question": "購入前の質問",
+        "technical_issue": "技術的な問題",
+        "refund_request": "返金依頼",
+        "cancellation": "解約",
+        "billing_issue": "請求の問題",
+        "account_issue": "アカウントの問題",
+        "feedback": "フィードバック",
+        "timeline_confirmation": "スケジュール確認",
+        "other": "その他"
+      },
+      "salesStage": {
+        "none": "なし",
+        "awareness": "認知",
+        "consideration": "検討",
+        "decision": "決定",
+        "post_purchase": "購入後"
+      },
+      "objection": {
+        "price": "価格",
+        "features": "機能",
+        "complexity": "複雑さ",
+        "trust": "信頼",
+        "timing": "タイミング",
+        "other": "その他"
+      },
+      "rootCause": {
+        "product": "製品",
+        "policy": "ポリシー",
+        "billing": "請求",
+        "ux": "ユーザー体験",
+        "onboarding": "オンボーディング",
+        "expectation_mismatch": "期待の不一致",
+        "other": "その他"
+      },
+      "evidencePurpose": {
+        "frustration": "フラストレーション",
+        "satisfaction": "満足",
+        "objection": "異議",
+        "appreciation": "感謝",
+        "threat": "脅威",
+        "other": "その他"
+      },
+      "severity": {
+        "low": "低",
+        "medium": "中",
+        "high": "高",
+        "critical": "重大"
+      },
+      "priority": {
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      },
+      "actionArea": {
+        "support_process": "サポートプロセス",
+        "product": "製品",
+        "billing": "請求",
+        "onboarding": "オンボーディング",
+        "policy": "ポリシー",
+        "ux": "ユーザー体験"
+      },
+      "outcomeStatus": {
+        "resolved": "解決済み",
+        "partially_resolved": "一部解決",
+        "unresolved": "未解決",
+        "escalated": "エスカレーション",
+        "pending_customer": "顧客対応待ち",
+        "pending_internal": "内部対応待ち"
+      }
+    },
     "chatTitle": "チャットタイトル",
     "chatTitlePlaceholder": "このチャットのタイトルを入力してください...",
     "uploadFile": "ファイルをアップロード",
@@ -181,6 +266,25 @@
     "delete": "削除",
     "confirmDelete": "削除の確認",
     "thisActionCannotBeUndone": "この操作は元に戻せません。チャットとそのすべてのメッセージは完全に削除されます。",
+    "feedback": {
+      "title": "フィードバックをお寄せください",
+      "subtitle": "うまくいっている点と改善してほしい点を教えてください。",
+      "category": "カテゴリ",
+      "categories": {
+        "bug": "不具合・問題",
+        "idea": "アイデア・機能要望",
+        "praise": "感謝・称賛",
+        "other": "その他"
+      },
+      "placeholderLabel": "メッセージ",
+      "placeholder": "ここにフィードバックを入力してください...",
+      "submit": "フィードバックを送信",
+      "submitting": "送信中...",
+      "success": "ありがとうございます。フィードバックを送信しました。",
+      "error": "フィードバックを送信できませんでした。もう一度お試しください。",
+      "required": "まずフィードバックを入力してください。",
+      "noOrg": "フィードバックを送信する前に組織を作成または選択してください。"
+    },
     "chats": {
       "statusOpen": "オープン",
       "statusClosed": "クローズ",
@@ -405,7 +509,20 @@
     "failedToImportChat": "チャットのインポートに失敗しました",
     "failedToUploadChat": "チャットのアップロードに失敗しました",
     "count": "件数",
-    "score": "スコア"
+    "score": "スコア",
+    "downloadPdf": "PDFをダウンロード",
+    "generatingPdf": "PDFを生成中...",
+    "pdfDownloaded": "PDFをダウンロードしました",
+    "pdfError": "PDFの生成に失敗しました",
+    "downloadMarkdown": "Markdownをエクスポート",
+    "downloadMarkdownSuccess": "Markdownをエクスポートしました",
+    "exportMarkdownPlan": "Markdownをエクスポートするにはプランをアップグレードしてください",
+    "report": {
+      "agent": "担当者",
+      "score": "スコア",
+      "strengths": "強み",
+      "improvements": "改善点"
+    }
   },
   "metadata": {
     "title": "Repvix – 顧客サポート＆営業チーム向けAIチャット分析 | 多言語会話インサイト",
@@ -431,6 +548,91 @@
     "analyzing": "分析中",
     "analyzeChat": "チャットを分析",
     "analysis": "分析",
+    "analysisLabels": {
+      "sentiment": {
+        "very_negative": "非常にネガティブ",
+        "negative": "ネガティブ",
+        "neutral": "中立",
+        "positive": "ポジティブ",
+        "very_positive": "非常にポジティブ"
+      },
+      "riskLevel": {
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      },
+      "primaryIntent": {
+        "complaint": "苦情",
+        "pre_sales_question": "購入前の質問",
+        "technical_issue": "技術的な問題",
+        "refund_request": "返金依頼",
+        "cancellation": "解約",
+        "billing_issue": "請求の問題",
+        "account_issue": "アカウントの問題",
+        "feedback": "フィードバック",
+        "timeline_confirmation": "スケジュール確認",
+        "other": "その他"
+      },
+      "salesStage": {
+        "none": "なし",
+        "awareness": "認知",
+        "consideration": "検討",
+        "decision": "決定",
+        "post_purchase": "購入後"
+      },
+      "objection": {
+        "price": "価格",
+        "features": "機能",
+        "complexity": "複雑さ",
+        "trust": "信頼",
+        "timing": "タイミング",
+        "other": "その他"
+      },
+      "rootCause": {
+        "product": "製品",
+        "policy": "ポリシー",
+        "billing": "請求",
+        "ux": "ユーザー体験",
+        "onboarding": "オンボーディング",
+        "expectation_mismatch": "期待の不一致",
+        "other": "その他"
+      },
+      "evidencePurpose": {
+        "frustration": "フラストレーション",
+        "satisfaction": "満足",
+        "objection": "異議",
+        "appreciation": "感謝",
+        "threat": "脅威",
+        "other": "その他"
+      },
+      "severity": {
+        "low": "低",
+        "medium": "中",
+        "high": "高",
+        "critical": "重大"
+      },
+      "priority": {
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      },
+      "actionArea": {
+        "support_process": "サポートプロセス",
+        "product": "製品",
+        "billing": "請求",
+        "onboarding": "オンボーディング",
+        "policy": "ポリシー",
+        "ux": "ユーザー体験"
+      },
+      "outcomeStatus": {
+        "resolved": "解決済み",
+        "partially_resolved": "一部解決",
+        "unresolved": "未解決",
+        "escalated": "エスカレーション",
+        "pending_customer": "顧客対応待ち",
+        "pending_internal": "内部対応待ち"
+      }
+    },
     "analysisOutcome": "成果の要約",
     "status": "ステータス",
     "confidence": "確信度",
