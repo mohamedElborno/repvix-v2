@@ -125,6 +125,7 @@ export default function ChatViewClient({
       case "en":
       case "en-US":
       case "en-GB":
+        return "en";
       case "ja":
       case "ja-JP":
         return "ja";
