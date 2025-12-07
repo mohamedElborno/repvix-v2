@@ -61,6 +61,18 @@ export default function ChatViewClient({
     initialAnalysis ? "analysis" : "messages"
   );
 
+  const translateLabel = (group: string, value?: string | null) => {
+    if (!value) return "N/A";
+    const key = `analysisLabels.${group}.${value}`;
+    try {
+      const translated = t(key as any);
+      if (translated === key) return value.replace(/_/g, " ");
+      return translated;
+    } catch {
+      return value.replace(/_/g, " ");
+    }
+  };
+
   // Scroll to bottom on mount
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -478,7 +490,7 @@ export default function ChatViewClient({
                             : "bg-red-500/20 dark:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300"
                       }`}
                     >
-                      {analysis.outcomeStatus.replace(/_/g, " ")}
+                      {translateLabel("outcomeStatus", analysis.outcomeStatus)}
                     </div>
                   </div>
                   <div>
@@ -517,7 +529,10 @@ export default function ChatViewClient({
                       {analysis.customerSatisfactionScore}%
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 capitalize">
-                      {analysis.customerSatisfactionLabel?.replace(/_/g, " ")}
+                      {translateLabel(
+                        "satisfaction",
+                        analysis.customerSatisfactionLabel
+                      )}
                     </p>
                   </div>
                   <div className="bg-muted/50 rounded-lg p-4 border border-border">
@@ -528,7 +543,10 @@ export default function ChatViewClient({
                       {analysis.sentimentStartScore}%
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 capitalize">
-                      {analysis.sentimentStartLabel?.replace(/_/g, " ")}
+                      {translateLabel(
+                        "sentiment",
+                        analysis.sentimentStartLabel
+                      )}
                     </p>
                   </div>
                   <div className="bg-muted/50 rounded-lg p-4 border border-border">
@@ -539,7 +557,7 @@ export default function ChatViewClient({
                       {analysis.sentimentEndScore}%
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 capitalize">
-                      {analysis.sentimentEndLabel?.replace(/_/g, " ")}
+                      {translateLabel("sentiment", analysis.sentimentEndLabel)}
                     </p>
                   </div>
                   <div className="bg-muted/50 rounded-lg p-4 border border-border">
@@ -673,7 +691,7 @@ export default function ChatViewClient({
                         {analysis.churnRiskScore}%
                       </p>
                       <p className="text-xs text-muted-foreground mt-1 capitalize">
-                        {analysis.churnRiskLevel}
+                        {translateLabel("riskLevel", analysis.churnRiskLevel)}
                       </p>
                     </div>
                     {analysis.escalationRiskScore !== undefined && (
@@ -722,7 +740,10 @@ export default function ChatViewClient({
                         {t("primaryIntent") || "Primary Intent"}
                       </p>
                       <p className="text-lg font-bold text-foreground capitalize">
-                        {analysis.primaryIntent.replace(/_/g, " ")}
+                        {translateLabel(
+                          "primaryIntent",
+                          analysis.primaryIntent
+                        )}
                       </p>
                     </div>
                     <div className="bg-muted/50 rounded-lg p-4 border border-border">
@@ -730,7 +751,9 @@ export default function ChatViewClient({
                         {t("salesStage") || "Sales Stage"}
                       </p>
                       <p className="text-lg font-bold text-foreground capitalize">
-                        {analysis.salesStage?.replace(/_/g, " ") || "N/A"}
+                        {analysis.salesStage
+                          ? translateLabel("salesStage", analysis.salesStage)
+                          : "N/A"}
                       </p>
                     </div>
                     {analysis.purchaseIntentScore !== undefined && (
@@ -758,7 +781,7 @@ export default function ChatViewClient({
                               key={idx}
                               className="px-3 py-1 rounded-lg bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-300 text-sm"
                             >
-                              {intent}
+                              {translateLabel("primaryIntent", intent)}
                             </span>
                           ))}
                         </div>
@@ -780,7 +803,7 @@ export default function ChatViewClient({
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <span className="px-2 py-1 rounded text-xs font-medium bg-orange-500/20 text-orange-700 dark:text-orange-300 capitalize">
-                                  {obj.type}
+                                  {translateLabel("objection", obj.type)}
                                 </span>
                                 <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
                                   {obj.strength}%
@@ -814,7 +837,10 @@ export default function ChatViewClient({
                     </h4>
                     <div className="bg-muted/50 rounded-lg p-4 border border-orange-500/30">
                       <p className="text-lg font-bold text-orange-700 dark:text-orange-300 mb-2 capitalize">
-                        {analysis.primaryRootCauseCategory.replace(/_/g, " ")}
+                        {translateLabel(
+                          "rootCause",
+                          analysis.primaryRootCauseCategory
+                        )}
                       </p>
                       {analysis.primaryRootCauseDetails && (
                         <p className="text-foreground text-sm leading-relaxed">
@@ -839,7 +865,7 @@ export default function ChatViewClient({
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300 capitalize">
-                                  {cause.category}
+                                  {translateLabel("rootCause", cause.category)}
                                 </span>
                                 {cause.weight && (
                                   <span className="text-xs text-muted-foreground">
@@ -900,10 +926,16 @@ export default function ChatViewClient({
                                             : "bg-green-500/20 text-green-700 dark:text-green-300"
                                       }`}
                                     >
-                                      {action.priority}
+                                      {translateLabel(
+                                        "priority",
+                                        action.priority
+                                      )}
                                     </span>
                                     <span className="px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground">
-                                      {action.area}
+                                      {translateLabel(
+                                        "actionArea",
+                                        action.area
+                                      )}
                                     </span>
                                   </div>
                                   <h5 className="text-foreground font-semibold mb-1">
@@ -991,7 +1023,10 @@ export default function ChatViewClient({
                                           : "bg-green-500/20 text-green-700 dark:text-green-300"
                                   }`}
                                 >
-                                  {feedback.severity}
+                                  {translateLabel(
+                                    "severity",
+                                    feedback.severity
+                                  )}
                                 </span>
                                 {feedback.module && (
                                   <span className="px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground">
@@ -1108,7 +1143,7 @@ export default function ChatViewClient({
                             {quote.role}
                           </span>
                           <span className="px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground capitalize">
-                            {quote.purpose.replace(/_/g, " ")}
+                            {translateLabel("evidencePurpose", quote.purpose)}
                           </span>
                         </div>
                         <p className="text-foreground text-sm italic">
