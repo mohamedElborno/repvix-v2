@@ -140,7 +140,7 @@ export function LoginForm() {
         <p className="text-sm text-white/70">{t("subtitle")}</p>
       </div>
 
-      {/* Social Sign-in Buttons */}
+      {/* Social Sign-in Buttons 
       <div className="space-y-3 mb-6">
         <Button
           type="button"
@@ -180,9 +180,9 @@ export function LoginForm() {
           </svg>
           {t("continueWithSlack")}
         </Button>
-      </div>
+      </div>*/}
 
-      {/* Divider */}
+      {/* Divider 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-white/20"></div>
@@ -190,7 +190,7 @@ export function LoginForm() {
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-white/5 px-2 text-white/60">{t("or")}</span>
         </div>
-      </div>
+      </div>*/}
 
       {/* Email/Username Sign-in Form OR Code Verification */}
       {awaitingCode ? (
