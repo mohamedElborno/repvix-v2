@@ -63,8 +63,8 @@ export function SignUpForm() {
     setIsLoading(true);
     try {
       // Build the redirect URL with locale
-      const redirectUrl = `${window.location.origin}/${locale}/dashboard`;
-      const redirectUrlComplete = `${window.location.origin}/${locale}/dashboard`;
+      const redirectUrl = `${window.location.origin}/${locale}/dashboard/setup`;
+      const redirectUrlComplete = `${window.location.origin}/${locale}/dashboard/setup`;
 
       await signUp.authenticateWithRedirect({
         strategy: `oauth_${provider}`,

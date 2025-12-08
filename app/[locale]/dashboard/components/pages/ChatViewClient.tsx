@@ -15,6 +15,8 @@ import {
   Globe,
   CheckCircle2,
   Brain,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 
 // Convex types
@@ -60,6 +62,10 @@ export default function ChatViewClient({
   const [activeTab, setActiveTab] = useState<"messages" | "analysis">(
     initialAnalysis ? "analysis" : "messages"
   );
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<AnalysisLanguage>(
+    mapLocaleToAnalysisLanguage(locale) || "en"
+  );
 
   const translateLabel = (group: string, value?: string | null) => {
     if (!value) return "N/A";
@@ -101,9 +107,9 @@ export default function ChatViewClient({
     }).format(date);
   };
 
-  const mapLocaleToAnalysisLanguage = (
+  function mapLocaleToAnalysisLanguage(
     loc: string
-  ): AnalysisLanguage | undefined => {
+  ): AnalysisLanguage | undefined {
     switch (loc) {
       case "ar":
       case "ar-SA":
@@ -132,15 +138,31 @@ export default function ChatViewClient({
       default:
         return "en";
     }
+  }
+
+  const languages = [
+    { code: "ar", name: "العربية" },
+    { code: "en", name: "English" },
+    { code: "fr", name: "Français" },
+    { code: "tr", name: "Türkçe" },
+    { code: "es", name: "Español" },
+    { code: "hi", name: "हिन्दी" },
+    { code: "ja", name: "日本語" },
+  ];
+
+  const openLanguageModal = () => {
+    setSelectedLanguage(mapLocaleToAnalysisLanguage(locale) || "en");
+    setShowLanguageModal(true);
   };
 
-  const handleAnalyzeChat = async () => {
+  const handleConfirmAnalyze = async () => {
     setAnalysisError(null);
     setAnalysisMessage(null);
     setIsAnalyzing(true);
+    setShowLanguageModal(false);
 
     try {
-      const analysisLanguage = mapLocaleToAnalysisLanguage(locale);
+      const analysisLanguage = selectedLanguage;
 
       const result = await analyzeSingleChat({
         chatId: chat._id,
@@ -168,30 +190,14 @@ export default function ChatViewClient({
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              {/* Back Button */}
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/80 hover:bg-muted border border-border hover:border-purple-500/50 text-muted-foreground hover:text-foreground transition-all duration-300 backdrop-blur-sm"
-                dir={locale === "ar" ? "rtl" : "ltr"}
-              >
-                {locale === "ar" ? (
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                ) : (
-                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-                )}
-                <span className="text-sm font-medium">
-                  {t("back") || "Back"}
-                </span>
-              </button>
-
               {/* Chat Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
                     <MessageSquare className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-foreground via-purple-200 to-purple-300 dark:from-white dark:via-purple-200 dark:to-purple-300 bg-clip-text text-transparent truncate">
+                    <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
                       {chat.title || t("untitledChat") || "Untitled Chat"}
                     </h1>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -207,13 +213,13 @@ export default function ChatViewClient({
             <div className="flex flex-col items-stretch sm:items-end gap-1">
               <button
                 type="button"
-                onClick={handleAnalyzeChat}
+                onClick={openLanguageModal}
                 disabled={
                   isAnalyzing ||
                   !canAnalyze?.allowed ||
                   canAnalyze?.reason === "limit_exceeded"
                 }
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 disabled:from-muted disabled:to-muted text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 border border-purple-400/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500 disabled:bg-muted text-sm font-semibold disabled:text-foreground shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 border border-purple-400/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <Brain className="w-4 h-4" />
                 <span>
@@ -225,7 +231,7 @@ export default function ChatViewClient({
 
               {/* عرض معلومات الحدود */}
               {canAnalyze && !isAnalyzing && (
-                <div className="text-xs text-muted-foreground max-w-xs text-right">
+                <div className="text-xs text-muted-foreground max-w-xs mx-auto text-center">
                   {canAnalyze.reason === "limit_exceeded" ? (
                     <span className="text-destructive">
                       {t("dailyLimitExceeded") ||
@@ -1159,6 +1165,60 @@ export default function ChatViewClient({
           </div>
         ) : null}
       </div>
+
+      {/* Language Selection Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">
+              {t("selectAnalysisLanguage") || "Select Analysis Language"}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              {t("selectAnalysisLanguageHint") ||
+                "Choose the language for the AI analysis output"}
+            </p>
+
+            <div className="space-y-3 mb-6">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() =>
+                    setSelectedLanguage(lang.code as AnalysisLanguage)
+                  }
+                  className={`w-full p-3 rounded-lg border transition-all ${
+                    selectedLanguage === lang.code
+                      ? "bg-purple-500/10 border-purple-500 text-foreground"
+                      : "bg-muted/50 border-border text-muted-foreground hover:bg-muted/70"
+                  }`}
+                >
+                  {lang.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowLanguageModal(false)}
+                className="px-4 py-2 rounded-lg border border-border text-sm text-foreground hover:bg-muted"
+              >
+                {t("cancel") || "Cancel"}
+              </button>
+              <button
+                onClick={handleConfirmAnalyze}
+                disabled={isAnalyzing}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm disabled:opacity-60"
+              >
+                {isAnalyzing ? (
+                  <Loader2 className="w-4 h-4 mr-2 inline animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2 inline" />
+                )}
+                {t("startAnalysis") || "Start Analysis"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -84,13 +84,16 @@ export function parseWhatsappToRawMessages(
     blocks.push(current);
   }
 
+  // fallback roles for ambiguous cases
+  const fallbackRoles = buildFallbackRoles(blocks, options);
+
   // تحويل الـ blocks إلى RawMessageInput[]
   const messages: RawMessageInput[] = [];
 
-  for (const block of blocks) {
-    const raw = convertBlockToRaw(block, options);
+  blocks.forEach((block, idx) => {
+    const raw = convertBlockToRaw(block, options, idx, fallbackRoles);
     if (raw) messages.push(raw);
-  }
+  });
 
   return messages;
 }
@@ -162,7 +165,9 @@ function parseLineHeader(line: string): ParsedHeader | null {
 
 function convertBlockToRaw(
   block: MessageBlock,
-  options: WhatsappParserOptions
+  options: WhatsappParserOptions,
+  index: number,
+  fallbackRoles: Record<string, SenderType>
 ): RawMessageInput | null {
   const fullText = block.textLines.join("\n").trim();
 
@@ -172,9 +177,10 @@ function convertBlockToRaw(
   const senderType = determineSenderType(
     block.senderName,
     options.agentNames,
-    options.defaultSenderType ?? "customer",
+    index === 0 ? "customer" : "agent", // fallback: أول رسالة عميل، والباقي عامل في حال الغموض
     options.customerNames,
-    options.phoneIsCustomerIfUnknown ?? true
+    options.phoneIsCustomerIfUnknown ?? true,
+    fallbackRoles
   );
 
   // Try to convert the date/time to a timestamp
@@ -201,12 +207,19 @@ function determineSenderType(
   agentNames: string[],
   defaultSenderType: SenderType,
   customerNames?: string[],
-  phoneIsCustomerIfUnknown: boolean = true
+  phoneIsCustomerIfUnknown: boolean = true,
+  fallbackRoles: Record<string, SenderType> = {}
 ): SenderType {
   const normalizedSender = normalizeName(senderName);
+  const normalizedAgents = agentNames.map(normalizeName);
+  const normalizedCustomers = (customerNames || []).map(normalizeName);
+
+  // 0) إن كان لدينا تعيين احتياطي سابق لهذا المرسل
+  if (fallbackRoles[normalizedSender]) {
+    return fallbackRoles[normalizedSender];
+  }
 
   // 1) لو الاسم ضمن قائمة الـ agent (مطابقة مباشرة)
-  const normalizedAgents = agentNames.map(normalizeName);
   if (normalizedAgents.includes(normalizedSender)) {
     return "agent";
   }
@@ -221,7 +234,6 @@ function determineSenderType(
 
   // 2) لو الاسم ضمن قائمة الـ customerNames (لو تم تمريرها)
   if (customerNames && customerNames.length > 0) {
-    const normalizedCustomers = customerNames.map(normalizeName);
     if (normalizedCustomers.includes(normalizedSender)) {
       return "customer";
     }
@@ -233,6 +245,16 @@ function determineSenderType(
     }
   }
 
+  // 2.5) محاولة مطابقة أرقام الهاتف بشكل فضفاض (بدون كود دولة أو زيادات طفيفة)
+  if (customerNames && customerNames.length > 0) {
+    if (loosePhoneMatches(senderName, customerNames)) {
+      return "customer";
+    }
+    if (loosePhoneMatches(senderName, agentNames)) {
+      return "agent";
+    }
+  }
+
   // 3) لو لا يوجد أي داتا تحدد، والاسم يبدو رقم هاتف
   if (phoneIsCustomerIfUnknown && looksLikePhoneNumber(senderName)) {
     return "customer";
@@ -240,6 +262,123 @@ function determineSenderType(
 
   // 4) الافتراضي (غالبًا customer)
   return defaultSenderType;
+}
+
+/**
+ * نبني تعيينات احتياطية للأدوار في حال غياب أسماء معروفة:
+ * - لو وُجد رقم هاتف واحد فقط بين الأسماء → نعتبره العميل، وأول اسم آخر يصبح موظفًا.
+ * - لو لا يوجد أرقام مميزة، وأول شخص بدأ المحادثة = عميل، وأول طرف مختلف بعده = موظف.
+ * - لا نتدخل في الحالات التي حُسمت عبر قوائم العملاء/الموظفين.
+ */
+function buildFallbackRoles(
+  blocks: MessageBlock[],
+  options: WhatsappParserOptions
+): Record<string, SenderType> {
+  const roles: Record<string, SenderType> = {};
+  if (!blocks.length) return roles;
+
+  const normalizedAgents = options.agentNames.map(normalizeName);
+  const normalizedCustomers = (options.customerNames || []).map(normalizeName);
+
+  type SenderInfo = {
+    original: string;
+    normalized: string;
+    isPhone: boolean;
+    order: number;
+  };
+
+  const seen: Record<string, SenderInfo> = {};
+
+  blocks.forEach((b, idx) => {
+    const norm = normalizeName(b.senderName);
+    if (!norm) return;
+    if (!seen[norm]) {
+      seen[norm] = {
+        original: b.senderName,
+        normalized: norm,
+        isPhone: looksLikePhoneNumber(b.senderName),
+        order: idx,
+      };
+    }
+  });
+
+  const senders = Object.values(seen);
+
+  // استبعد أي اسم معروف مسبقًا في قوائم agent/customer
+  const ambiguousSenders = senders.filter(
+    (s) =>
+      !normalizedAgents.includes(s.normalized) &&
+      !normalizedCustomers.includes(s.normalized)
+  );
+
+  if (!ambiguousSenders.length) return roles;
+
+  const phoneSenders = ambiguousSenders.filter((s) => s.isPhone);
+
+  if (phoneSenders.length === 1) {
+    const phoneSender = phoneSenders[0];
+    roles[phoneSender.normalized] = "customer";
+
+    const other = ambiguousSenders.find(
+      (s) => s.normalized !== phoneSender.normalized
+    );
+    if (other) {
+      roles[other.normalized] = "agent";
+    }
+    return roles;
+  }
+
+  // لو لم نجد هاتفًا واضحًا، نطبّق قاعدة "أول من بدأ = عميل، أول آخر = موظف"
+  const sortedByOrder = [...ambiguousSenders].sort((a, b) => a.order - b.order);
+  if (sortedByOrder.length) {
+    roles[sortedByOrder[0].normalized] = "customer";
+    const second = sortedByOrder.find((s) => s.normalized !== sortedByOrder[0].normalized);
+    if (second) {
+      roles[second.normalized] = "agent";
+    }
+  }
+
+  return roles;
+}
+
+/**
+ * تطابق فضفاض لأرقام الهواتف:
+ * - نحذف كل ما عدا الأرقام
+ * - نتجاهل 00 أو + في البداية
+ * - نطابق آخر 8-10 أرقام لتجاوز اختلاف كود الدولة أو الصفر الأول
+ */
+function loosePhoneMatches(name: string, candidates: string[]): boolean {
+  const normTarget = normalizeDigits(name);
+  if (!normTarget) return false;
+
+  const targetShort = trimCountryPrefix(normTarget);
+
+  for (const c of candidates) {
+    const normCandidate = normalizeDigits(c);
+    if (!normCandidate) continue;
+    const candidateShort = trimCountryPrefix(normCandidate);
+
+    // تطابق كامل
+    if (normCandidate === normTarget) return true;
+    // تطابق آخر 8-10 أرقام
+    if (endsWithSameDigits(targetShort, candidateShort, 8)) return true;
+    if (endsWithSameDigits(targetShort, candidateShort, 10)) return true;
+  }
+  return false;
+}
+
+function normalizeDigits(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 6 ? digits : "";
+}
+
+function trimCountryPrefix(digits: string): string {
+  return digits.replace(/^0+/, "").replace(/^00/, "");
+}
+
+function endsWithSameDigits(a: string, b: string, len: number): boolean {
+  if (a.length < len || b.length < len) return false;
+  return a.slice(-len) === b.slice(-len);
 }
 
 /**

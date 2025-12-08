@@ -12,6 +12,11 @@ export default async function ProtectedPage() {
     redirect("/sign-in");
   }
 
+  // No active organization yet -> send user to setup flow
+  if (!orgId) {
+    redirect("/dashboard/setup");
+  }
+
   const convex = await getConvexServerClient();
   let initialChats: ChatListItemData[] = [];
   let stats = null as { totalChats: number; totalChunks: number } | null; // مؤقتًا، لو عندك API للـ KPIs خليه كما هو

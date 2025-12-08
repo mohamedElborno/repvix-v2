@@ -23,21 +23,14 @@ export default async function ProtectedLayout({
       organizationId: orgId,
     });
 
-    // 2) *** إنشاء أو مزامنة المنظمة ***
-    const convexOrgId = await convex.mutation(api.orgs.syncOrganization, {
-      clerkOrgId: org.id,
-      name: org.name,
-      createdBy: userId,
-    });
-
-    // 3) جلب الأعضاء من Clerk
+    // 2) جلب الأعضاء من Clerk
     const memberships = await clerk.organizations.getOrganizationMembershipList(
       {
         organizationId: orgId,
       }
     );
 
-    // 4) مزامنة الأعضاء
+    // 3) مزامنة الأعضاء
     await convex.mutation(api.orgs.syncOrganizationMembers, {
       clerkOrgId: org.id,
       members: memberships.data.map((m) => ({

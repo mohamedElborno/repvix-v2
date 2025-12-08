@@ -238,8 +238,18 @@ export default function UploadChatDialog({
               <Label htmlFor="title" className="text-foreground mb-2">
                 {t("chatTitle")}
               </Label>
+
+              <Input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t("chatTitlePlaceholder")}
+                className="bg-background border-border text-foreground placeholder-muted-foreground"
+                disabled={isLoading}
+              />
               {/* Customer Name Input */}
-              <div className="mb-4">
+              <div className="mt-4">
                 <Label htmlFor="customerName" className="text-foreground mb-2">
                   {t("customerNameLabel") ||
                     "Customer Name in WhatsApp (Optional but Recommended)"}
@@ -261,16 +271,6 @@ export default function UploadChatDialog({
                     "We will try to match the name you entered with the names in the conversation, even if there are minor errors or slight differences in spelling."}
                 </p>
               </div>
-
-              <Input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t("chatTitlePlaceholder")}
-                className="bg-background border-border text-foreground placeholder-muted-foreground"
-                disabled={isLoading}
-              />
             </div>
 
             {/* File Upload */}

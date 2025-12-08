@@ -57,7 +57,7 @@ export function VerifyEmailForm() {
           // Don't block the redirect if profile creation fails
         }
         
-        router.push(`/dashboard`);
+        router.push(`/dashboard/setup`);
       }
     } catch (err: any) {
       toast.error(err.errors?.[0]?.message || t("errorOccurred"));

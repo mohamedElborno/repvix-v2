@@ -67,7 +67,7 @@ export default function DashboardLayoutClient({
       ),
     }, */
   ];
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <div className="mx-auto h-[100vh] flex w-full flex-1 flex-col overflow-hidden md:flex-row">
