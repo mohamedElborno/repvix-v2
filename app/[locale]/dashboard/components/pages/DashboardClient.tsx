@@ -436,6 +436,7 @@ export default function DashboardClient({
         const parsed = JSON.parse(raw) as {
           layoutOrder?: WidgetKey[];
           visibleWidgets?: Partial<Record<WidgetKey, boolean>>;
+          chatViewMode?: "grid" | "whatsapp";
         };
         if (parsed.visibleWidgets) {
           setVisibleWidgets((prev) => ({
@@ -454,6 +455,12 @@ export default function DashboardClient({
             return [...filtered, ...missing];
           });
         }
+        if (
+          parsed.chatViewMode === "grid" ||
+          parsed.chatViewMode === "whatsapp"
+        ) {
+          setChatViewMode(parsed.chatViewMode);
+        }
       }
     } catch (e) {
       console.warn("Failed to load dashboard preferences", e);
@@ -467,12 +474,12 @@ export default function DashboardClient({
     try {
       localStorage.setItem(
         prefsKey,
-        JSON.stringify({ layoutOrder, visibleWidgets })
+        JSON.stringify({ layoutOrder, visibleWidgets, chatViewMode })
       );
     } catch (e) {
       console.warn("Failed to save dashboard preferences", e);
     }
-  }, [prefsKey, prefsLoaded, layoutOrder, visibleWidgets]);
+  }, [prefsKey, prefsLoaded, layoutOrder, visibleWidgets, chatViewMode]);
 
   const renderedWidgets = useMemo(
     () =>
