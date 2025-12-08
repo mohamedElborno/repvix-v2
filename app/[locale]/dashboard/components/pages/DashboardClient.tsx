@@ -423,6 +423,57 @@ export default function DashboardClient({
     });
   }, [availableWidgets]);
 
+  // Persist customizer choices per organization
+  const prefsKey = organizationId ? `dashboard_prefs_${organizationId}` : null;
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!prefsKey || prefsLoaded) return;
+    try {
+      const raw =
+        typeof window !== "undefined" ? localStorage.getItem(prefsKey) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          layoutOrder?: WidgetKey[];
+          visibleWidgets?: Partial<Record<WidgetKey, boolean>>;
+        };
+        if (parsed.visibleWidgets) {
+          setVisibleWidgets((prev) => ({
+            ...prev,
+            ...parsed.visibleWidgets,
+          }));
+        }
+        if (parsed.layoutOrder) {
+          setLayoutOrder((prev) => {
+            const filtered = parsed.layoutOrder!.filter((k) =>
+              availableWidgets.includes(k)
+            );
+            const missing = availableWidgets.filter(
+              (k) => !filtered.includes(k)
+            );
+            return [...filtered, ...missing];
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load dashboard preferences", e);
+    } finally {
+      setPrefsLoaded(true);
+    }
+  }, [prefsKey, prefsLoaded, availableWidgets]);
+
+  useEffect(() => {
+    if (!prefsKey || !prefsLoaded) return;
+    try {
+      localStorage.setItem(
+        prefsKey,
+        JSON.stringify({ layoutOrder, visibleWidgets })
+      );
+    } catch (e) {
+      console.warn("Failed to save dashboard preferences", e);
+    }
+  }, [prefsKey, prefsLoaded, layoutOrder, visibleWidgets]);
+
   const renderedWidgets = useMemo(
     () =>
       layoutOrder.filter(
