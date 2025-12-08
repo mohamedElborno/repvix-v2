@@ -919,12 +919,14 @@ export default function DashboardClient({
               onClick={() => setIsUploadDialogOpen(true)}
               className="max-h-9 group relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground transition-all duration-300 shrink-0"
             >
-              <div className="relative flex items-center gap-2">
+              <div className="relative flex items-center md:gap-2">
                 <div className="relative w-5 h-5 flex items-center justify-center">
                   <div className="absolute inset-0 rounded-full bg-primary-foreground/20 group-hover:bg-primary-foreground/30 transition-all duration-300 scale-0 group-hover:scale-100"></div>
                   <Plus className="w-4 h-4 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
                 </div>
-                <span className="font-medium">{t("uploadChat")}</span>
+                <span className="hidden md:block font-medium">
+                  {t("uploadChat")}
+                </span>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/50 to-primary-foreground/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
             </Button>

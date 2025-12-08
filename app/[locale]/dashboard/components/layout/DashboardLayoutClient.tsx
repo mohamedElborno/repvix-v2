@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IconAnalyze,
   IconBrandTabler,
@@ -67,7 +67,14 @@ export default function DashboardLayoutClient({
       ),
     }, */
   ];
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+
+  // Open sidebar by default on medium+ screens, keep closed on small screens
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isDesktop = window.innerWidth >= 768;
+    setOpen(isDesktop);
+  }, []);
 
   return (
     <div className="mx-auto h-[100vh] flex w-full flex-1 flex-col overflow-hidden md:flex-row">
