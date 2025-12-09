@@ -919,7 +919,13 @@
     "updateError": "Échec de la mise à jour de l'employé. Veuillez réessayer.",
     "saving": "Enregistrement...",
     "saveChanges": "Enregistrer les modifications",
-    "leaveOrganization": "Quitter l'organisation"
+    "leaveOrganization": "Quitter l'organisation",
+    "myTeam": "Mon équipe",
+    "leaveOrganizationSuccess": "Vous avez quitté l’organisation.",
+    "multipleOrganizationsTitle": "Plusieurs organisations détectées",
+    "multipleOrganizationsSubtitle": "Veuillez quitter les autres organisations d’abord.",
+    "memberLimitReached": "Limite de membres atteinte pour votre offre actuelle.",
+    "invitationFailed": "Échec de l’envoi de l’invitation."
   },
   "billing": {
     "title": "Facturation et Abonnement",

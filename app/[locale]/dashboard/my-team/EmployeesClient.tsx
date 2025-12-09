@@ -119,7 +119,7 @@ export default function EmployeesClient() {
     try {
       if (!organization) return;
       await leaveOrganizationAction(organization.id);
-      toast.success("You have left the organization.");
+      toast.success(t("leaveOrganizationSuccess"));
       router.refresh();
     } catch (err: any) {
       toast.error(err.message);
@@ -155,10 +155,10 @@ export default function EmployeesClient() {
         return (
           <div className="p-8 text-center min-h-[calc(100vh-120px)]">
             <h2 className="text-xl font-bold text-red-500 mb-2">
-              Multiple Organizations Detected
+              {t("multipleOrganizationsTitle")}
             </h2>
             <p className="text-gray-500">
-              Please leave all other organizations first.
+              {t("multipleOrganizationsSubtitle")}
             </p>
           </div>
         );
@@ -186,7 +186,7 @@ export default function EmployeesClient() {
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold">{organization.name}</h1>
+            <h1 className="text-3xl font-bold">{t("myTeam")}</h1>
             <p className="text-gray-500">{t("subtitle")}</p>
           </div>
 
@@ -269,9 +269,8 @@ export default function EmployeesClient() {
                 const remaining = memberLimit.remaining ?? 0;
                 toast.error(
                   remaining > 0
-                    ? t("invitationFailed") ||
-                        "Member limit reached for your current plan."
-                    : "Member limit reached for your current plan."
+                    ? t("memberLimitReached")
+                    : t("memberLimitReached")
                 );
                 return;
               }
@@ -289,8 +288,7 @@ export default function EmployeesClient() {
                 toast.error(
                   error?.errors?.[0]?.message ||
                     error?.message ||
-                    t("invitationFailed") ||
-                    "Failed to send invitation"
+                    t("invitationFailed")
                 );
               }
             }}

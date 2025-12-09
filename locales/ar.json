@@ -919,7 +919,13 @@
     "updateError": "فشل تحديث بيانات الموظف. حاول مجددًا.",
     "saving": "جارٍ الحفظ...",
     "saveChanges": "حفظ التغييرات",
-    "leaveOrganization": "مغادرة المؤسسة"
+    "myTeam": "فريقي",
+    "leaveOrganization": "مغادرة المؤسسة",
+    "leaveOrganizationSuccess": "تم مغادرة المؤسسة.",
+    "multipleOrganizationsTitle": "تم اكتشاف عدة مؤسسات",
+    "multipleOrganizationsSubtitle": "يرجى مغادرة باقي المؤسسات أولاً.",
+    "memberLimitReached": "تم الوصول إلى الحد الأقصى للأعضاء في خطتك الحالية.",
+    "invitationFailed": "فشل إرسال الدعوة."
   },
   "billing": {
     "title": "الفواتير والاشتراك",

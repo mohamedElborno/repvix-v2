@@ -919,7 +919,13 @@
     "updateError": "Error al actualizar el empleado. Inténtalo nuevamente.",
     "saving": "Guardando...",
     "saveChanges": "Guardar Cambios",
-    "leaveOrganization": "Dejar Organización"
+    "leaveOrganization": "Dejar Organización",
+    "myTeam": "Mi Equipo",
+    "leaveOrganizationSuccess": "Has salido de la organización.",
+    "multipleOrganizationsTitle": "Se detectaron múltiples organizaciones",
+    "multipleOrganizationsSubtitle": "Por favor, abandona las demás organizaciones primero.",
+    "memberLimitReached": "Límite de miembros alcanzado para tu plan actual.",
+    "invitationFailed": "No se pudo enviar la invitación."
   },
   "billing": {
     "title": "Facturación y Suscripción",

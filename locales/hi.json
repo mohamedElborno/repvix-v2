@@ -919,7 +919,13 @@
     "updateError": "कर्मचारी अपडेट करने में विफल। कृपया पुनः प्रयास करें।",
     "saving": "सहेजा जा रहा है...",
     "saveChanges": "परिवर्तन सहेजें",
-    "leaveOrganization": "संगठन छोड़ें"
+    "myTeam": "मेरी टीम",
+    "leaveOrganization": "संगठन छोड़ें",
+    "leaveOrganizationSuccess": "आप संगठन छोड़ चुके हैं।",
+    "multipleOrganizationsTitle": "एक से अधिक संगठन मिले",
+    "multipleOrganizationsSubtitle": "कृपया पहले अन्य संगठनों को छोड़ दें।",
+    "memberLimitReached": "आपकी वर्तमान योजना के लिए सदस्य सीमा पूरी हो गई है।",
+    "invitationFailed": "निमंत्रण भेजा नहीं जा सका।"
   },
   "billing": {
     "title": "बिलिंग और सदस्यता",

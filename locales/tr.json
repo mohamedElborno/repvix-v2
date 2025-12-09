@@ -893,7 +893,13 @@
     "updateError": "Güncelleme başarısız. Lütfen tekrar dene.",
     "saving": "Kaydediliyor...",
     "saveChanges": "Değişiklikleri Kaydet",
-    "leaveOrganization": "Organizasyondan Ayrıl"
+    "leaveOrganization": "Organizasyondan Ayrıl",
+    "myTeam": "Ekibim",
+    "leaveOrganizationSuccess": "Kuruluştan ayrıldın.",
+    "multipleOrganizationsTitle": "Birden fazla kuruluş bulundu",
+    "multipleOrganizationsSubtitle": "Lütfen önce diğer kuruluşlardan ayrıl.",
+    "memberLimitReached": "Mevcut planın için üye sınırına ulaşıldı.",
+    "invitationFailed": "Davet gönderilemedi."
   },
   "billing": {
     "title": "Faturalandırma ve Abonelik",

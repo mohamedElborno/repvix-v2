@@ -919,7 +919,13 @@
     "updateError": "Failed to update employee. Please try again.",
     "saving": "Saving...",
     "saveChanges": "Save Changes",
-    "leaveOrganization": "Leave Organization"
+    "leaveOrganization": "Leave Organization",
+    "myTeam": "My Team",
+    "leaveOrganizationSuccess": "You have left the organization.",
+    "multipleOrganizationsTitle": "Multiple Organizations Detected",
+    "multipleOrganizationsSubtitle": "Please leave all other organizations first.",
+    "memberLimitReached": "Member limit reached for your current plan.",
+    "invitationFailed": "Failed to send invitation."
   },
   "billing": {
     "title": "Billing & Subscription",

@@ -919,7 +919,13 @@
     "updateError": "従業員の更新に失敗しました。もう一度お試しください。",
     "saving": "保存中...",
     "saveChanges": "変更を保存",
-    "leaveOrganization": "組織を離脱"
+    "leaveOrganization": "組織を離脱",
+    "myTeam": "マイチーム",
+    "leaveOrganizationSuccess": "組織を離脱しました。",
+    "multipleOrganizationsTitle": "複数の組織が検出されました",
+    "multipleOrganizationsSubtitle": "先に他の組織を退出してください。",
+    "memberLimitReached": "現在のプランのメンバー上限に達しました。",
+    "invitationFailed": "招待の送信に失敗しました。"
   },
   "billing": {
     "title": "請求とサブスクリプション",
