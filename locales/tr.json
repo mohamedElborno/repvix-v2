@@ -55,7 +55,7 @@
       "subtitle": "Ham sohbetlerden derin performans analizlerine — üç basit adımda.",
       "step1": {
         "title": "Sohbetleri Yükle",
-        "desc": "WhatsApp, Telegram veya metin dosyalarınızı (TXT/CSV) içe aktarın. Repvix verilerinizi otomatik olarak temizler ve analiz için hazırlar.",
+        "desc": "WhatsApp veya metin dosyalarınızı (TXT/CSV) içe aktarın. Repvix verilerinizi otomatik olarak temizler ve analiz için hazırlar.",
         "badge": "Girdi"
       },
       "step2": {
@@ -73,7 +73,7 @@
       "title": "Sıkça Sorulan Sorular",
       "subtitle": "Başlamadan önce bilmeniz gereken her şey.",
       "q1": "Hangi sohbet platformları destekleniyor?",
-      "a1": "Şu anda Repvix, CSV veya TXT formatında manuel sohbet yüklemelerini destekliyor. WhatsApp, Telegram ve Discord entegrasyonları yakında gelecek sürümlerde eklenecek — şu anda açık betadayız.",
+      "a1": "Şu anda Repvix, CSV veya TXT formatında manuel sohbet yüklemelerini destekliyor. Yakında ek doğrudan entegrasyonlar gelecek — şu anda açık betadayız.",
       "q2": "Tüm planlar aynı yapay zekâyı mı kullanıyor?",
       "a2": "Evet. Tüm planlar, tüm dillerde tutarlı analiz kalitesi sağlamak için aynı gelişmiş yapay zekâ motorunu ve kural tabanlı yapıyı kullanır.",
       "q3": "Repvix hangi içgörüleri sunuyor?",
@@ -364,7 +364,7 @@
             "f2": "En fazla 10 ekip üyesi",
             "f3": "Sohbet ve organizasyon düzeyinde tam analiz",
             "f4": "PDF, Markdown ve CSV dışa aktarımı",
-            "f5": "Intercom ve Telegram entegrasyonu",
+            "f5": "Intercom entegrasyonu",
             "f6": "Gelişmiş SSS çıkarımı"
           }
         },
@@ -522,8 +522,8 @@
   },
   "metadata": {
     "title": "Repvix – Müşteri Desteği ve Satış Ekipleri için Yapay Zekâ Sohbet Analizi | Çok Dilli İçgörüler",
-    "description": "Repvix, WhatsApp, Telegram ve Discord konuşmalarını analiz ederek duygu, davranış ve performans içgörüleri sunar. Altı dilde yönetici özetleri, SSS'ler ve raporlar oluşturun — sadece birkaç saniyede.",
-    "keywords": "yapay zekâ sohbet analizi, konuşma zekâsı, WhatsApp analitiği, Telegram sohbet analizi, Discord içgörüleri, müşteri desteği AI, satış konuşması analitiği, duygu analizi, davranış takibi, çok dilli yapay zekâ, Repvix"
+    "description": "Repvix, WhatsApp ve diğer sohbetleri analiz ederek duygu, davranış ve performans içgörüleri sunar. Yedi dilde yönetici özetleri, SSS'ler ve raporlar oluşturun — sadece birkaç saniyede.",
+    "keywords": "yapay zekâ sohbet analizi, konuşma zekâsı, WhatsApp analitiği, sohbet içgörüleri, müşteri desteği AI, satış konuşması analitiği, duygu analizi, davranış takibi, çok dilli yapay zekâ, Repvix"
   },
   "chat": {
     "back": "Geri",
@@ -732,6 +732,10 @@
     "invalidCode": "Lütfen geçerli bir 6 haneli kod gir",
     "codeResent": "Doğrulama kodu tekrar gönderildi! E-postanı kontrol et.",
     "errorOccurred": "Bir hata oluştu. Lütfen tekrar dene."
+  },
+  "ssoCallback": {
+    "processingTitle": "Hesabın hazırlanıyor…",
+    "processingSubtitle": "Bu işlem birkaç saniye sürebilir. Otomatik olarak yönlendirileceksin."
   },
   "profile": {
     "title": "Profil",

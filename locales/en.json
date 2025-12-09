@@ -55,7 +55,7 @@
       "subtitle": "From raw chat exports to deep performance insights — in three simple steps.",
       "step1": {
         "title": "Upload Conversations",
-        "desc": "Import your WhatsApp, Telegram, or chat transcripts (TXT/CSV). Repvix automatically cleans and structures your data for analysis.",
+        "desc": "Import your WhatsApp or chat transcripts (TXT/CSV). Repvix automatically cleans and structures your data for analysis.",
         "badge": "Input"
       },
       "step2": {
@@ -73,7 +73,7 @@
       "title": "Frequently Asked Questions",
       "subtitle": "Everything you need to know before getting started.",
       "q1": "Which chat platforms are supported?",
-      "a1": "Repvix currently supports manual chat uploads in CSV or TXT format. Integrations with WhatsApp, Telegram, and Discord are planned for upcoming releases — we’re currently in open beta.",
+      "a1": "Repvix currently supports manual chat uploads in CSV or TXT format. Additional direct integrations are planned for upcoming releases — we’re currently in open beta.",
       "q2": "Do all plans use the same AI model?",
       "a2": "Yes. Every plan uses the same advanced AI engine and rule-based framework to ensure consistent analysis quality across all accounts and languages.",
       "q3": "What insights does Repvix provide?",
@@ -381,7 +381,7 @@
             "f2": "Up to 10 team members",
             "f3": "Comprehensive chat and organization-level analysis",
             "f4": "PDF, Markdown, and CSV export",
-            "f5": "Integrations with Intercom & Telegram",
+            "f5": "Intercom integration",
             "f6": "Advanced FAQ extraction"
           }
         },
@@ -539,8 +539,8 @@
   },
   "metadata": {
     "title": "Repvix – AI Chat Analysis for Customer Support & Sales Teams | Multilingual Conversation Insights",
-    "description": "Repvix analyzes WhatsApp, Telegram, and Discord conversations using advanced AI to deliver sentiment, behavioral, and performance insights. Create executive summaries, FAQs, and reports in six languages — all in seconds.",
-    "keywords": "AI chat analysis, conversation intelligence, WhatsApp analytics, Telegram chat insights, Discord analysis, customer support AI, sales conversation analytics, sentiment analysis, behavior tracking, multilingual AI, Repvix"
+    "description": "Repvix analyzes WhatsApp and other chat conversations using advanced AI to deliver sentiment, behavioral, and performance insights. Create executive summaries, FAQs, and reports in seven languages — all in seconds.",
+    "keywords": "AI chat analysis, conversation intelligence, WhatsApp analytics, chat insights, customer support AI, sales conversation analytics, sentiment analysis, behavior tracking, multilingual AI, Repvix"
   },
   "locale": {
     "arabic": "Arabic",
@@ -758,6 +758,10 @@
     "invalidCode": "Please enter a valid 6-digit code",
     "codeResent": "Verification code resent! Please check your email.",
     "errorOccurred": "An error occurred. Please try again."
+  },
+  "ssoCallback": {
+    "processingTitle": "Preparing your account…",
+    "processingSubtitle": "This can take a few seconds. You’ll be redirected automatically."
   },
   "profile": {
     "title": "Profile",

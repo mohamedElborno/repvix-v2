@@ -55,7 +55,7 @@
       "subtitle": "Desde chats en bruto hasta insights detallados — en tres pasos simples.",
       "step1": {
         "title": "Sube tus Conversaciones",
-        "desc": "Importa tus chats de WhatsApp, Telegram o archivos CSV/TXT. Repvix los limpia y estructura automáticamente.",
+        "desc": "Importa tus chats de WhatsApp o archivos CSV/TXT. Repvix los limpia y estructura automáticamente.",
         "badge": "Entrada"
       },
       "step2": {
@@ -73,7 +73,7 @@
       "title": "Preguntas Frecuentes",
       "subtitle": "Todo lo que necesitas saber antes de empezar.",
       "q1": "¿Qué plataformas de chat son compatibles?",
-      "a1": "Repvix admite actualmente cargas manuales en formato CSV o TXT. Las integraciones con WhatsApp, Telegram y Discord llegarán pronto — actualmente en beta abierta.",
+      "a1": "Repvix admite actualmente cargas manuales en formato CSV o TXT. Llegarán pronto integraciones directas adicionales — actualmente en beta abierta.",
       "q2": "¿Todos los planes usan el mismo modelo de IA?",
       "a2": "Sí. Todos los planes usan el mismo motor de IA avanzada con un marco de reglas consistente para garantizar calidad uniforme.",
       "q3": "¿Qué tipo de insights ofrece Repvix?",
@@ -150,8 +150,8 @@
   },
   "metadata": {
     "title": "Repvix – Análisis de Chats con IA para Equipos de Soporte y Ventas | Insights Multilingües",
-    "description": "Repvix analiza conversaciones de WhatsApp, Telegram y Discord con IA avanzada para ofrecer análisis de sentimiento, comportamiento y rendimiento. Crea resúmenes ejecutivos, FAQs y reportes en seis idiomas en segundos.",
-    "keywords": "análisis de chat con IA, inteligencia conversacional, analítica de WhatsApp, insights de Telegram, análisis de Discord, IA para soporte, rendimiento de ventas, análisis de comportamiento, multilingüe, Repvix"
+    "description": "Repvix analiza conversaciones de WhatsApp y otros chats con IA avanzada para ofrecer análisis de sentimiento, comportamiento y rendimiento. Crea resúmenes ejecutivos, FAQs y reportes en siete idiomas en segundos.",
+    "keywords": "análisis de chat con IA, inteligencia conversacional, analítica de WhatsApp, insights de chat, IA para soporte, rendimiento de ventas, análisis de comportamiento, multilingüe, Repvix"
   },
   "locale": {
     "arabic": "Árabe",
@@ -395,7 +395,7 @@
             "f2": "Hasta 10 miembros de equipo",
             "f3": "Análisis a nivel organizacional y de chat",
             "f4": "Exportación en PDF, Markdown y CSV",
-            "f5": "Integraciones con Intercom y Telegram",
+            "f5": "Integración con Intercom",
             "f6": "Extracción avanzada de FAQs"
           }
         },
@@ -758,6 +758,10 @@
     "invalidCode": "Por favor, introduce un código válido de 6 dígitos",
     "codeResent": "Código reenviado. Revisa tu correo.",
     "errorOccurred": "Ocurrió un error. Inténtalo nuevamente."
+  },
+  "ssoCallback": {
+    "processingTitle": "Preparando tu cuenta…",
+    "processingSubtitle": "Esto puede tardar unos segundos. Serás redirigido automáticamente."
   },
   "profile": {
     "title": "Perfil",
