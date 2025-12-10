@@ -165,9 +165,9 @@
     "analyticsHiddenNoData": "تظهر عناصر التحليلات فقط عند توفر بيانات.",
     "dragToReorder": "اسحب لإعادة الترتيب",
     "trialBanner": {
-      "title": "ابدأ تجربتك المجانية لمدة 14 يومًا",
-      "description": "جرّب Repvix مجانًا لمدة 14 يومًا وابدأ فورًا بتحليل محادثاتك.",
-      "cta": "ابدأ التجربة الآن"
+      "title": "زد عدد تحليلاتك اليومية",
+      "description": "لديك تحليل مجاني واحد يوميًا. ترقَّ إلى الباقة الأساسية لفتح المزيد من التحليلات اليومية مع تجربة مجانية لمدة 14 يومًا.",
+      "cta": "الترقية مع تجربة 14 يومًا"
     },
     "noMessagesYet": "لا توجد رسائل بعد",
     "chatDeleted": "تم حذف المحادثة",
@@ -475,7 +475,7 @@
     "generatingAnalysis": "جاري توليد التحليل... قد يستغرق هذا بعض الوقت.",
     "analysisGenerated": "تم توليد التحليل بنجاح!",
     "analysisError": "فشل في توليد التحليل",
-    "analysisRateLimit24h": "يمكنك توليد تحليل شامل واحد كل 24 ساعة. الرجاء المحاولة بعد حوالي {hours} ساعة.",
+    "analysisRateLimit24h": "يمكنك توليد تحليل شامل واحد كل 72 ساعة (كل 3 أيام). الرجاء المحاولة بعد حوالي {hours} ساعة.",
     "faqs": {
       "title": "الأسئلة الشائعة من بياناتك",
       "subtitle": "أنشئ أسئلة وأجوبة مختصرة مبنية على تحليلات المحادثات المجمعة.",
@@ -560,8 +560,19 @@
     "agent": "الموظف",
     "analyzing": "جارٍ التحليل...",
     "analyzeChat": "تحليل المحادثة",
+    "selectAnalysisLanguage": "اختر لغة التحليل",
+    "selectAnalysisLanguageHint": "اختر اللغة لإخراج تحليل الذكاء الاصطناعي",
+    "startAnalysis": "بدء التحليل",
+    "cancel": "إلغاء",
     "analysis": "التحليل",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "منخفض جدًا",
+        "low": "منخفض",
+        "medium": "متوسط",
+        "high": "مرتفع",
+        "very_high": "مرتفع جدًا"
+      },
       "sentiment": {
         "very_negative": "سلبي جدًا",
         "negative": "سلبي",
@@ -582,15 +593,40 @@
         "cancellation": "إلغاء",
         "billing_issue": "مشكلة فواتير",
         "account_issue": "مشكلة حساب",
+        "feature_request": "طلب ميزة",
         "feedback": "ملاحظات",
+        "bug_report": "تبليغ عن خلل",
+        "order_issue": "مشكلة طلب",
+        "shipping_issue": "مشكلة شحن",
+        "payment_failure": "فشل الدفع",
+        "usage_help": "مساعدة في الاستخدام",
+        "onboarding_help": "مساعدة في الإعداد",
+        "integration_help": "مساعدة في التكامل",
+        "data_request": "طلب بيانات",
+        "subscription_change": "تغيير الاشتراك",
+        "upgrade_request": "طلب ترقية",
+        "downgrade_request": "طلب تخفيض",
+        "contract_question": "سؤال عقد",
+        "security_question": "سؤال أمني",
+        "compliance_question": "سؤال امتثال",
+        "general_question": "سؤال عام",
         "timeline_confirmation": "تأكيد المواعيد",
+        "features": "المزايا",
+        "pricing": "الأسعار",
+        "timeline": "الجدول الزمني",
+        "multilanguage_support": "دعم متعدد اللغات",
         "other": "أخرى"
       },
       "salesStage": {
         "none": "بدون",
         "awareness": "وعي",
+        "problem_identification": "تحديد المشكلة",
+        "solution_identification": "تحديد الحل",
         "consideration": "تقييم",
+        "evaluation": "تقييم مفصل",
         "decision": "قرار",
+        "negotiation": "تفاوض",
+        "commitment": "التزام",
         "post_purchase": "بعد الشراء"
       },
       "objection": {
@@ -599,6 +635,13 @@
         "complexity": "التعقيد",
         "trust": "الثقة",
         "timing": "التوقيت",
+        "competitor": "منافس",
+        "budget": "ميزانية",
+        "value_unclear": "قيمة غير واضحة",
+        "risk": "مخاطر",
+        "support_quality": "جودة الدعم",
+        "integration_limitations": "قيود التكامل",
+        "missing_capabilities": "قدرات مفقودة",
         "other": "أخرى"
       },
       "rootCause": {
@@ -608,6 +651,15 @@
         "ux": "تجربة المستخدم",
         "onboarding": "الإعداد",
         "expectation_mismatch": "توقعات غير متطابقة",
+        "pricing_transparency": "شفافية التسعير",
+        "scope_definition": "تحديد النطاق",
+        "training_gap": "فجوة تدريبية",
+        "technical_issue": "مشكلة تقنية",
+        "integration_issue": "مشكلة تكامل",
+        "third_party_issue": "مشكلة طرف ثالث",
+        "data_issue": "مشكلة بيانات",
+        "compliance": "امتثال",
+        "process_gap": "فجوة في العملية",
         "other": "أخرى"
       },
       "evidencePurpose": {
@@ -635,7 +687,9 @@
         "billing": "الفوترة",
         "onboarding": "الإعداد",
         "policy": "السياسة",
-        "ux": "تجربة المستخدم"
+        "ux": "تجربة المستخدم",
+        "delivery": "التسليم",
+        "sales": "المبيعات"
       },
       "outcomeStatus": {
         "resolved": "محلولة",
@@ -647,6 +701,8 @@
       }
     },
     "analysisOutcome": "ملخص النتائج",
+    "statusOpen": "مفتوحة",
+    "statusClosed": "مغلقة",
     "status": "الحالة",
     "confidence": "الثقة",
     "summary": "الملخص",

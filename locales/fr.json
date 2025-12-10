@@ -179,9 +179,9 @@
     "analyticsHiddenNoData": "Les widgets d’analyse apparaissent uniquement lorsqu’il y a des données.",
     "dragToReorder": "Glisser pour réorganiser",
     "trialBanner": {
-      "title": "Commencez votre essai gratuit de 14 jours",
-      "description": "Essayez Repvix gratuitement pendant 14 jours et commencez à analyser vos conversations immédiatement.",
-      "cta": "Démarrer l'essai gratuit"
+      "title": "Augmente tes analyses quotidiennes",
+      "description": "Tu as 1 analyse gratuite par jour. Passe au plan Basic pour débloquer plus d’analyses quotidiennes — essai gratuit de 14 jours inclus.",
+      "cta": "Passer à Basic (essai 14 jours)"
     },
     "noMessagesYet": "Aucun message pour l’instant",
     "chatDeleted": "Conversation supprimée",
@@ -489,7 +489,7 @@
     "generatingAnalysis": "Génération de l'analyse en cours... Cela peut prendre un moment.",
     "analysisGenerated": "Analyse générée avec succès !",
     "analysisError": "Échec de la génération de l'analyse",
-    "analysisRateLimit24h": "Vous pouvez générer une analyse globale toutes les 24 heures. Réessayez dans ~{hours} h.",
+    "analysisRateLimit24h": "Vous pouvez générer une analyse globale toutes les 72 heures (tous les 3 jours). Réessayez dans ~{hours} h.",
     "faqs": {
       "title": "FAQs issues de vos données",
       "subtitle": "Générez des questions/réponses concises à partir de vos analyses agrégées.",
@@ -560,8 +560,19 @@
     "agent": "Agent",
     "analyzing": "Analyse en cours",
     "analyzeChat": "Analyser la conversation",
+    "selectAnalysisLanguage": "Sélectionner la Langue d'Analyse",
+    "selectAnalysisLanguageHint": "Choisissez la langue pour la sortie de l'analyse IA",
+    "startAnalysis": "Démarrer l'analyse",
+    "cancel": "Annuler",
     "analysis": "Analyse",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "Très faible",
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Élevée",
+        "very_high": "Très élevée"
+      },
       "sentiment": {
         "very_negative": "Très négatif",
         "negative": "Négatif",
@@ -584,13 +595,38 @@
         "account_issue": "Problème de compte",
         "feedback": "Retour / feedback",
         "timeline_confirmation": "Confirmation du délai",
+        "features": "Fonctionnalités",
+        "pricing": "Tarification",
+        "timeline": "Calendrier",
+        "multilanguage_support": "Support multilingue",
+        "feature_request": "Demande de fonctionnalité",
+        "bug_report": "Signalement de bug",
+        "order_issue": "Problème de commande",
+        "shipping_issue": "Problème de livraison",
+        "payment_failure": "Échec de paiement",
+        "usage_help": "Aide à l'usage",
+        "onboarding_help": "Aide à l'onboarding",
+        "integration_help": "Aide à l'intégration",
+        "data_request": "Demande de données",
+        "subscription_change": "Changement d'abonnement",
+        "upgrade_request": "Demande de mise à niveau",
+        "downgrade_request": "Demande de rétrogradation",
+        "contract_question": "Question contractuelle",
+        "security_question": "Question de sécurité",
+        "compliance_question": "Question de conformité",
+        "general_question": "Question générale",
         "other": "Autre"
       },
       "salesStage": {
         "none": "Aucun",
         "awareness": "Sensibilisation",
+        "problem_identification": "Identification du problème",
+        "solution_identification": "Identification de la solution",
         "consideration": "Considération",
+        "evaluation": "Évaluation",
         "decision": "Décision",
+        "negotiation": "Négociation",
+        "commitment": "Engagement",
         "post_purchase": "Post-achat"
       },
       "objection": {
@@ -599,6 +635,13 @@
         "complexity": "Complexité",
         "trust": "Confiance",
         "timing": "Calendrier",
+        "competitor": "Concurrent",
+        "budget": "Budget",
+        "value_unclear": "Valeur peu claire",
+        "risk": "Risque",
+        "support_quality": "Qualité du support",
+        "integration_limitations": "Limites d'intégration",
+        "missing_capabilities": "Fonctionnalités manquantes",
         "other": "Autre"
       },
       "rootCause": {
@@ -608,6 +651,15 @@
         "ux": "Expérience utilisateur",
         "onboarding": "Onboarding",
         "expectation_mismatch": "Décalage des attentes",
+        "pricing_transparency": "Transparence des prix",
+        "scope_definition": "Définition du périmètre",
+        "training_gap": "Lacune de formation",
+        "technical_issue": "Problème technique",
+        "integration_issue": "Problème d'intégration",
+        "third_party_issue": "Problème tiers",
+        "data_issue": "Problème de données",
+        "compliance": "Conformité",
+        "process_gap": "Lacune de processus",
         "other": "Autre"
       },
       "evidencePurpose": {
@@ -635,7 +687,9 @@
         "billing": "Facturation",
         "onboarding": "Onboarding",
         "policy": "Politique",
-        "ux": "Expérience utilisateur"
+        "ux": "Expérience utilisateur",
+        "delivery": "Livraison",
+        "sales": "Ventes"
       },
       "outcomeStatus": {
         "resolved": "Résolu",
@@ -647,6 +701,8 @@
       }
     },
     "analysisOutcome": "Résumé des résultats",
+    "statusOpen": "Ouverte",
+    "statusClosed": "Fermée",
     "status": "Statut",
     "confidence": "Confiance",
     "summary": "Résumé",

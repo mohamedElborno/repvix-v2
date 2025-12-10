@@ -148,9 +148,9 @@
     "analyticsHiddenNoData": "Analitik bileşenler yalnızca veri varsa görünür.",
     "dragToReorder": "Sürükleyip yeniden sırala",
     "trialBanner": {
-      "title": "14 günlük ücretsiz denemenizi başlatın",
-      "description": "Repvix'i 14 gün ücretsiz deneyin ve sohbetlerinizi anında analiz etmeye başlayın.",
-      "cta": "Ücretsiz denemeyi başlat"
+      "title": "Günlük analiz sayını artır",
+      "description": "Günde 1 ücretsiz analiz hakkın var. Daha fazla günlük analiz için Basic’e geç — 14 günlük ücretsiz deneme dahildir.",
+      "cta": "14 gün ücretsiz deneme ile yükselt"
     },
     "noMessagesYet": "Henüz mesaj yok",
     "chatDeleted": "Sohbet silindi",
@@ -458,7 +458,7 @@
     "generatingAnalysis": "Analiz oluşturuluyor... Bu biraz zaman alabilir.",
     "analysisGenerated": "Analiz başarıyla oluşturuldu!",
     "analysisError": "Analiz oluşturulamadı",
-    "analysisRateLimit24h": "Her 24 saatte bir genel analiz oluşturabilirsiniz. Lütfen ~{hours} saat sonra tekrar deneyin.",
+    "analysisRateLimit24h": "Her 72 saatte (her 3 günde) bir genel analiz oluşturabilirsiniz. Lütfen ~{hours} saat sonra tekrar deneyin.",
     "faqs": {
       "title": "Verilerinizden SSS",
       "subtitle": "Toplu analizlerinizden kısa soru-cevaplar üretin.",
@@ -534,8 +534,19 @@
     "agent": "Temsilci",
     "analyzing": "Analiz Ediliyor",
     "analyzeChat": "Sohbeti Analiz Et",
+    "selectAnalysisLanguage": "Analiz Dili Seç",
+    "selectAnalysisLanguageHint": "Yapay zeka analiz çıktısı için dili seçin",
+    "startAnalysis": "Analizi Başlat",
+    "cancel": "İptal",
     "analysis": "Analiz",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "Çok düşük",
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek",
+        "very_high": "Çok yüksek"
+      },
       "sentiment": {
         "very_negative": "Çok negatif",
         "negative": "Negatif",
@@ -558,13 +569,38 @@
         "account_issue": "Hesap sorunu",
         "feedback": "Geri bildirim",
         "timeline_confirmation": "Zaman çizelgesi onayı",
+        "features": "Özellikler",
+        "pricing": "Fiyatlandırma",
+        "timeline": "Zaman çizelgesi",
+        "multilanguage_support": "Çok dilli destek",
+        "feature_request": "Özellik talebi",
+        "bug_report": "Hata bildirimi",
+        "order_issue": "Sipariş sorunu",
+        "shipping_issue": "Kargo/teslimat sorunu",
+        "payment_failure": "Ödeme hatası",
+        "usage_help": "Kullanım yardımı",
+        "onboarding_help": "Onboarding yardımı",
+        "integration_help": "Entegrasyon yardımı",
+        "data_request": "Veri talebi",
+        "subscription_change": "Abonelik değişikliği",
+        "upgrade_request": "Yükseltme talebi",
+        "downgrade_request": "Düşürme talebi",
+        "contract_question": "Sözleşme sorusu",
+        "security_question": "Güvenlik sorusu",
+        "compliance_question": "Uyumluluk sorusu",
+        "general_question": "Genel soru",
         "other": "Diğer"
       },
       "salesStage": {
         "none": "Yok",
         "awareness": "Farkındalık",
+        "problem_identification": "Sorun tespiti",
+        "solution_identification": "Çözüm tespiti",
         "consideration": "Değerlendirme",
+        "evaluation": "Detaylı değerlendirme",
         "decision": "Karar",
+        "negotiation": "Müzakere",
+        "commitment": "Taahhüt",
         "post_purchase": "Satın alma sonrası"
       },
       "objection": {
@@ -573,6 +609,13 @@
         "complexity": "Karmaşıklık",
         "trust": "Güven",
         "timing": "Zamanlama",
+        "competitor": "Rakip",
+        "budget": "Bütçe",
+        "value_unclear": "Değer belirsiz",
+        "risk": "Risk",
+        "support_quality": "Destek kalitesi",
+        "integration_limitations": "Entegrasyon kısıtları",
+        "missing_capabilities": "Eksik kabiliyetler",
         "other": "Diğer"
       },
       "rootCause": {
@@ -582,6 +625,15 @@
         "ux": "Kullanıcı deneyimi",
         "onboarding": "Onboarding",
         "expectation_mismatch": "Beklenti uyumsuzluğu",
+        "pricing_transparency": "Fiyat şeffaflığı",
+        "scope_definition": "Kapsam tanımı",
+        "training_gap": "Eğitim eksikliği",
+        "technical_issue": "Teknik sorun",
+        "integration_issue": "Entegrasyon sorunu",
+        "third_party_issue": "Üçüncü taraf sorunu",
+        "data_issue": "Veri sorunu",
+        "compliance": "Uyumluluk",
+        "process_gap": "Süreç boşluğu",
         "other": "Diğer"
       },
       "evidencePurpose": {
@@ -609,7 +661,9 @@
         "billing": "Faturalama",
         "onboarding": "Onboarding",
         "policy": "Politika",
-        "ux": "Kullanıcı deneyimi"
+        "ux": "Kullanıcı deneyimi",
+        "delivery": "Teslimat",
+        "sales": "Satış"
       },
       "outcomeStatus": {
         "resolved": "Çözüldü",
@@ -621,6 +675,8 @@
       }
     },
     "analysisOutcome": "Sonuç Özeti",
+    "statusOpen": "Açık",
+    "statusClosed": "Kapalı",
     "status": "Durum",
     "confidence": "Güven Düzeyi",
     "summary": "Özet",

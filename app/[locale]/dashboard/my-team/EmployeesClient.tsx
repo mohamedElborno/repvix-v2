@@ -85,7 +85,6 @@ export default function EmployeesClient() {
     }
   }, [isLoaded, organization, userMemberships, setActive]);
 
-  console.log(userMemberships);
   // ----------- LOAD MEMBERS ----------- //
   const members = useQuery(
     api.orgs.getOrganizationMembers,
@@ -179,7 +178,6 @@ export default function EmployeesClient() {
         </div>
       );
     }
-    console.log("userMemberships", userMemberships);
     // 4) normal dashboard
     return (
       <div className="space-y-6 min-h-[calc(100vh-120px)]">

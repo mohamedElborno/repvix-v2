@@ -165,9 +165,9 @@
     "analyticsHiddenNoData": "एनालिटिक्स विजेट तभी दिखेंगे जब डेटा उपलब्ध हो.",
     "dragToReorder": "खींचें और क्रम बदलें",
     "trialBanner": {
-      "title": "14-दिन का मुफ्त ट्रायल शुरू करें",
-      "description": "Repvix को 14 दिनों के लिए मुफ्त में आज़माएँ और तुरंत अपनी चैट्स का विश्लेषण शुरू करें।",
-      "cta": "ट्रायल शुरू करें"
+      "title": "अपने दैनिक विश्लेषण बढ़ाएं",
+      "description": "आपके पास रोज़ 1 मुफ़्त विश्लेषण है। अधिक दैनिक विश्लेषण अनलॉक करने के लिए Basic प्लान लें — इसमें 14 दिन का मुफ़्त ट्रायल शामिल है।",
+      "cta": "14‑दिन मुफ्त ट्रायल के साथ अपग्रेड करें"
     },
     "noMessagesYet": "अभी कोई संदेश नहीं",
     "chatDeleted": "चैट हटा दी गई",
@@ -475,7 +475,7 @@
     "generatingAnalysis": "विश्लेषण उत्पन्न हो रहा है... इसमें कुछ समय लग सकता है।",
     "analysisGenerated": "विश्लेषण सफलतापूर्वक उत्पन्न हुआ!",
     "analysisError": "विश्लेषण उत्पन्न करने में विफल",
-    "analysisRateLimit24h": "आप हर 24 घंटे में एक वैश्विक विश्लेषण बना सकते हैं। कृपया ~{hours} घंटे बाद पुनः प्रयास करें।",
+    "analysisRateLimit24h": "आप हर 72 घंटे (हर 3 दिन) में एक वैश्विक विश्लेषण बना सकते हैं। कृपया ~{hours} घंटे बाद पुनः प्रयास करें।",
     "faqs": {
       "title": "आपके डेटा से FAQs",
       "subtitle": "समेकित विश्लेषणों से संक्षिप्त प्रश्न-उत्तर तैयार करें।",
@@ -560,8 +560,19 @@
     "agent": "एजेंट",
     "analyzing": "विश्लेषण जारी है",
     "analyzeChat": "चैट का विश्लेषण करें",
+    "selectAnalysisLanguage": "विश्लेषण भाषा चुनें",
+    "selectAnalysisLanguageHint": "AI विश्लेषण आउटपुट के लिए भाषा चुनें",
+    "startAnalysis": "विश्लेषण शुरू करें",
+    "cancel": "रद्द करें",
     "analysis": "विश्लेषण",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "बहुत कम",
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च",
+        "very_high": "बहुत उच्च"
+      },
       "sentiment": {
         "very_negative": "अत्यंत नकारात्मक",
         "negative": "नकारात्मक",
@@ -582,15 +593,40 @@
         "cancellation": "रद्द करना",
         "billing_issue": "बिलिंग समस्या",
         "account_issue": "खाता समस्या",
+        "feature_request": "फ़ीचर अनुरोध",
         "feedback": "प्रतिक्रिया",
+        "bug_report": "बग रिपोर्ट",
+        "order_issue": "ऑर्डर समस्या",
+        "shipping_issue": "शिपिंग समस्या",
+        "payment_failure": "भुगतान विफलता",
+        "usage_help": "उपयोग सहायता",
+        "onboarding_help": "ऑनबोर्डिंग सहायता",
+        "integration_help": "इंटीग्रेशन सहायता",
+        "data_request": "डेटा अनुरोध",
+        "subscription_change": "सदस्यता परिवर्तन",
+        "upgrade_request": "अपग्रेड अनुरोध",
+        "downgrade_request": "डाउनग्रेड अनुरोध",
+        "contract_question": "कॉन्ट्रैक्ट प्रश्न",
+        "security_question": "सुरक्षा प्रश्न",
+        "compliance_question": "अनुपालन प्रश्न",
+        "general_question": "सामान्य प्रश्न",
         "timeline_confirmation": "समय-सीमा की पुष्टि",
+        "features": "विशेषताएँ",
+        "pricing": "मूल्य निर्धारण",
+        "timeline": "समयरेखा",
+        "multilanguage_support": "बहुभाषी समर्थन",
         "other": "अन्य"
       },
       "salesStage": {
         "none": "कोई नहीं",
         "awareness": "जागरूकता",
+        "problem_identification": "समस्या की पहचान",
+        "solution_identification": "समाधान की पहचान",
         "consideration": "विचार",
+        "evaluation": "मूल्यांकन",
         "decision": "निर्णय",
+        "negotiation": "मोलभाव",
+        "commitment": "प्रतिबद्धता",
         "post_purchase": "खरीद के बाद"
       },
       "objection": {
@@ -599,6 +635,13 @@
         "complexity": "जटिलता",
         "trust": "विश्वास",
         "timing": "समय",
+        "competitor": "प्रतियोगी",
+        "budget": "बजट",
+        "value_unclear": "मूल्य अस्पष्ट",
+        "risk": "जोखिम",
+        "support_quality": "सपोर्ट गुणवत्ता",
+        "integration_limitations": "इंटीग्रेशन सीमाएँ",
+        "missing_capabilities": "गुम क्षमताएँ",
         "other": "अन्य"
       },
       "rootCause": {
@@ -608,6 +651,15 @@
         "ux": "उपयोगकर्ता अनुभव",
         "onboarding": "ऑनबोर्डिंग",
         "expectation_mismatch": "अपेक्षा असंगति",
+        "pricing_transparency": "मूल्य पारदर्शिता",
+        "scope_definition": "स्कोप परिभाषा",
+        "training_gap": "प्रशिक्षण अंतर",
+        "technical_issue": "तकनीकी समस्या",
+        "integration_issue": "इंटीग्रेशन समस्या",
+        "third_party_issue": "थर्ड-पार्टी समस्या",
+        "data_issue": "डेटा समस्या",
+        "compliance": "अनुपालन",
+        "process_gap": "प्रक्रिया अंतर",
         "other": "अन्य"
       },
       "evidencePurpose": {
@@ -635,7 +687,9 @@
         "billing": "बिलिंग",
         "onboarding": "ऑनबोर्डिंग",
         "policy": "नीति",
-        "ux": "उपयोगकर्ता अनुभव"
+        "ux": "उपयोगकर्ता अनुभव",
+        "delivery": "डिलीवरी",
+        "sales": "बिक्री"
       },
       "outcomeStatus": {
         "resolved": "सुलझा",
@@ -647,6 +701,8 @@
       }
     },
     "analysisOutcome": "परिणाम सारांश",
+    "statusOpen": "खुला",
+    "statusClosed": "बंद",
     "status": "स्थिति",
     "confidence": "विश्वास स्तर",
     "summary": "सारांश",

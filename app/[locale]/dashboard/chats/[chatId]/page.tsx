@@ -14,7 +14,6 @@ interface PageProps {
 export default async function ChatPage({ params }: PageProps) {
   const { chatId } = await params;
   const { userId, orgId } = await auth();
-  console.log("chatId", chatId);
 
   if (!userId || !orgId) {
     notFound();

@@ -20,7 +20,9 @@ export const processOne = internalMutation(
         (event.webhookId &&
           (await ctx.db
             .query("webhookEvents")
-            .withIndex("by_webhookId", (q) => q.eq("webhookId", event.webhookId))
+            .withIndex("by_webhookId", (q) =>
+              q.eq("webhookId", event.webhookId)
+            )
             .first())) ||
         (await ctx.db
           .query("webhookEvents")
@@ -40,8 +42,6 @@ export const processOne = internalMutation(
 export const run = internalMutation(async (ctx) => {
   const events = await ctx.runQuery(internal.billingProcessor.unprocessed, {});
 
-  console.log(`Processing ${events.length} unprocessed webhook events`);
-
   for (const ev of events) {
     try {
       await ctx.runMutation(internal.billingProcessor.processOne, {
@@ -55,6 +55,4 @@ export const run = internalMutation(async (ctx) => {
       // Continue processing other events even if one fails
     }
   }
-
-  console.log(`Finished processing ${events.length} webhook events`);
 });

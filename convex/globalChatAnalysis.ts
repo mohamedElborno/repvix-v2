@@ -46,16 +46,16 @@ export const runFullGlobalAnalysis = action({
       };
     }
 
-    // Rate limit: one global analysis per org per day (24h window)
+    // Rate limit: one global analysis per org every 3 days (72h window)
     const latest = await ctx.runQuery(api.globalAnalysis.getLatestByOrg, {
       organizationId: args.organizationId,
     });
     const lastCreatedAt = latest?.analysis?.createdAt;
     if (lastCreatedAt) {
       const now = Date.now();
-      const oneDayMs = 24 * 60 * 60 * 1000;
-      if (now - lastCreatedAt < oneDayMs) {
-        const remainingMs = oneDayMs - (now - lastCreatedAt);
+      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+      if (now - lastCreatedAt < threeDaysMs) {
+        const remainingMs = threeDaysMs - (now - lastCreatedAt);
         const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
         return {
           ok: false,

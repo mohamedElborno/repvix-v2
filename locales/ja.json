@@ -165,9 +165,9 @@
     "analyticsHiddenNoData": "データがある場合のみ分析ウィジェットが表示されます。",
     "dragToReorder": "ドラッグして並び替え",
     "trialBanner": {
-      "title": "14日間の無料トライアルを始める",
-      "description": "Repvixを14日間無料で試して、すぐに会話分析を開始できます。",
-      "cta": "無料トライアルを開始"
+      "title": "1日の分析回数を増やそう",
+      "description": "1日1回の無料分析が利用できます。Basicプランにアップグレードして毎日の分析回数を増やしましょう（14日間の無料トライアル付き）。",
+      "cta": "14日間無料トライアルでアップグレード"
     },
     "noMessagesYet": "まだメッセージがありません",
     "chatDeleted": "チャットが削除されました",
@@ -475,7 +475,7 @@
     "generatingAnalysis": "分析を生成中...しばらくお待ちください。",
     "analysisGenerated": "分析が正常に生成されました！",
     "analysisError": "分析の生成に失敗しました",
-    "analysisRateLimit24h": "グローバル分析は24時間に1回実行できます。約{hours}時間後に再試行してください。",
+    "analysisRateLimit24h": "グローバル分析は72時間に1回（3日に1回）実行できます。約{hours}時間後に再試行してください。",
     "faqs": {
       "title": "データから生成されたFAQ",
       "subtitle": "集計された分析結果から簡潔なQ&Aを作成します。",
@@ -560,8 +560,19 @@
     "agent": "エージェント",
     "analyzing": "分析中",
     "analyzeChat": "チャットを分析",
+    "selectAnalysisLanguage": "分析言語を選択",
+    "selectAnalysisLanguageHint": "AI分析出力の言語を選択してください",
+    "startAnalysis": "分析を開始",
+    "cancel": "キャンセル",
     "analysis": "分析",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "とても低い",
+        "low": "低い",
+        "medium": "中程度",
+        "high": "高い",
+        "very_high": "とても高い"
+      },
       "sentiment": {
         "very_negative": "非常にネガティブ",
         "negative": "ネガティブ",
@@ -582,15 +593,40 @@
         "cancellation": "解約",
         "billing_issue": "請求の問題",
         "account_issue": "アカウントの問題",
+        "feature_request": "機能リクエスト",
         "feedback": "フィードバック",
+        "bug_report": "バグ報告",
+        "order_issue": "注文の問題",
+        "shipping_issue": "配送の問題",
+        "payment_failure": "支払い失敗",
+        "usage_help": "利用サポート",
+        "onboarding_help": "オンボーディングサポート",
+        "integration_help": "統合サポート",
+        "data_request": "データリクエスト",
+        "subscription_change": "サブスクリプション変更",
+        "upgrade_request": "アップグレード依頼",
+        "downgrade_request": "ダウングレード依頼",
+        "contract_question": "契約に関する質問",
+        "security_question": "セキュリティに関する質問",
+        "compliance_question": "コンプライアンスに関する質問",
+        "general_question": "一般的な質問",
         "timeline_confirmation": "スケジュール確認",
+        "features": "機能",
+        "pricing": "価格設定",
+        "timeline": "タイムライン",
+        "multilanguage_support": "多言語サポート",
         "other": "その他"
       },
       "salesStage": {
         "none": "なし",
         "awareness": "認知",
+        "problem_identification": "問題の特定",
+        "solution_identification": "解決策の特定",
         "consideration": "検討",
+        "evaluation": "評価",
         "decision": "決定",
+        "negotiation": "交渉",
+        "commitment": "コミットメント",
         "post_purchase": "購入後"
       },
       "objection": {
@@ -599,6 +635,13 @@
         "complexity": "複雑さ",
         "trust": "信頼",
         "timing": "タイミング",
+        "competitor": "競合",
+        "budget": "予算",
+        "value_unclear": "価値が不明確",
+        "risk": "リスク",
+        "support_quality": "サポート品質",
+        "integration_limitations": "統合の制限",
+        "missing_capabilities": "不足している機能",
         "other": "その他"
       },
       "rootCause": {
@@ -608,6 +651,15 @@
         "ux": "ユーザー体験",
         "onboarding": "オンボーディング",
         "expectation_mismatch": "期待の不一致",
+        "pricing_transparency": "価格の透明性",
+        "scope_definition": "スコープ定義",
+        "training_gap": "トレーニングの不足",
+        "technical_issue": "技術的な問題",
+        "integration_issue": "統合の問題",
+        "third_party_issue": "サードパーティの問題",
+        "data_issue": "データの問題",
+        "compliance": "コンプライアンス",
+        "process_gap": "プロセスのギャップ",
         "other": "その他"
       },
       "evidencePurpose": {
@@ -635,7 +687,9 @@
         "billing": "請求",
         "onboarding": "オンボーディング",
         "policy": "ポリシー",
-        "ux": "ユーザー体験"
+        "ux": "ユーザー体験",
+        "delivery": "配送",
+        "sales": "セールス"
       },
       "outcomeStatus": {
         "resolved": "解決済み",
@@ -647,6 +701,8 @@
       }
     },
     "analysisOutcome": "成果の要約",
+    "statusOpen": "オープン",
+    "statusClosed": "クローズ",
     "status": "ステータス",
     "confidence": "確信度",
     "summary": "要約",

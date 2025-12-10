@@ -5,6 +5,8 @@ kurumsal seviyede bir Operasyonel Zekâ Analistisiniz.
 Sana, sohbet analizlerinden elde edilen tüm istatistiklerin
 (toplu rule-based veriler) bulunduğu bir JSON gönderilecektir.
 
+"commonTopics" ve "commonIssues" için: insan tarafından okunabilir kısa ifadeler döndür (enum key ya da snake_case kullanma). Kod benzeri etiketleri anlaşılır ifadeye çevir (örn: "pre_sales_question" → "Ön satış soruları", "scope_clarity" → "Kapsam netliği").
+
 Görevin:
 - Kurum seviyesinde kapsamlı bir analiz üretmek
 - Trendleri ve operasyonel kalıpları belirlemek
@@ -69,5 +71,6 @@ Sadece aşağıdaki EXACT JSON formatını üret:
 4. JSON dışında hiçbir metin üretme.
 5. Her cümleyi kısa ve doğrudan yaz (mümkün olduğunca 18 kelimeyi aşmamalı).
 6. Hiçbir metin JSON dışında yazma.
+7. commonTopics/commonIssues için: yalnızca okunabilir kısa ifadeler ver (anahtar, snake_case, underscore yok). Kod benzeri etiketleri çıktı dilinde anlaşılır ifadeye çevir.
 ########## END ##########
 `;

@@ -179,9 +179,9 @@
     "analyticsHiddenNoData": "Los widgets de analítica aparecen solo cuando hay datos.",
     "dragToReorder": "Arrastra para reordenar",
     "trialBanner": {
-      "title": "Comienza tu prueba gratis de 14 días",
-      "description": "Prueba Repvix gratis durante 14 días y empieza a analizar tus conversaciones de inmediato.",
-      "cta": "Empezar prueba gratuita"
+      "title": "Aumenta tus análisis diarios",
+      "description": "Tienes 1 análisis gratis al día. Mejora al plan Basic para desbloquear más análisis diarios — incluye prueba gratis de 14 días.",
+      "cta": "Mejorar con prueba de 14 días"
     },
     "noMessagesYet": "Aún no hay mensajes",
     "chatDeleted": "Chat eliminado",
@@ -489,7 +489,7 @@
     "generatingAnalysis": "Generando análisis... Esto puede tardar un momento.",
     "analysisGenerated": "¡Análisis generado con éxito!",
     "analysisError": "Error al generar el análisis",
-    "analysisRateLimit24h": "Puedes generar un análisis global cada 24 horas. Inténtalo de nuevo en ~{hours} h.",
+    "analysisRateLimit24h": "Puedes generar un análisis global cada 72 horas (cada 3 días). Inténtalo de nuevo en ~{hours} h.",
     "faqs": {
       "title": "Preguntas frecuentes desde tus datos",
       "subtitle": "Genera preguntas y respuestas concisas a partir de tus análisis agregados.",
@@ -560,8 +560,19 @@
     "agent": "Agente",
     "analyzing": "Analizando",
     "analyzeChat": "Analizar Chat",
+    "selectAnalysisLanguage": "Seleccionar Idioma del Análisis",
+    "selectAnalysisLanguageHint": "Elige el idioma para la salida del análisis de IA",
+    "startAnalysis": "Iniciar análisis",
+    "cancel": "Cancelar",
     "analysis": "Análisis",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "Muy baja",
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta",
+        "very_high": "Muy alta"
+      },
       "sentiment": {
         "very_negative": "Muy negativo",
         "negative": "Negativo",
@@ -584,13 +595,38 @@
         "account_issue": "Problema de cuenta",
         "feedback": "Comentarios",
         "timeline_confirmation": "Confirmación de plazos",
+        "features": "Funciones",
+        "pricing": "Precios",
+        "timeline": "Línea de tiempo",
+        "multilanguage_support": "Soporte multilenguaje",
+        "feature_request": "Solicitud de característica",
+        "bug_report": "Reporte de error",
+        "order_issue": "Problema con pedido",
+        "shipping_issue": "Problema de envío",
+        "payment_failure": "Fallo de pago",
+        "usage_help": "Ayuda de uso",
+        "onboarding_help": "Ayuda de onboarding",
+        "integration_help": "Ayuda de integración",
+        "data_request": "Solicitud de datos",
+        "subscription_change": "Cambio de suscripción",
+        "upgrade_request": "Solicitud de upgrade",
+        "downgrade_request": "Solicitud de downgrade",
+        "contract_question": "Pregunta de contrato",
+        "security_question": "Pregunta de seguridad",
+        "compliance_question": "Pregunta de cumplimiento",
+        "general_question": "Pregunta general",
         "other": "Otro"
       },
       "salesStage": {
         "none": "Ninguno",
         "awareness": "Conocimiento",
+        "problem_identification": "Identificación del problema",
+        "solution_identification": "Identificación de la solución",
         "consideration": "Consideración",
+        "evaluation": "Evaluación",
         "decision": "Decisión",
+        "negotiation": "Negociación",
+        "commitment": "Compromiso",
         "post_purchase": "Post-compra"
       },
       "objection": {
@@ -599,6 +635,13 @@
         "complexity": "Complejidad",
         "trust": "Confianza",
         "timing": "Plazos",
+        "competitor": "Competidor",
+        "budget": "Presupuesto",
+        "value_unclear": "Valor poco claro",
+        "risk": "Riesgo",
+        "support_quality": "Calidad de soporte",
+        "integration_limitations": "Limitaciones de integración",
+        "missing_capabilities": "Capacidades faltantes",
         "other": "Otro"
       },
       "rootCause": {
@@ -608,6 +651,15 @@
         "ux": "Experiencia de usuario",
         "onboarding": "Onboarding",
         "expectation_mismatch": "Desajuste de expectativas",
+        "pricing_transparency": "Transparencia de precios",
+        "scope_definition": "Definición de alcance",
+        "training_gap": "Brecha de capacitación",
+        "technical_issue": "Problema técnico",
+        "integration_issue": "Problema de integración",
+        "third_party_issue": "Problema de terceros",
+        "data_issue": "Problema de datos",
+        "compliance": "Cumplimiento",
+        "process_gap": "Brecha de proceso",
         "other": "Otro"
       },
       "evidencePurpose": {
@@ -635,7 +687,9 @@
         "billing": "Facturación",
         "onboarding": "Onboarding",
         "policy": "Política",
-        "ux": "Experiencia de usuario"
+        "ux": "Experiencia de usuario",
+        "delivery": "Entrega",
+        "sales": "Ventas"
       },
       "outcomeStatus": {
         "resolved": "Resuelto",
@@ -647,6 +701,8 @@
       }
     },
     "analysisOutcome": "Resumen del Resultado",
+    "statusOpen": "Abierto",
+    "statusClosed": "Cerrado",
     "status": "Estado",
     "confidence": "Confianza",
     "summary": "Resumen",

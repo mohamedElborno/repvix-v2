@@ -11,7 +11,6 @@ import {
   Settings2,
   LayoutGrid,
   PanelsTopLeft,
-  Sparkles,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import UploadChatDialog from "../UploadChatDialog";
 import ChatListItem from "../ChatListItem";
 import { useTranslations } from "next-intl";
 import type { DashboardClientProps } from "../../types/dashboard";
-import { useUser, useOrganization } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/nextjs";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
   useQuery,
@@ -104,7 +103,6 @@ export default function DashboardClient({
   initialChats,
 }: DashboardClientProps) {
   const locale = useLocale();
-  const { user } = useUser();
   const { organization } = useOrganization();
   const t = useTranslations("dashboard");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);

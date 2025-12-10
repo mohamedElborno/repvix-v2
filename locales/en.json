@@ -165,9 +165,9 @@
     "analyticsHiddenNoData": "Analytics widgets appear here only when data exists.",
     "dragToReorder": "Drag to reorder",
     "trialBanner": {
-      "title": "Start your 14-day free trial",
-      "description": "Try Repvix free for 14 days and start analyzing your chats instantly.",
-      "cta": "Start free trial"
+      "title": "Boost your daily analyses",
+      "description": "You have 1 free analysis per day. Upgrade to Basic to unlock more daily analyses — includes a 14-day free trial.",
+      "cta": "Upgrade with 14-day free trial"
     },
     "noMessagesYet": "No messages yet",
     "chatDeleted": "Chat deleted",
@@ -475,7 +475,7 @@
     "generatingAnalysis": "Generating analysis... This may take a moment.",
     "analysisGenerated": "Analysis generated successfully!",
     "analysisError": "Failed to generate analysis",
-    "analysisRateLimit24h": "You can generate one global analysis every 24 hours. Try again in ~{hours}h.",
+    "analysisRateLimit24h": "You can generate one global analysis every 72 hours (every 3 days). Try again in ~{hours}h.",
     "faqs": {
       "title": "FAQs from your data",
       "subtitle": "Generate concise questions and answers from your aggregated chat insights.",
@@ -560,8 +560,19 @@
     "agent": "Agent",
     "analyzing": "Analyzing",
     "analyzeChat": "Analyze Chat",
+    "selectAnalysisLanguage": "Select Analysis Language",
+    "selectAnalysisLanguageHint": "Choose the language for the AI analysis output",
+    "startAnalysis": "Start Analysis",
+    "cancel": "Cancel",
     "analysis": "Analysis",
     "analysisLabels": {
+      "satisfaction": {
+        "very_low": "Very low",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "very_high": "Very high"
+      },
       "sentiment": {
         "very_negative": "Very negative",
         "negative": "Negative",
@@ -584,13 +595,38 @@
         "account_issue": "Account issue",
         "feedback": "Feedback",
         "timeline_confirmation": "Timeline confirmation",
+        "features": "Features",
+        "pricing": "Pricing",
+        "timeline": "Timeline",
+        "multilanguage_support": "Multilanguage support",
+        "feature_request": "Feature request",
+        "bug_report": "Bug report",
+        "order_issue": "Order issue",
+        "shipping_issue": "Shipping issue",
+        "payment_failure": "Payment failure",
+        "usage_help": "Usage help",
+        "onboarding_help": "Onboarding help",
+        "integration_help": "Integration help",
+        "data_request": "Data request",
+        "subscription_change": "Subscription change",
+        "upgrade_request": "Upgrade request",
+        "downgrade_request": "Downgrade request",
+        "contract_question": "Contract question",
+        "security_question": "Security question",
+        "compliance_question": "Compliance question",
+        "general_question": "General question",
         "other": "Other"
       },
       "salesStage": {
         "none": "None",
         "awareness": "Awareness",
+        "problem_identification": "Problem identification",
+        "solution_identification": "Solution identification",
         "consideration": "Consideration",
+        "evaluation": "Evaluation",
         "decision": "Decision",
+        "negotiation": "Negotiation",
+        "commitment": "Commitment",
         "post_purchase": "Post-purchase"
       },
       "objection": {
@@ -599,6 +635,13 @@
         "complexity": "Complexity",
         "trust": "Trust",
         "timing": "Timing",
+        "competitor": "Competitor",
+        "budget": "Budget",
+        "value_unclear": "Value unclear",
+        "risk": "Risk",
+        "support_quality": "Support quality",
+        "integration_limitations": "Integration limitations",
+        "missing_capabilities": "Missing capabilities",
         "other": "Other"
       },
       "rootCause": {
@@ -608,6 +651,15 @@
         "ux": "UX / usability",
         "onboarding": "Onboarding",
         "expectation_mismatch": "Expectation mismatch",
+        "pricing_transparency": "Pricing transparency",
+        "scope_definition": "Scope definition",
+        "training_gap": "Training gap",
+        "technical_issue": "Technical issue",
+        "integration_issue": "Integration issue",
+        "third_party_issue": "Third-party issue",
+        "data_issue": "Data issue",
+        "compliance": "Compliance",
+        "process_gap": "Process gap",
         "other": "Other"
       },
       "evidencePurpose": {
@@ -635,7 +687,9 @@
         "billing": "Billing",
         "onboarding": "Onboarding",
         "policy": "Policy",
-        "ux": "UX / usability"
+        "ux": "UX / usability",
+        "delivery": "Delivery",
+        "sales": "Sales"
       },
       "outcomeStatus": {
         "resolved": "Resolved",
@@ -647,6 +701,8 @@
       }
     },
     "analysisOutcome": "Outcome Summary",
+    "statusOpen": "Open",
+    "statusClosed": "Closed",
     "status": "Status",
     "confidence": "Confidence",
     "summary": "Summary",

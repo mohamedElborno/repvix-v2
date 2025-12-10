@@ -86,7 +86,6 @@ export default function EmployeeDetailsClient({
   employee,
   clerkUserId,
 }: EmployeeDetailsClientProps) {
-  console.log("EMPLOYEE:", employee);
   const t = useTranslations("team");
   const locale = useLocale();
   const router = useRouter();

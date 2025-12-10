@@ -59,6 +59,90 @@ const CHART_COLORS = [
   "#06b6d4",
 ];
 
+const SENTIMENT_LABELS: Record<
+  string,
+  Record<
+    "very_negative" | "negative" | "neutral" | "positive" | "very_positive",
+    string
+  >
+> = {
+  ar: {
+    very_negative: "سلبي جدًا",
+    negative: "سلبي",
+    neutral: "محايد",
+    positive: "إيجابي",
+    very_positive: "إيجابي جدًا",
+  },
+  en: {
+    very_negative: "Very negative",
+    negative: "Negative",
+    neutral: "Neutral",
+    positive: "Positive",
+    very_positive: "Very positive",
+  },
+  es: {
+    very_negative: "Muy negativo",
+    negative: "Negativo",
+    neutral: "Neutral",
+    positive: "Positivo",
+    very_positive: "Muy positivo",
+  },
+  fr: {
+    very_negative: "Très négatif",
+    negative: "Négatif",
+    neutral: "Neutre",
+    positive: "Positif",
+    very_positive: "Très positif",
+  },
+  hi: {
+    very_negative: "अत्यंत नकारात्मक",
+    negative: "नकारात्मक",
+    neutral: "तटस्थ",
+    positive: "सकारात्मक",
+    very_positive: "अत्यंत सकारात्मक",
+  },
+  ja: {
+    very_negative: "とてもネガティブ",
+    negative: "ネガティブ",
+    neutral: "ニュートラル",
+    positive: "ポジティブ",
+    very_positive: "とてもポジティブ",
+  },
+  tr: {
+    very_negative: "Çok negatif",
+    negative: "Negatif",
+    neutral: "Nötr",
+    positive: "Pozitif",
+    very_positive: "Çok pozitif",
+  },
+};
+
+const RISK_LEVEL_LABELS: Record<
+  string,
+  Record<"low" | "medium" | "high", string>
+> = {
+  ar: { low: "منخفض", medium: "متوسط", high: "مرتفع" },
+  en: { low: "Low", medium: "Medium", high: "High" },
+  es: { low: "Bajo", medium: "Medio", high: "Alto" },
+  fr: { low: "Faible", medium: "Moyen", high: "Élevé" },
+  hi: { low: "कम", medium: "मध्यम", high: "उच्च" },
+  ja: { low: "低", medium: "中", high: "高" },
+  tr: { low: "Düşük", medium: "Orta", high: "Yüksek" },
+};
+
+const PRIORITY_LABELS: Record<
+  string,
+  Record<"low" | "medium" | "high", string>
+> = {
+  ar: { low: "منخفض", medium: "متوسط", high: "مرتفع" },
+  en: { low: "Low", medium: "Medium", high: "High" },
+  es: { low: "Baja", medium: "Media", high: "Alta" },
+  fr: { low: "Faible", medium: "Moyenne", high: "Élevée" },
+  hi: { low: "कम", medium: "मध्यम", high: "उच्च" },
+  ja: { low: "低い", medium: "中", high: "高い" },
+  tr: { low: "Düşük", medium: "Orta", high: "Yüksek" },
+};
+
 export default function GlobalAnalyticsClient() {
   const t = useTranslations("dashboard");
   const locale = useLocale();
@@ -107,6 +191,33 @@ export default function GlobalAnalyticsClient() {
   const isLoading = organization?.id
     ? convexOrgId === undefined || latest === undefined
     : false;
+
+  const translateSentiment = (value?: string | null) => {
+    if (!value) return "N/A";
+    return (
+      SENTIMENT_LABELS[locale]?.[
+        value as keyof (typeof SENTIMENT_LABELS)[typeof locale]
+      ] ?? value
+    );
+  };
+
+  const translateRiskLevel = (value?: string | null) => {
+    if (!value) return "N/A";
+    return (
+      RISK_LEVEL_LABELS[locale]?.[
+        value as keyof (typeof RISK_LEVEL_LABELS)[typeof locale]
+      ] ?? value
+    );
+  };
+
+  const translatePriority = (value?: string | null) => {
+    if (!value) return value ?? "";
+    return (
+      PRIORITY_LABELS[locale]?.[
+        value as keyof (typeof PRIORITY_LABELS)[typeof locale]
+      ] ?? value
+    );
+  };
 
   const languages = [
     { code: "ar", name: "العربية" },
@@ -516,7 +627,7 @@ export default function GlobalAnalyticsClient() {
                       </p>
                     </div>
                     <p className="text-lg font-bold text-foreground capitalize">
-                      {analysis.overallSentiment || "N/A"}
+                      {translateSentiment(analysis.overallSentiment)}
                     </p>
                   </div>
                   <div className="group/card relative bg-muted/50 rounded-xl p-4 border border-border hover:border-red-500/50 dark:hover:border-red-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/10">
@@ -544,7 +655,7 @@ export default function GlobalAnalyticsClient() {
                       </p>
                     </div>
                     <p className="text-lg font-bold text-foreground capitalize">
-                      {analysis.churnRiskLevel || "N/A"}
+                      {translateRiskLevel(analysis.churnRiskLevel)}
                     </p>
                   </div>
                 </div>
@@ -1012,7 +1123,7 @@ export default function GlobalAnalyticsClient() {
                                         : "bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30"
                                   }`}
                                 >
-                                  {action.priority}
+                                  {translatePriority(action.priority)}
                                 </span>
                               </div>
                               <p className="text-foreground text-sm leading-relaxed break-words">

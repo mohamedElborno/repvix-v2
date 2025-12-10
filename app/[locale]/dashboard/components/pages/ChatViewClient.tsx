@@ -32,6 +32,14 @@ interface ChatViewClientProps {
 
 type AnalysisLanguage = "ar" | "en" | "tr" | "fr" | "es" | "hi" | "ja";
 
+// Fixed-option labels mapping → translation keys
+const FIXED_LABEL_KEYS = {
+  status: {
+    open: "statusOpen",
+    closed: "statusClosed",
+  },
+} as const;
+
 export default function ChatViewClient({
   chat,
   messages,
@@ -49,7 +57,10 @@ export default function ChatViewClient({
   const canAnalyze = useQuery(
     api.featureGate.canPerformAnalysis,
     chat.organizationId
-      ? { organizationId: chat.organizationId as Id<"organizations"> }
+      ? {
+          organizationId: chat.organizationId as Id<"organizations">,
+          chatId: chat._id as Id<"chats">,
+        }
       : "skip"
   );
 
@@ -76,6 +87,24 @@ export default function ChatViewClient({
       return translated;
     } catch {
       return value.replace(/_/g, " ");
+    }
+  };
+
+  const translateFixed = (
+    group: keyof typeof FIXED_LABEL_KEYS,
+    value?: string | null
+  ) => {
+    if (!value) return value ?? "";
+    const key =
+      FIXED_LABEL_KEYS[group]?.[
+        value as keyof (typeof FIXED_LABEL_KEYS)[typeof group]
+      ];
+    if (!key) return value;
+    try {
+      const translated = t(key as any);
+      return translated === key ? value : translated;
+    } catch {
+      return value;
     }
   };
 
@@ -182,7 +211,6 @@ export default function ChatViewClient({
     }
   };
 
-  console.log("analysis", analysis);
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -214,11 +242,7 @@ export default function ChatViewClient({
               <button
                 type="button"
                 onClick={openLanguageModal}
-                disabled={
-                  isAnalyzing ||
-                  !canAnalyze?.allowed ||
-                  canAnalyze?.reason === "limit_exceeded"
-                }
+                disabled={isAnalyzing || canAnalyze?.allowed === false}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500 disabled:bg-muted text-sm font-semibold disabled:text-foreground shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 border border-purple-400/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <Brain className="w-4 h-4" />
@@ -232,7 +256,14 @@ export default function ChatViewClient({
               {/* عرض معلومات الحدود */}
               {canAnalyze && !isAnalyzing && (
                 <div className="text-xs text-muted-foreground max-w-xs mx-auto text-center">
-                  {canAnalyze.reason === "limit_exceeded" ? (
+                  {canAnalyze.reason === "per_chat_daily_limit" ? (
+                    <span className="text-destructive">
+                      {t("dailyLimitExceeded") ||
+                        `يمكن إجراء تحليل واحد يوميًا لكل محادثة. حاول بعد ${
+                          (canAnalyze as any).remainingHours ?? 24
+                        } ساعة.`}
+                    </span>
+                  ) : canAnalyze.reason === "limit_exceeded" ? (
                     <span className="text-destructive">
                       {t("dailyLimitExceeded") ||
                         `تم تجاوز الحد اليومي (${canAnalyze.usedToday}/${canAnalyze.dailyLimit})`}
@@ -292,7 +323,7 @@ export default function ChatViewClient({
                 }`}
               />
               <span className="text-xs text-foreground capitalize">
-                {chat.status}
+                {translateFixed("status", chat.status)}
               </span>
             </div>
 

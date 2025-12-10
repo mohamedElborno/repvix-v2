@@ -219,7 +219,6 @@ export default function ProfileClient() {
           }
 
           const hexColor = rgbToHex(dominantR, dominantG, dominantB);
-          console.log("Extracted dominant color:", hexColor);
           resolve(hexColor);
         } catch (error) {
           console.error("Error extracting color:", error);

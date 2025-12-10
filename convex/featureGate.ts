@@ -64,22 +64,77 @@ export const getDailyAnalysisCount = query({
  * Determine if the org can perform another analysis today.
  */
 export const canPerformAnalysis = query({
-  args: { organizationId: v.id("organizations") },
-  handler: async (ctx, { organizationId }) => {
+  args: {
+    organizationId: v.id("organizations"),
+    chatId: v.optional(v.id("chats")),
+  },
+  handler: async (ctx, { organizationId, chatId }) => {
     const org = await ctx.db.get(organizationId);
 
-    if (!org?.planTier) {
+    const now = Date.now();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayMs = startOfDay.getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    // -------------------------------
+    // Per-chat daily limit (1/day/chat)
+    // -------------------------------
+    if (chatId) {
+      const chat = await ctx.db.get(chatId);
+      if (!chat || chat.organizationId !== organizationId) {
+        return {
+          allowed: false,
+          reason: "chat_not_found",
+          dailyLimit: 1,
+          usedToday: 0,
+          remaining: 0,
+        };
+      }
+
+      const analyses = await ctx.db
+        .query("chatAnalyses")
+        .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+        .collect();
+
+      const usedToday = analyses.filter(
+        (a) => a.createdAt >= startOfDayMs
+      ).length;
+
+      const lastCreatedAt = analyses.reduce(
+        (latest, a) => (a.createdAt > latest ? a.createdAt : latest),
+        0
+      );
+
+      if (lastCreatedAt && now - lastCreatedAt < oneDayMs) {
+        const remainingMs = oneDayMs - (now - lastCreatedAt);
+        const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+        return {
+          allowed: false,
+          reason: "per_chat_daily_limit",
+          dailyLimit: 1,
+          usedToday,
+          remaining: 0,
+          remainingHours,
+        };
+      }
+
+      const remaining = Math.max(0, 1 - usedToday);
       return {
-        allowed: false,
-        reason: "no_plan",
-        dailyLimit: 0,
-        usedToday: 0,
-        remaining: 0,
+        allowed: remaining > 0,
+        reason: "within_chat_limit",
+        dailyLimit: 1,
+        usedToday,
+        remaining,
       };
     }
 
-    const limits = limitsForTier(org.planTier);
-    const dailyLimit = limits.dailyAnalyses;
+    // -------------------------------
+    // Legacy per-org limits (plans) — keep for compatibility
+    // -------------------------------
+    const dailyLimit = org?.planTier
+      ? limitsForTier(org.planTier).dailyAnalyses
+      : 1;
 
     if (dailyLimit === "unlimited") {
       return {
@@ -90,11 +145,6 @@ export const canPerformAnalysis = query({
         remaining: "unlimited",
       };
     }
-
-    const now = Date.now();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const startOfDayMs = startOfDay.getTime();
 
     const analyses = await ctx.db
       .query("chatAnalyses")

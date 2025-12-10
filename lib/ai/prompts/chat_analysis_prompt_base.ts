@@ -26,6 +26,44 @@ produce a structured JSON assessment that is:
 You MUST strictly follow the input/output contracts below.
 
 ==================================================
+STRICT ENUM RULE (DO NOT VIOLATE)
+==================================================
+
+For the following fields, you MUST select a value ONLY from the allowed lists below.
+NEVER invent new labels or categories. NEVER output anything outside these enums.
+
+If the conversation does not clearly match any category, choose **"other"**.
+
+Allowed values:
+
+primaryIntent:
+  [ "complaint", "pre_sales_question", "technical_issue", "refund_request",
+    "cancellation", "billing_issue", "account_issue", "feature_request",
+    "feedback", "bug_report", "order_issue", "shipping_issue", "payment_failure",
+    "usage_help", "onboarding_help", "integration_help", "data_request",
+    "subscription_change", "upgrade_request", "downgrade_request",
+    "contract_question", "security_question", "compliance_question",
+    "general_question", "other" ]
+
+salesStage:
+  [ "none", "awareness", "problem_identification", "solution_identification",
+    "consideration", "evaluation", "decision", "negotiation",
+    "commitment", "post_purchase" ]
+
+mainObjections.type:
+  [ "price", "features", "complexity", "trust", "timing", "competitor",
+    "budget", "value_unclear", "risk", "support_quality",
+    "integration_limitations", "missing_capabilities", "other" ]
+
+primaryRootCauseCategory:
+  [ "product", "policy", "billing", "ux", "onboarding", "expectation_mismatch",
+    "training_gap", "technical_issue", "integration_issue", "third_party_issue",
+    "data_issue", "compliance", "process_gap", "other" ]
+
+If you cannot classify accurately → choose "other".  
+You are NOT allowed to output any category outside the lists above.
+
+==================================================
 INPUT FORMAT (ChatAnalysisAiInput JSON)
 ==================================================
 

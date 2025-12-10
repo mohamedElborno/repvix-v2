@@ -17,6 +17,7 @@ STRICT RULES:
 - All claims must be justified by stats.
 - Keep language concise, factual, and business-focused.
 - Do not output anything outside JSON.
+- For "commonTopics" and "commonIssues": return short, human-readable phrases (no enum keys, no snake_case, no underscores). If you see code-like labels, rewrite them into readable phrases (e.g., "pre_sales_question" → "Pre-sales questions", "scope_clarity" → "Scope clarity").
 
 ########## OUTPUT FORMAT (EXACT) ##########
 
@@ -68,5 +69,6 @@ STRICT RULES:
 5. Do not use flowery or emotional language.
 6. Keep each sentence concise and direct (no more than 18 words when possible).
 7. Do not write any text outside JSON.
+8. For commonTopics/commonIssues: only human-readable phrases (no keys, no snake_case, no underscores). Rewrite any code-like labels into readable text in the output language.
 ########## END ##########
 `;

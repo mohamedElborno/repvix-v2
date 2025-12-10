@@ -72,16 +72,10 @@ async function resolveOrganizationId(ctx: any, ref?: string) {
   try {
     const maybe = await ctx.db.get(ref as Id<"organizations">);
     if (maybe?._id) {
-      console.log(
-        `resolveOrganizationId: Found organization by Convex ID: ${ref}`
-      );
       return maybe._id;
     }
   } catch (error) {
     // Not a valid Convex ID, try as Clerk ID
-    console.log(
-      `resolveOrganizationId: ${ref} is not a Convex ID, trying as Clerk ID`
-    );
   }
 
   // Try as Clerk Org ID
@@ -91,15 +85,9 @@ async function resolveOrganizationId(ctx: any, ref?: string) {
     .first();
 
   if (viaClerk?._id) {
-    console.log(
-      `resolveOrganizationId: Found organization by Clerk ID: ${ref}`
-    );
     return viaClerk._id;
   }
 
-  console.error(
-    `resolveOrganizationId: Organization not found for ref: ${ref}`
-  );
   return undefined;
 }
 
@@ -414,9 +402,6 @@ export const handleEvent = internalMutation({
       if (existing) {
         await ctx.db.patch(existing._id, subscriptionUpdate);
         subscriptionId = existing._id;
-        console.log(
-          `Updated subscription ${subExternal} for organization ${organizationId}`
-        );
       } else {
         subscriptionId = await ctx.db.insert("subscriptions", {
           organizationId,
@@ -424,9 +409,6 @@ export const handleEvent = internalMutation({
           createdAt: Date.now(),
           ...subscriptionUpdate,
         });
-        console.log(
-          `Created subscription ${subExternal} for organization ${organizationId}`
-        );
       }
 
       // Update org billing info
@@ -462,9 +444,6 @@ export const handleEvent = internalMutation({
         }
 
         await ctx.db.patch(organizationId, orgUpdate);
-        console.log(
-          `Updated organization ${organizationId} with tier ${tier} and status ${status}`
-        );
       } else if (isCancelled) {
         await ctx.db.patch(organizationId, {
           billingStatus: status,
@@ -571,9 +550,6 @@ export const handleEvent = internalMutation({
 
     if (ev) {
       await ctx.db.patch(ev._id, { processed: true });
-      console.log(
-        `Marked webhook event ${ev._id} (lemonId: ${ev.lemonId}) as processed`
-      );
     } else {
       console.warn(
         `Webhook event with key ${webhookId ?? lemonId} not found in database`
@@ -593,17 +569,12 @@ export const processUnprocessedWebhooks = internalMutation({
       .withIndex("by_processed", (q: any) => q.eq("processed", false))
       .take(50);
 
-    console.log(`Found ${events.length} unprocessed webhook events`);
-
     for (const ev of events) {
       try {
         await ctx.runMutation(internal.billing.handleEvent, {
           eventName: ev.eventName,
           payload: ev.payload,
         });
-        console.log(
-          `Processed webhook event ${ev._id} (lemonId: ${ev.lemonId})`
-        );
       } catch (error) {
         console.error(
           `Error processing webhook event ${ev._id} (lemonId: ${ev.lemonId}):`,

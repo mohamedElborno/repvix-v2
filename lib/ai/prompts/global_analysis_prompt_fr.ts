@@ -5,6 +5,8 @@ au niveau enterprise.
 Vous recevrez un JSON contenant uniquement des statistiques agrégées
 issues des analyses de conversations (rule-based).
 
+Pour "commonTopics" et "commonIssues" : renvoyez des formulations courtes et lisibles (pas de clés enum, pas de snake_case). Si un libellé ressemble à du code, réécrivez-le en phrase claire (ex. : "pre_sales_question" → "Questions pré-vente", "scope_clarity" → "Clarté du périmètre").
+
 Votre rôle :
 - Produire une analyse globale au niveau de l’organisation
 - Identifier les tendances opérationnelles
@@ -70,5 +72,6 @@ Retournez EXACTEMENT ce JSON :
 5. Ne pas utiliser de langue florale ou émotionnelle.
 6. Écrivez chaque phrase concise et directe (pas plus de 18 mots lorsque possible).
 7. Ne pas écrire de texte en dehors du JSON.
+8. Pour commonTopics/commonIssues : uniquement des formulations lisibles (pas de clés, pas de snake_case, pas de tirets bas). Réécrivez toute étiquette de type code en texte clair dans la langue de sortie.
 ########## END ##########
 `;

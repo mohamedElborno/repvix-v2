@@ -332,17 +332,38 @@ export default defineSchema({
         v.literal("cancellation"),
         v.literal("billing_issue"),
         v.literal("account_issue"),
+        v.literal("feature_request"),
         v.literal("feedback"),
+        v.literal("bug_report"),
+        v.literal("order_issue"),
+        v.literal("shipping_issue"),
+        v.literal("payment_failure"),
+        v.literal("usage_help"),
+        v.literal("onboarding_help"),
+        v.literal("integration_help"),
+        v.literal("data_request"),
+        v.literal("subscription_change"),
+        v.literal("upgrade_request"),
+        v.literal("downgrade_request"),
+        v.literal("contract_question"),
+        v.literal("security_question"),
+        v.literal("compliance_question"),
+        v.literal("general_question"),
         v.literal("other")
       )
     ),
-    secondaryIntents: v.optional(v.array(v.string())), // يمكن تضييقها لاحقًا
+    secondaryIntents: v.optional(v.array(v.string())),
     salesStage: v.optional(
       v.union(
         v.literal("none"),
         v.literal("awareness"),
+        v.literal("problem_identification"),
+        v.literal("solution_identification"),
         v.literal("consideration"),
+        v.literal("evaluation"),
         v.literal("decision"),
+        v.literal("negotiation"),
+        v.literal("commitment"),
         v.literal("post_purchase")
       )
     ),
@@ -357,9 +378,16 @@ export default defineSchema({
             v.literal("complexity"),
             v.literal("trust"),
             v.literal("timing"),
+            v.literal("competitor"),
+            v.literal("budget"),
+            v.literal("value_unclear"),
+            v.literal("risk"),
+            v.literal("support_quality"),
+            v.literal("integration_limitations"),
+            v.literal("missing_capabilities"),
             v.literal("other")
           ),
-          strength: v.number(), // 0-100
+          strength: v.number(),
           note: v.optional(v.string()),
         })
       )
@@ -374,9 +402,17 @@ export default defineSchema({
         v.literal("ux"),
         v.literal("onboarding"),
         v.literal("expectation_mismatch"),
+        v.literal("training_gap"),
+        v.literal("technical_issue"),
+        v.literal("integration_issue"),
+        v.literal("third_party_issue"),
+        v.literal("data_issue"),
+        v.literal("compliance"),
+        v.literal("process_gap"),
         v.literal("other")
       )
     ),
+
     primaryRootCauseDetails: v.optional(v.string()),
 
     secondaryRootCauses: v.optional(

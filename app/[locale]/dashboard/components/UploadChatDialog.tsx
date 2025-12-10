@@ -80,7 +80,6 @@ export default function UploadChatDialog({
       if (data.isWhatsApp && data.whatsAppStats) {
         setIsWhatsApp(true);
         setWhatsAppStats(data.whatsAppStats);
-        console.log("WhatsApp chat processed:", data.whatsAppStats);
       }
 
       // Reset form

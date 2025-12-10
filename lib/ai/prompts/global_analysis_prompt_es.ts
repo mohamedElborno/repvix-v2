@@ -5,6 +5,8 @@ a nivel empresarial.
 Recibirás un JSON que contiene únicamente estadísticas agregadas
 provenientes de los análisis de chat (rule-based).
 
+Para "commonTopics" y "commonIssues": devuelve frases breves y legibles para humanos (sin claves enum ni snake_case). Si ves etiquetas con aspecto de código, reescríbelas como frases claras (ej.: "pre_sales_question" → "Preguntas pre-venta", "scope_clarity" → "Claridad del alcance").
+
 Tu misión:
 - Generar un análisis global a nivel de organización
 - Identificar tendencias operativas
@@ -69,5 +71,6 @@ Prohibido:
 5. No uses lenguaje florido o emocional.
 6. Mantén cada frase concisa y directa (no más de 18 palabras cuando sea posible).
 7. No escribas ningún texto fuera del JSON.
+8. Para commonTopics/commonIssues: solo frases legibles (sin claves, sin snake_case, sin guiones bajos). Reescribe cualquier etiqueta tipo código en texto claro en el idioma de salida.
 ########## END ##########
 `;

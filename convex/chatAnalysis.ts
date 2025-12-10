@@ -229,14 +229,18 @@ export const analyzeSingleChat = action({
     // 2) التحقق من حدود الخطة قبل المتابعة
     const canAnalyze = await ctx.runQuery(api.featureGate.canPerformAnalysis, {
       organizationId: chat.organizationId,
+      chatId: args.chatId,
     });
 
     if (!canAnalyze.allowed) {
-      if (canAnalyze.reason === "no_plan") {
-        throw new Error("لا يمكن إجراء التحليل. يرجى الاشتراك في خطة أولاً.");
+      if (canAnalyze.reason === "per_chat_daily_limit") {
+        const hours = (canAnalyze as any).remainingHours ?? 24;
+        throw new Error(
+          `يمكن إجراء تحليل واحد يوميًا لكل محادثة. حاول بعد حوالي ${hours} ساعة.`
+        );
       } else if (canAnalyze.reason === "limit_exceeded") {
         throw new Error(
-          `تم تجاوز الحد اليومي للتحليلات. الحد المسموح: ${canAnalyze.dailyLimit}، المستخدم اليوم: ${canAnalyze.usedToday}. يرجى المحاولة غداً أو ترقية خطتك.`
+          `تم تجاوز الحد اليومي للتحليلات. الحد المسموح: ${canAnalyze.dailyLimit}، المستخدم اليوم: ${canAnalyze.usedToday}. يرجى المحاولة لاحقًا.`
         );
       } else {
         throw new Error("لا يمكن إجراء التحليل في الوقت الحالي.");

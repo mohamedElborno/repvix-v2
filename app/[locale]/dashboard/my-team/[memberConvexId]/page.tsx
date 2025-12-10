@@ -23,9 +23,6 @@ export default async function EmployeeDetailsPage(props: {
     props.params,
   ]);
 
-  // لو حاب تطبّع بعد ما تفك الوعد (هذا آمن)
-  console.log("Server params:", { locale, memberConvexId });
-
   // 2) لو مافيش user → روح للّوجين
   if (!userId) {
     redirect("/login");
