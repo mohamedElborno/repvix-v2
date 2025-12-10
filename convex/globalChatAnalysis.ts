@@ -7,6 +7,7 @@ import { requireUser } from "./auth";
 import { getOpenAiClient, CHAT_ANALYSIS_MODEL } from "../lib/openai/client";
 import { getGlobalAnalysisSystemPrompt } from "@/lib/ai/prompts/globalAnalysisPrompt";
 import { Id } from "./_generated/dataModel";
+import { mapVariantToPlan } from "./billingPlan";
 
 export const runFullGlobalAnalysis = action({
   args: {
@@ -46,16 +47,49 @@ export const runFullGlobalAnalysis = action({
       };
     }
 
-    // Rate limit: one global analysis per org every 3 days (72h window)
+    // Rate limit: paid orgs -> 24h window, free orgs -> 72h window
+    const billing = await ctx.runQuery(api.billing.getCurrentPlan, {
+      organizationId: args.organizationId,
+    });
+
+    const activeStatuses = new Set(["active", "on_trial"]);
+
+    let effectiveTier = billing?.planTier as
+      | ReturnType<typeof mapVariantToPlan>["tier"]
+      | null;
+    let hasSubscription =
+      Boolean(effectiveTier) ||
+      (billing?.billingStatus &&
+        activeStatuses.has(String(billing.billingStatus).toLowerCase())) ||
+      Boolean(billing?.activeSubscriptionId);
+
+    // Fallback: look at latest subscription and require active/on_trial
+    const latestSub = await ctx.runQuery(api.subscriptions.getByOrg, {
+      organizationId: args.organizationId,
+    });
+    if (latestSub) {
+      const subStatus = String(latestSub.status || "").toLowerCase();
+      const subActive = activeStatuses.has(subStatus);
+      if (subActive) {
+        hasSubscription = true;
+        if (!effectiveTier && latestSub.variantId) {
+          effectiveTier = mapVariantToPlan(latestSub.variantId).tier;
+        }
+      }
+    }
+
+    const windowMs = hasSubscription
+      ? 24 * 60 * 60 * 1000
+      : 3 * 24 * 60 * 60 * 1000;
+
     const latest = await ctx.runQuery(api.globalAnalysis.getLatestByOrg, {
       organizationId: args.organizationId,
     });
     const lastCreatedAt = latest?.analysis?.createdAt;
     if (lastCreatedAt) {
       const now = Date.now();
-      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-      if (now - lastCreatedAt < threeDaysMs) {
-        const remainingMs = threeDaysMs - (now - lastCreatedAt);
+      if (now - lastCreatedAt < windowMs) {
+        const remainingMs = windowMs - (now - lastCreatedAt);
         const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
         return {
           ok: false,

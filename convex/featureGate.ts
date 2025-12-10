@@ -1,7 +1,7 @@
 // convex/feature.gate.ts
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { limitsForTier } from "./billingPlan";
+import { limitsForTier, mapVariantToPlan } from "./billingPlan";
 
 export const getOrgCapabilities = query({
   args: { organizationId: v.id("organizations") },
@@ -71,15 +71,34 @@ export const canPerformAnalysis = query({
   handler: async (ctx, { organizationId, chatId }) => {
     const org = await ctx.db.get(organizationId);
 
+    // Resolve subscription/tier even if org.planTier is missing
+    let planTier = org?.planTier as ReturnType<typeof mapVariantToPlan>["tier"] | undefined;
+    let hasSubscription = Boolean(planTier);
+
+    if (!planTier) {
+      const subs = await ctx.db
+        .query("subscriptions")
+        .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
+        .collect();
+
+      const activeSub = subs.find((s) => {
+        const status = (s.status || "").toLowerCase();
+        return status === "active" || status === "on_trial";
+      });
+
+      if (activeSub?.variantId) {
+        planTier = mapVariantToPlan(activeSub.variantId).tier;
+      }
+
+      hasSubscription = Boolean(activeSub || planTier || org?.activeSubscriptionId);
+    }
+
     const now = Date.now();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
     const startOfDayMs = startOfDay.getTime();
     const oneDayMs = 24 * 60 * 60 * 1000;
 
-    // -------------------------------
-    // Per-chat daily limit (1/day/chat)
-    // -------------------------------
     if (chatId) {
       const chat = await ctx.db.get(chatId);
       if (!chat || chat.organizationId !== organizationId) {
@@ -92,49 +111,50 @@ export const canPerformAnalysis = query({
         };
       }
 
-      const analyses = await ctx.db
-        .query("chatAnalyses")
-        .withIndex("by_chat", (q) => q.eq("chatId", chatId))
-        .collect();
+      // Enforce the strict per-chat daily cap only for orgs without a paid plan.
+      if (!hasSubscription) {
+        const analyses = await ctx.db
+          .query("chatAnalyses")
+          .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+          .collect();
 
-      const usedToday = analyses.filter(
-        (a) => a.createdAt >= startOfDayMs
-      ).length;
+        const usedToday = analyses.filter(
+          (a) => a.createdAt >= startOfDayMs
+        ).length;
 
-      const lastCreatedAt = analyses.reduce(
-        (latest, a) => (a.createdAt > latest ? a.createdAt : latest),
-        0
-      );
+        const lastCreatedAt = analyses.reduce(
+          (latest, a) => (a.createdAt > latest ? a.createdAt : latest),
+          0
+        );
 
-      if (lastCreatedAt && now - lastCreatedAt < oneDayMs) {
-        const remainingMs = oneDayMs - (now - lastCreatedAt);
-        const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+        if (lastCreatedAt && now - lastCreatedAt < oneDayMs) {
+          const remainingMs = oneDayMs - (now - lastCreatedAt);
+          const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+          return {
+            allowed: false,
+            reason: "per_chat_daily_limit",
+            dailyLimit: 1,
+            usedToday,
+            remaining: 0,
+            remainingHours,
+          };
+        }
+
+        const remaining = Math.max(0, 1 - usedToday);
         return {
-          allowed: false,
-          reason: "per_chat_daily_limit",
+          allowed: remaining > 0,
+          reason: "within_chat_limit",
           dailyLimit: 1,
           usedToday,
-          remaining: 0,
-          remainingHours,
+          remaining,
         };
       }
-
-      const remaining = Math.max(0, 1 - usedToday);
-      return {
-        allowed: remaining > 0,
-        reason: "within_chat_limit",
-        dailyLimit: 1,
-        usedToday,
-        remaining,
-      };
     }
 
     // -------------------------------
     // Legacy per-org limits (plans) — keep for compatibility
     // -------------------------------
-    const dailyLimit = org?.planTier
-      ? limitsForTier(org.planTier).dailyAnalyses
-      : 1;
+    const dailyLimit = planTier ? limitsForTier(planTier).dailyAnalyses : 1;
 
     if (dailyLimit === "unlimited") {
       return {
