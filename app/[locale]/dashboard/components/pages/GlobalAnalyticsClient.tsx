@@ -263,9 +263,10 @@ export default function GlobalAnalyticsClient() {
         result.code === "RATE_LIMIT_GLOBAL_ANALYSIS"
       ) {
         const hours = result.remainingHours ?? 24;
+        const windowHours = result.windowHours ?? 24;
         toast.error(
-          t("analysisRateLimit24h", { hours }) ||
-            `You can generate one global analysis every 24 hours. Try again in ~${hours}h.`,
+          t("analysisRateLimit24h", { hours: windowHours }) ||
+            `You can generate one global analysis every ${windowHours} hours. Try again in ~${hours}h.`,
           { id: "generating-analysis" }
         );
       } else {
@@ -279,9 +280,10 @@ export default function GlobalAnalyticsClient() {
       const parsed = parseError(error);
       if (parsed?.code === "RATE_LIMIT_GLOBAL_ANALYSIS") {
         const hours = parsed.remainingHours ?? 24;
+        const windowHours = parsed.windowHours ?? 24;
         toast.error(
-          t("analysisRateLimit24h", { hours }) ||
-            `You can generate one global analysis every 24 hours. Try again in ~${hours}h.`,
+          t("analysisRateLimit24h", { hours: windowHours }) ||
+            `You can generate one global analysis every ${windowHours} hours. Try again in ~${hours}h.`,
           { id: "generating-analysis" }
         );
       } else {

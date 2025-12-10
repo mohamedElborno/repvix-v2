@@ -29,6 +29,7 @@ export const runFullGlobalAnalysis = action({
     ok: boolean;
     code?: string;
     remainingHours?: number;
+    windowHours?: number;
     analysisId?: Id<"globalAnalyses">;
     processingTimeMs?: number;
     tokenInputCount?: number | undefined;
@@ -81,6 +82,7 @@ export const runFullGlobalAnalysis = action({
     const windowMs = hasSubscription
       ? 24 * 60 * 60 * 1000
       : 3 * 24 * 60 * 60 * 1000;
+    const windowHours = Math.ceil(windowMs / (60 * 60 * 1000));
 
     const latest = await ctx.runQuery(api.globalAnalysis.getLatestByOrg, {
       organizationId: args.organizationId,
@@ -95,6 +97,7 @@ export const runFullGlobalAnalysis = action({
           ok: false,
           code: "RATE_LIMIT_GLOBAL_ANALYSIS",
           remainingHours,
+          windowHours,
         };
       }
     }
@@ -106,7 +109,7 @@ export const runFullGlobalAnalysis = action({
         analysisLanguage: args.language,
       }
     );
-    return { ok: true, ...res };
+    return { ok: true, windowHours, ...res };
   },
 });
 
