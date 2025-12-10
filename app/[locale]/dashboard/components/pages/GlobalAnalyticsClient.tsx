@@ -262,13 +262,10 @@ export default function GlobalAnalyticsClient() {
         result?.ok === false &&
         result.code === "RATE_LIMIT_GLOBAL_ANALYSIS"
       ) {
-        const hours = result.remainingHours ?? 24;
         const windowHours = result.windowHours ?? 24;
-        toast.error(
-          t("analysisRateLimit24h", { hours: windowHours }) ||
-            `You can generate one global analysis every ${windowHours} hours. Try again in ~${hours}h.`,
-          { id: "generating-analysis" }
-        );
+        const hours = result.remainingHours ?? windowHours;
+        const message = `You can generate one global analysis every ${windowHours} hours. Try again in ~${hours}h.`;
+        toast.error(message, { id: "generating-analysis" });
       } else {
         toast.success(
           t("analysisGenerated") || "Analysis generated successfully!",
@@ -279,13 +276,10 @@ export default function GlobalAnalyticsClient() {
       console.error("Error generating analysis:", error);
       const parsed = parseError(error);
       if (parsed?.code === "RATE_LIMIT_GLOBAL_ANALYSIS") {
-        const hours = parsed.remainingHours ?? 24;
         const windowHours = parsed.windowHours ?? 24;
-        toast.error(
-          t("analysisRateLimit24h", { hours: windowHours }) ||
-            `You can generate one global analysis every ${windowHours} hours. Try again in ~${hours}h.`,
-          { id: "generating-analysis" }
-        );
+        const hours = parsed.remainingHours ?? windowHours;
+        const message = `You can generate one global analysis every ${windowHours} hours. Try again in ~${hours}h.`;
+        toast.error(message, { id: "generating-analysis" });
       } else {
         const errorMessage =
           error instanceof Error
