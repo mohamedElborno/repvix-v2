@@ -139,6 +139,7 @@
     "faq": "الأسئلة الشائعة",
     "dashboard": "لوحة التحكم",
     "analytics": "التحليلات",
+    "integrations": "التكاملات",
     "myTeam": "فريقي",
     "billing": "الفواتير",
     "settings": "الإعدادات",
@@ -147,6 +148,41 @@
     "logoAlt": "شعار ريبفيكس",
     "brandName": "ريبفيكس",
     "beta": "بيتا"
+  },
+  "integrations": {
+    "title": "التكاملات",
+    "subtitle": "وصّل ريبفيكس بأدوات الدعم لديك. نبدأ بتكامل Zendesk.",
+    "comingSoon": "المزيد من التكاملات قريبًا",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "استورد التذاكر والمحادثات ليبقى التحليل محدثًا.",
+      "status": "بيتا خاصة",
+      "cta": "طلب الوصول",
+      "redirecting": "جارٍ التحويل...",
+      "missingSubdomain": "أدخل نطاق Zendesk الفرعي أولاً.",
+      "subdomainLabel": "أدخل نطاق Zendesk الفرعي",
+      "subdomainHint": "هو الجزء قبل ‎.zendesk.com — مثلاً: acme إذا كان رابطك acme.zendesk.com",
+      "connected": "متصل",
+      "alreadyConnected": "تكامل Zendesk متصل بالفعل.",
+      "connectedTo": "متصل بـ {subdomain}.zendesk.com",
+      "checking": "جاري التحقق من الاتصال...",
+      "disconnect": "إلغاء الاتصال",
+      "disconnecting": "جارٍ إلغاء الاتصال...",
+      "disconnected": "تم إلغاء اتصال Zendesk.",
+      "disconnectError": "تعذر إلغاء الاتصال. حاول مرة أخرى.",
+      "toast": "تم حفظ طلبك. سنخبرك عند جاهزية تكامل Zendesk.",
+      "points": {
+        "sync": "مزامنة التذاكر والمحادثات تلقائيًا.",
+        "automation": "تشغيل تحليل الجودة والمشاعر عند إنشاء أو تحديث التذاكر.",
+        "insights": "إرسال النتائج كوسوم أو ملاحظات داخلية في Zendesk (قريبًا)."
+      },
+      "checklistTitle": "لإتمام الاتصال قريبًا",
+      "checklist": {
+        "admin": "صلاحيات مسؤول Zendesk أو رمز API يسمح بالوصول إلى التذاكر.",
+        "subdomain": "نطاق Zendesk الفرعي لإكمال OAuth.",
+        "scopes": "الأذونات المطلوبة: tickets:read و users:read و tags:write."
+      }
+    }
   },
   "dashboard": {
     "welcome": "مرحبًا بعودتك",
@@ -178,6 +214,16 @@
     "tryDifferentSearch": "جرّب كلمات بحث مختلفة",
     "uploadFirstChat": "ابدأ برفع أول محادثة لتحصل على التحليل",
     "uploadNewChat": "رفع محادثة جديدة",
+    "chatsZendesk": "محادثات Zendesk",
+    "showZendesk": "إظهار محادثات Zendesk",
+    "hideZendesk": "إخفاء محادثات Zendesk",
+    "zendeskHidden": "محادثات Zendesk مخفية.",
+    "noZendeskChats": "لا توجد محادثات Zendesk بعد.",
+    "zendeskTickets": "تذاكر Zendesk",
+    "zendeskComments": "التعليقات",
+    "zendeskReload": "إعادة التحميل",
+    "zendeskLoading": "جارٍ التحميل...",
+    "zendeskNoComments": "لا توجد تعليقات بعد.",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "سلبي جدًا",
@@ -310,6 +356,7 @@
     "breadcrumb": {
       "dashboard": "لوحة التحكم",
       "analytics": "التحليلات",
+      "integrations": "التكاملات",
       "myTeam": "فريقي",
       "settings": "الإعدادات",
       "profile": "الملف الشخصي",

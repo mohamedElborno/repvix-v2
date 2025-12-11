@@ -30,6 +30,7 @@ import type * as messages from "../messages.js";
 import type * as orgMembers from "../orgMembers.js";
 import type * as orgs from "../orgs.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as zendesk from "../zendesk.js";
 
 import type {
   ApiFromModules,
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   orgMembers: typeof orgMembers;
   orgs: typeof orgs;
   subscriptions: typeof subscriptions;
+  zendesk: typeof zendesk;
 }>;
 
 /**

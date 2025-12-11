@@ -119,15 +119,19 @@ export default function DashboardClient({
   const [chatViewMode, setChatViewMode] = useState<"grid" | "whatsapp">("grid");
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  type WidgetKey = "kpis" | "charts" | "chats";
+  type WidgetKey = "kpis" | "charts" | "chats" | "zendeskChats";
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const [layoutOrder, setLayoutOrder] = useState<WidgetKey[]>(["chats"]);
+  const [layoutOrder, setLayoutOrder] = useState<WidgetKey[]>([
+    "chats",
+    "zendeskChats",
+  ]);
   const [visibleWidgets, setVisibleWidgets] = useState<
     Record<WidgetKey, boolean>
   >({
     kpis: false,
     charts: false,
     chats: true,
+    zendeskChats: true,
   });
   const [draggingKey, setDraggingKey] = useState<WidgetKey | null>(null);
 
@@ -168,6 +172,36 @@ export default function DashboardClient({
 
   const deleteChat = useMutation(api.chats.deleteChat);
   const submitFeedback = useMutation(api.feedbacks.submitFeedback);
+
+  // Zendesk tickets (lazy load, comments on demand)
+  const [zendeskTickets, setZendeskTickets] = useState<
+    Array<{
+      id: number;
+      subject?: string;
+      status?: string;
+      updated_at?: string;
+      created_at?: string;
+      requester_id?: number;
+      assignee_id?: number;
+      priority?: string;
+    }>
+  >([]);
+  const [zendeskLoading, setZendeskLoading] = useState(false);
+  const [zendeskError, setZendeskError] = useState<string | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [ticketComments, setTicketComments] = useState<
+    Array<{
+      role: string;
+      content: string;
+      timestamp: number;
+      authorId: number;
+      public?: boolean;
+    }>
+  >([]);
+  const [ticketCommentsLoading, setTicketCommentsLoading] = useState(false);
+  const [ticketCommentsError, setTicketCommentsError] = useState<string | null>(
+    null
+  );
 
   // جلب جميع الرسائل لكل المحادثات للبحث النصي
   const chatIds = useMemo(() => safeChats.map((chat) => chat._id), [safeChats]);
@@ -298,6 +332,44 @@ export default function DashboardClient({
     setUseSemanticSearch(shouldUseSemantic);
   }, [searchQuery]);
 
+  // Fetch Zendesk tickets on mount
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        setZendeskLoading(true);
+        setZendeskError(null);
+        const res = await fetch("/api/integrations/zendesk/tickets");
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || "Failed to fetch tickets");
+        setZendeskTickets(json.tickets || []);
+      } catch (err: any) {
+        setZendeskError(err?.message || "Failed to load tickets");
+      } finally {
+        setZendeskLoading(false);
+      }
+    };
+    loadTickets();
+  }, []);
+
+  const loadTicketComments = async (ticketId: number) => {
+    try {
+      setSelectedTicketId(ticketId);
+      setTicketComments([]);
+      setTicketCommentsError(null);
+      setTicketCommentsLoading(true);
+      const res = await fetch(
+        `/api/integrations/zendesk/tickets/${ticketId}/comments`
+      );
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "Failed to fetch comments");
+      setTicketComments(json.comments || []);
+    } catch (err: any) {
+      setTicketCommentsError(err?.message || "Failed to load comments");
+    } finally {
+      setTicketCommentsLoading(false);
+    }
+  };
+
   // Process global analysis data for KPIs and charts
   useEffect(() => {
     if (globalAnalysis === undefined) {
@@ -395,7 +467,7 @@ export default function DashboardClient({
       !!kpiData?.charts?.sentimentDistribution);
 
   const availableWidgets = useMemo<WidgetKey[]>(() => {
-    const widgets: WidgetKey[] = ["chats"];
+    const widgets: WidgetKey[] = ["chats", "zendeskChats"];
     if (analyticsAvailable) {
       widgets.unshift("kpis");
     }
@@ -535,6 +607,7 @@ export default function DashboardClient({
     kpis: t("keyMetrics") || "Key Metrics",
     charts: t("charts") || "Charts",
     chats: t("yourChats") || "Chats",
+    zendeskChats: t("zendeskTickets") || "Zendesk tickets",
   };
 
   const getLastMessagePreview = (chatId: Id<"chats">) => {
@@ -581,13 +654,110 @@ export default function DashboardClient({
     return { initials, color: palette[idx] };
   };
 
+  const renderChatGrid = (chatsToRender: typeof filteredChats) => {
+    if (chatsToRender.length === 0) return null;
+    return (
+      <div
+        className={
+          chatViewMode === "whatsapp"
+            ? "grid grid-cols-1 gap-3"
+            : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        }
+      >
+        {chatsToRender.map((chat) => {
+          if (chatViewMode === "whatsapp") {
+            const preview = getLastMessagePreview(chat._id);
+            const customerLabel =
+              chat.customerIdentifier ||
+              chat.title ||
+              t("chats.untitledChat", { default: "Untitled chat" });
+            const { initials, color } = getAvatarData(customerLabel);
+            return (
+              <Card
+                key={chat._id}
+                className="p-3 border border-border bg-card/90 hover:bg-muted/50 transition cursor-pointer"
+                onClick={() =>
+                  window.location.assign(
+                    `/${locale}/dashboard/chats/${chat._id}`
+                  )
+                }
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage alt={customerLabel} />
+                    <AvatarFallback className={`${color} text-white`}>
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-semibold text-sm truncate">
+                        {customerLabel}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground shrink-0">
+                        {formatTimeShort(preview.ts)}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                      {preview.text || t("noMessagesYet") || ""}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          }
+
+          return (
+            <ChatListItem
+              key={chat._id}
+              chat={chat}
+              onDelete={handleDeleteChat}
+            />
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderEmptyState = (opts?: { hideUpload?: boolean }) => (
+    <div className="relative group/empty">
+      <div className="absolute -inset-1 bg-linear-to-r from-muted/20 via-muted/10 to-muted/20 rounded-xl blur-lg opacity-50"></div>
+      <div className="relative bg-muted/50 rounded-xl p-12 text-center border border-border/30">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted border border-border/50 flex items-center justify-center">
+          <MessageSquare className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg sm:text-xl font-semibold text-foreground/90 mb-2">
+          {searchQuery ? t("noResults") : t("noChats")}
+        </h3>
+        <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-md mx-auto">
+          {searchQuery ? t("tryDifferentSearch") : t("uploadFirstChat")}
+        </p>
+        {!searchQuery && !opts?.hideUpload && (
+          <Button
+            onClick={() => setIsUploadDialogOpen(true)}
+            className="group/btn relative bg-linear-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground shadow-lg shadow-purple-500/30 transition-all duration-300"
+          >
+            <div className="relative flex items-center gap-2">
+              <div className="relative w-5 h-5 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-primary-foreground/20 group-hover/btn:bg-primary-foreground/30 transition-all duration-300 scale-0 group-hover/btn:scale-100"></div>
+                <Plus className="w-4 h-4 relative z-10 group-hover/btn:rotate-90 transition-transform duration-300" />
+              </div>
+              <span className="font-medium">{t("uploadChat")}</span>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-primary-foreground/0 via-primary-foreground/50 to-primary-foreground/0 scale-x-0 group-hover/btn:scale-x-100 transition-transform duration-300"></div>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
   const renderWidget = (key: WidgetKey) => {
     switch (key) {
       case "kpis":
         return (
           <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-5 sm:p-6">
             <div className="flex items-center gap-3 mb-5 sm:mb-6">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-foreground">
@@ -631,7 +801,7 @@ export default function DashboardClient({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[...Array(2)].map((_, i) => (
                   <div key={i} className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-cyan-500/10 to-blue-600/20 rounded-2xl blur-xl opacity-50 transition duration-500"></div>
+                    <div className="absolute -inset-1 bg-linear-to-r from-blue-600/20 via-cyan-500/10 to-blue-600/20 rounded-2xl blur-xl opacity-50 transition duration-500"></div>
                     <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl border border-border dark:border-blue-500/20 h-[400px] animate-pulse">
                       <div className="p-4 md:p-5 h-full">
                         <div className="h-6 bg-muted rounded w-32 mb-4"></div>
@@ -644,13 +814,13 @@ export default function DashboardClient({
             ) : kpiData ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-cyan-500/10 to-blue-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                  <div className="absolute -inset-1 bg-linear-to-r from-blue-600/20 via-cyan-500/10 to-blue-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
                   <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl border border-border dark:border-blue-500/20">
                     <ChatVolume data={kpiData.charts.peakHours} />
                   </div>
                 </div>
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-500/10 to-purple-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+                  <div className="absolute -inset-1 bg-linear-to-r from-purple-600/20 via-pink-500/10 to-purple-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
                   <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl border border-border dark:border-purple-500/20">
                     <SentimentDistribution
                       data={kpiData.charts.sentimentDistribution}
@@ -662,12 +832,159 @@ export default function DashboardClient({
           </>
         );
       case "chats":
+      case "zendeskChats":
       default:
+        if (key === "zendeskChats") {
+          return (
+            <div className="relative group scroll-mt-24">
+              <div className="absolute -inset-1 bg-linear-to-r from-blue-600/20 via-cyan-500/10 to-blue-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+              <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-border dark:border-blue-500/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                      <MessageSquare className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+                      {t("zendeskTickets") || "Zendesk tickets"}
+                    </h2>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      // reload tickets
+                      setZendeskLoading(true);
+                      setZendeskError(null);
+                      fetch("/api/integrations/zendesk/tickets")
+                        .then((r) => r.json())
+                        .then((json) => {
+                          if (!json.ok) throw new Error(json.error || "Failed");
+                          setZendeskTickets(json.tickets || []);
+                        })
+                        .catch((err) =>
+                          setZendeskError(
+                            err?.message || "Failed to load tickets"
+                          )
+                        )
+                        .finally(() => setZendeskLoading(false));
+                    }}
+                    disabled={zendeskLoading}
+                  >
+                    {zendeskLoading
+                      ? t("zendeskLoading") || "Loading..."
+                      : t("zendeskReload") || "Reload"}
+                  </Button>
+                </div>
+
+                {visibleWidgets.zendeskChats ? (
+                  <div className="space-y-4">
+                    {zendeskError && (
+                      <p className="text-sm text-destructive">{zendeskError}</p>
+                    )}
+
+                    {zendeskLoading ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t("zendeskLoading") || "Loading..."}
+                      </div>
+                    ) : zendeskTickets.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t("noZendeskChats") || "No Zendesk chats yet."}
+                      </p>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {zendeskTickets.map((ticket) => (
+                          <Card
+                            key={ticket.id}
+                            className={`p-3 border cursor-pointer ${
+                              selectedTicketId === ticket.id
+                                ? "border-blue-400"
+                                : "border-border"
+                            }`}
+                            onClick={() => loadTicketComments(ticket.id)}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-semibold truncate">
+                                {ticket.subject || `#${ticket.id}`}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {ticket.status || ""}
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground line-clamp-2">
+                              {ticket.priority
+                                ? `Priority: ${ticket.priority}`
+                                : ""}
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedTicketId && (
+                      <div className="rounded-xl border border-border p-3 space-y-2 bg-card/70">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold">
+                            {t("zendeskComments") || "Comments"}
+                          </h4>
+                          {ticketCommentsLoading && (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
+                        {ticketCommentsError ? (
+                          <p className="text-sm text-destructive">
+                            {ticketCommentsError}
+                          </p>
+                        ) : ticketCommentsLoading ? (
+                          <p className="text-sm text-muted-foreground">
+                            {t("zendeskLoading") || "Loading..."}
+                          </p>
+                        ) : ticketComments.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            {t("zendeskNoComments") || "No comments yet."}
+                          </p>
+                        ) : (
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {ticketComments.map((m, idx) => (
+                              <div
+                                key={idx}
+                                className="rounded-lg border border-border/50 p-2 bg-muted/40"
+                              >
+                                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                  <span className="uppercase font-medium">
+                                    {m.role}
+                                  </span>
+                                  <span>
+                                    {m.timestamp
+                                      ? new Date(m.timestamp).toLocaleString()
+                                      : ""}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-foreground whitespace-pre-wrap">
+                                  {m.content}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t("zendeskHidden") || "Zendesk chats are hidden."}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div id="chats-section" className="relative group scroll-mt-24">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600/20 via-purple-500/10 to-indigo-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
-            <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-border dark:border-indigo-500/20">
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="absolute -inset-1 bg-linear-to-r from-indigo-600/20 via-purple-500/10 to-indigo-600/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
+            <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-border dark:border-indigo-500/20 space-y-6">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                     <MessageSquare className="w-5 h-5 text-primary-foreground" />
@@ -677,124 +994,29 @@ export default function DashboardClient({
                   </h2>
                 </div>
               </div>
-              {filteredChats.length === 0 ? (
-                <div className="relative group/empty">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-muted/20 via-muted/10 to-muted/20 rounded-xl blur-lg opacity-50"></div>
-                  <div className="relative bg-muted/50 rounded-xl p-12 text-center border border-border/30">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted border border-border/50 flex items-center justify-center">
-                      <MessageSquare className="w-10 h-10 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-foreground/90 mb-2">
-                      {searchQuery ? t("noResults") : t("noChats")}
-                    </h3>
-                    <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-md mx-auto">
-                      {searchQuery
-                        ? t("tryDifferentSearch")
-                        : t("uploadFirstChat")}
-                    </p>
-                    {!searchQuery && (
-                      <Button
-                        onClick={() => setIsUploadDialogOpen(true)}
-                        className="group/btn relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground shadow-lg shadow-purple-500/30 transition-all duration-300"
-                      >
-                        <div className="relative flex items-center gap-2">
-                          <div className="relative w-5 h-5 flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full bg-primary-foreground/20 group-hover/btn:bg-primary-foreground/30 transition-all duration-300 scale-0 group-hover/btn:scale-100"></div>
-                            <Plus className="w-4 h-4 relative z-10 group-hover/btn:rotate-90 transition-transform duration-300" />
-                          </div>
-                          <span className="font-medium">{t("uploadChat")}</span>
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/50 to-primary-foreground/0 scale-x-0 group-hover/btn:scale-x-100 transition-transform duration-300"></div>
-                      </Button>
-                    )}
-                  </div>
+              {filteredChats.length === 0
+                ? renderEmptyState()
+                : renderChatGrid(filteredChats)}
+              {/* Infinite scroll trigger */}
+              {status === "CanLoadMore" && (
+                <div
+                  ref={loadMoreRef}
+                  className="flex items-center justify-center py-8"
+                >
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
                 </div>
-              ) : (
-                <>
-                  <div
-                    className={
-                      chatViewMode === "whatsapp"
-                        ? "grid grid-cols-1 gap-3"
-                        : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-                    }
-                  >
-                    {filteredChats.map((chat) => {
-                      if (chatViewMode === "whatsapp") {
-                        const preview = getLastMessagePreview(chat._id);
-                        const customerLabel =
-                          chat.customerIdentifier ||
-                          chat.title ||
-                          t("chats.untitledChat", { default: "Untitled chat" });
-                        const { initials, color } =
-                          getAvatarData(customerLabel);
-                        return (
-                          <Card
-                            key={chat._id}
-                            className="p-3 border border-border bg-card/90 hover:bg-muted/50 transition cursor-pointer"
-                            onClick={() =>
-                              window.location.assign(
-                                `/${locale}/dashboard/chats/${chat._id}`
-                              )
-                            }
-                          >
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage alt={customerLabel} />
-                                <AvatarFallback
-                                  className={`${color} text-white`}
-                                >
-                                  {initials}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="font-semibold text-sm truncate">
-                                    {customerLabel}
-                                  </div>
-                                  <div className="text-[11px] text-muted-foreground shrink-0">
-                                    {formatTimeShort(preview.ts)}
-                                  </div>
-                                </div>
-                                <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                                  {preview.text || t("noMessagesYet") || ""}
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      }
-
-                      return (
-                        <ChatListItem
-                          key={chat._id}
-                          chat={chat}
-                          onDelete={handleDeleteChat}
-                        />
-                      );
-                    })}
-                  </div>
-                  {/* Infinite scroll trigger */}
-                  {status === "CanLoadMore" && (
-                    <div
-                      ref={loadMoreRef}
-                      className="flex items-center justify-center py-8"
-                    >
-                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    </div>
-                  )}
-                  {status === "LoadingMore" && (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    </div>
-                  )}
-                  {status === "Exhausted" && filteredChats.length > 0 && (
-                    <div className="flex items-center justify-center py-8">
-                      <p className="text-sm text-muted-foreground">
-                        {t("allChatsLoaded") || "All chats loaded"}
-                      </p>
-                    </div>
-                  )}
-                </>
+              )}
+              {status === "LoadingMore" && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              )}
+              {status === "Exhausted" && filteredChats.length > 0 && (
+                <div className="flex items-center justify-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    {t("allChatsLoaded") || "All chats loaded"}
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -915,7 +1137,7 @@ export default function DashboardClient({
             </div>
             <Button
               onClick={() => setIsUploadDialogOpen(true)}
-              className="max-h-9 group relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground transition-all duration-300 shrink-0"
+              className="max-h-9 group relative bg-linear-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground transition-all duration-300 shrink-0"
             >
               <div className="relative flex items-center md:gap-2">
                 <div className="relative w-5 h-5 flex items-center justify-center">
@@ -926,7 +1148,7 @@ export default function DashboardClient({
                   {t("uploadChat")}
                 </span>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/50 to-primary-foreground/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-linear-to-r from-primary-foreground/0 via-primary-foreground/50 to-primary-foreground/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
             </Button>
             <Button
               variant="ghost"
@@ -1101,7 +1323,7 @@ export default function DashboardClient({
                     onClick={handleSubmitFeedback}
                     disabled={isSubmittingFeedback}
                     size="sm"
-                    className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground shadow-lg shadow-purple-500/30 transition-all duration-300"
+                    className="bg-linear-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground shadow-lg shadow-purple-500/30 transition-all duration-300"
                   >
                     {isSubmittingFeedback
                       ? t("feedback.submitting")
@@ -1113,7 +1335,7 @@ export default function DashboardClient({
           ) : (
             <Button
               size="sm"
-              className="shadow-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white"
+              className="shadow-lg bg-linear-to-r from-purple-600 to-purple-500 text-white"
               onClick={() => setIsFeedbackOpen(true)}
             >
               <MessageSquare className="w-4 h-4 mr-2" />

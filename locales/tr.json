@@ -161,6 +161,16 @@
     "tryDifferentSearch": "Arama terimlerini değiştirerek tekrar dene",
     "uploadFirstChat": "İlk sohbetini yükleyerek içgörüler elde etmeye başla",
     "uploadNewChat": "Yeni Sohbet Yükle",
+    "chatsZendesk": "Zendesk sohbetleri",
+    "showZendesk": "Zendesk sohbetlerini göster",
+    "hideZendesk": "Zendesk sohbetlerini gizle",
+    "zendeskHidden": "Zendesk sohbetleri gizli.",
+    "noZendeskChats": "Henüz Zendesk sohbeti yok.",
+    "zendeskTickets": "Zendesk biletleri",
+    "zendeskComments": "Yorumlar",
+    "zendeskReload": "Yenile",
+    "zendeskLoading": "Yükleniyor...",
+    "zendeskNoComments": "Henüz yorum yok.",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Çok negatif",
@@ -293,6 +303,7 @@
     "breadcrumb": {
       "dashboard": "Panel",
       "analytics": "Analitik",
+      "integrations": "Entegrasyonlar",
       "myTeam": "Ekibim",
       "settings": "Ayarlar",
       "profile": "Profil",
@@ -992,6 +1003,7 @@
     "faq": "SSS",
     "dashboard": "Panel",
     "analytics": "Analitik",
+    "integrations": "Entegrasyonlar",
     "myTeam": "Ekibim",
     "billing": "Faturalandırma",
     "settings": "Ayarlar",
@@ -1000,6 +1012,41 @@
     "logoAlt": "Repvix logosu",
     "brandName": "Repvix",
     "beta": "BETA"
+  },
+  "integrations": {
+    "title": "Entegrasyonlar",
+    "subtitle": "Repvix’i destek araçlarınla bağla. İlk entegrasyon Zendesk.",
+    "comingSoon": "Yakında daha fazla entegrasyon geliyor",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "Analizlerin güncel kalması için biletleri ve konuşmaları içe aktar.",
+      "status": "Özel beta",
+      "cta": "Erişim iste",
+      "redirecting": "Yönlendiriliyor...",
+      "missingSubdomain": "Önce Zendesk alt alan adını gir.",
+      "subdomainLabel": "Zendesk alt alan adını gir",
+      "subdomainHint": ".zendesk.com öncesindeki kısım — örn: adresin acme.zendesk.com ise acme",
+      "connected": "Bağlandı",
+      "alreadyConnected": "Zendesk zaten bağlı.",
+      "connectedTo": "{subdomain}.zendesk.com adresine bağlı",
+      "checking": "Bağlantı kontrol ediliyor...",
+      "disconnect": "Bağlantıyı kes",
+      "disconnecting": "Bağlantı kesiliyor...",
+      "disconnected": "Zendesk bağlantısı kesildi.",
+      "disconnectError": "Bağlantı kesilemedi, lütfen tekrar dene.",
+      "toast": "Talebini kaydettik. Zendesk hazır olduğunda haber vereceğiz.",
+      "points": {
+        "sync": "Bilet ve konuşmaları otomatik olarak senkronize et.",
+        "automation": "Yeni veya güncellenen biletlerde kalite ve duygu analizi çalıştır.",
+        "insights": "İçgörüleri iç not veya etiket olarak Zendesk’e geri gönder."
+      },
+      "checklistTitle": "Bağlantı için gerekenler",
+      "checklist": {
+        "admin": "Zendesk yönetici yetkisi veya bilet erişimi olan API token.",
+        "subdomain": "OAuth’u tamamlamak için Zendesk alt alan adın.",
+        "scopes": "Gerekli izinler: tickets:read, users:read, tags:write."
+      }
+    }
   },
   "locale": {
     "arabic": "Arapça",

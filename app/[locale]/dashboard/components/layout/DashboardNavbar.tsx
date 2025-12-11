@@ -57,6 +57,7 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
 
         let label = segment;
         if (segment === "analytics") label = tBreadcrumb("analytics");
+        else if (segment === "integrations") label = tBreadcrumb("integrations");
         else if (segment === "my-team") label = tBreadcrumb("myTeam");
         else if (segment === "settings") label = tBreadcrumb("settings");
         else if (segment === "profile") label = tBreadcrumb("profile");

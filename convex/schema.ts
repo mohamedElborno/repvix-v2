@@ -789,4 +789,29 @@ export default defineSchema({
   })
     .index("by_org", ["organizationId"])
     .index("by_invoice", ["lemonInvoiceId"]),
+
+  // =============================
+  // Zendesk Connections
+  // =============================
+  zendeskConnections: defineTable({
+    organizationId: v.id("organizations"),
+    subdomain: v.string(),
+    accessToken: v.string(),
+    refreshToken: v.optional(v.string()),
+    expiresAt: v.number(), // ms
+    scope: v.optional(v.string()),
+    createdBy: v.string(), // clerk user id
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_org", ["organizationId"]),
+
+  // =============================
+  // Zendesk Analyses (store analysis result only)
+  // =============================
+  zendeskAnalyses: defineTable({
+    organizationId: v.id("organizations"),
+    ticketId: v.number(),
+    analysis: v.any(),
+    createdAt: v.number(),
+  }).index("by_org_ticket", ["organizationId", "ticketId"]),
 });

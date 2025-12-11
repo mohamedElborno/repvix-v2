@@ -139,6 +139,7 @@
     "faq": "FAQ",
     "dashboard": "डैशबोर्ड",
     "analytics": "एनालिटिक्स",
+    "integrations": "इंटीग्रेशन",
     "myTeam": "मेरी टीम",
     "billing": "बिलिंग",
     "settings": "सेटिंग्स",
@@ -147,6 +148,41 @@
     "logoAlt": "Repvix लोगो",
     "brandName": "Repvix",
     "beta": "बीटा"
+  },
+  "integrations": {
+    "title": "इंटीग्रेशन",
+    "subtitle": "Repvix को आपके सपोर्ट स्टैक से जोड़ें. पहला इंटीग्रेशन Zendesk है.",
+    "comingSoon": "जल्द और इंटीग्रेशन आएंगे",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "टिकट और बातचीत आयात करें ताकि विश्लेषण अपडेट रहे.",
+      "status": "प्राइवेट बीटा",
+      "cta": "एक्सेस का अनुरोध करें",
+      "redirecting": "रीडायरेक्ट किया जा रहा है...",
+      "missingSubdomain": "पहले अपना Zendesk सबडोमेन दर्ज करें।",
+      "subdomainLabel": "अपना Zendesk सबडोमेन दर्ज करें",
+      "subdomainHint": "यह .zendesk.com से पहले का भाग है — उदाहरण: acme यदि आपका URL acme.zendesk.com है",
+      "connected": "कनेक्टेड",
+      "alreadyConnected": "Zendesk पहले से कनेक्टेड है.",
+      "connectedTo": "{subdomain}.zendesk.com से जुड़ा",
+      "checking": "कनेक्शन जांचा जा रहा है...",
+      "disconnect": "डिस्कनेक्ट करें",
+      "disconnecting": "डिस्कनेक्ट किया जा रहा है...",
+      "disconnected": "Zendesk डिस्कनेक्ट हो गया।",
+      "disconnectError": "डिस्कनेक्ट नहीं हो सका, कृपया पुनः प्रयास करें।",
+      "toast": "आपका अनुरोध सेव हो गया है. Zendesk तैयार होते ही हम बताएंगे.",
+      "points": {
+        "sync": "टिकट और बातचीत अपने आप सिंक करें.",
+        "automation": "नए या अपडेटेड टिकट पर गुणवत्ता और भावना विश्लेषण चलाएँ.",
+        "insights": "इनसाइट्स को आंतरिक नोट्स या टैग के रूप में Zendesk में भेजें (जल्द)."
+      },
+      "checklistTitle": "सेटअप के लिए आवश्यक",
+      "checklist": {
+        "admin": "Zendesk एडमिन या टिकट एक्सेस वाला API टोकन.",
+        "subdomain": "OAuth पूरा करने के लिए आपका Zendesk सबडोमेन.",
+        "scopes": "आवश्यक अनुमतियाँ: tickets:read, users:read, tags:write."
+      }
+    }
   },
   "dashboard": {
     "welcome": "वापसी पर स्वागत है",
@@ -178,6 +214,16 @@
     "tryDifferentSearch": "अपनी खोज शर्तें बदलने का प्रयास करें",
     "uploadFirstChat": "अपनी पहली चैट अपलोड करके अंतर्दृष्टियाँ प्राप्त करना शुरू करें",
     "uploadNewChat": "नई चैट अपलोड करें",
+    "chatsZendesk": "Zendesk चैट्स",
+    "showZendesk": "Zendesk चैट्स दिखाएँ",
+    "hideZendesk": "Zendesk चैट्स छुपाएँ",
+    "zendeskHidden": "Zendesk चैट्स छुपी हुई हैं।",
+    "noZendeskChats": "अभी कोई Zendesk चैट नहीं है।",
+    "zendeskTickets": "Zendesk टिकट",
+    "zendeskComments": "टिप्पणियाँ",
+    "zendeskReload": "रिलोड करें",
+    "zendeskLoading": "लोड हो रहा है...",
+    "zendeskNoComments": "अभी कोई टिप्पणी नहीं है।",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "अत्यंत नकारात्मक",
@@ -310,6 +356,7 @@
     "breadcrumb": {
       "dashboard": "डैशबोर्ड",
       "analytics": "एनालिटिक्स",
+      "integrations": "इंटीग्रेशन",
       "myTeam": "मेरी टीम",
       "settings": "सेटिंग्स",
       "profile": "प्रोफ़ाइल",

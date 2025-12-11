@@ -139,6 +139,7 @@
     "faq": "Preguntas Frecuentes",
     "dashboard": "Panel",
     "analytics": "Analítica",
+    "integrations": "Integraciones",
     "myTeam": "Mi Equipo",
     "billing": "Facturación",
     "settings": "Configuraciones",
@@ -147,6 +148,41 @@
     "logoAlt": "Logotipo de Repvix",
     "brandName": "Repvix",
     "beta": "BETA"
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "subtitle": "Conecta Repvix con tu stack de soporte. Zendesk es el primero.",
+    "comingSoon": "Más integraciones muy pronto",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "Importa tickets y conversaciones para mantener el análisis sincronizado.",
+      "status": "Beta privada",
+      "cta": "Solicitar acceso",
+      "redirecting": "Redirigiendo...",
+      "missingSubdomain": "Primero escribe tu subdominio de Zendesk.",
+      "subdomainLabel": "Escribe tu subdominio de Zendesk",
+      "subdomainHint": "Es la parte antes de .zendesk.com — por ejemplo: acme si tu URL es acme.zendesk.com",
+      "connected": "Conectado",
+      "alreadyConnected": "Zendesk ya está conectado.",
+      "connectedTo": "Conectado a {subdomain}.zendesk.com",
+      "checking": "Comprobando conexión...",
+      "disconnect": "Desconectar",
+      "disconnecting": "Desconectando...",
+      "disconnected": "Zendesk desconectado.",
+      "disconnectError": "No se pudo desconectar. Intenta de nuevo.",
+      "toast": "Guardamos tu solicitud. Te avisaremos cuando Zendesk esté listo.",
+      "points": {
+        "sync": "Sincroniza tickets y conversaciones automáticamente.",
+        "automation": "Ejecuta análisis de calidad y sentimiento en tickets nuevos o actualizados.",
+        "insights": "Envía los hallazgos como notas internas o etiquetas en Zendesk (próximamente)."
+      },
+      "checklistTitle": "Para dejarlo listo",
+      "checklist": {
+        "admin": "Acceso de administrador en Zendesk o token API con acceso a tickets.",
+        "subdomain": "Tu subdominio de Zendesk para completar OAuth.",
+        "scopes": "Permisos necesarios: tickets:read, users:read y tags:write."
+      }
+    }
   },
   "metadata": {
     "title": "Repvix – Análisis de Chats con IA para Equipos de Soporte y Ventas | Insights Multilingües",
@@ -192,6 +228,16 @@
     "tryDifferentSearch": "Prueba con otros términos de búsqueda",
     "uploadFirstChat": "Comienza subiendo tu primera conversación para obtener análisis",
     "uploadNewChat": "Subir Nuevo Chat",
+    "chatsZendesk": "Chats de Zendesk",
+    "showZendesk": "Mostrar chats de Zendesk",
+    "hideZendesk": "Ocultar chats de Zendesk",
+    "zendeskHidden": "Los chats de Zendesk están ocultos.",
+    "noZendeskChats": "Aún no hay chats de Zendesk.",
+    "zendeskTickets": "Tickets de Zendesk",
+    "zendeskComments": "Comentarios",
+    "zendeskReload": "Recargar",
+    "zendeskLoading": "Cargando...",
+    "zendeskNoComments": "Aún no hay comentarios.",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Muy negativo",
@@ -324,6 +370,7 @@
     "breadcrumb": {
       "dashboard": "Panel",
       "analytics": "Analítica",
+      "integrations": "Integraciones",
       "myTeam": "Mi Equipo",
       "settings": "Configuración",
       "profile": "Perfil",

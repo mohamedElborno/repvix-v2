@@ -139,6 +139,7 @@
     "faq": "FAQ",
     "dashboard": "Dashboard",
     "analytics": "Analytics",
+    "integrations": "Integrations",
     "myTeam": "My Team",
     "billing": "Billing",
     "settings": "Settings",
@@ -147,6 +148,41 @@
     "logoAlt": "Repvix logo",
     "brandName": "Repvix",
     "beta": "BETA"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "Connect Repvix with your support stack. Zendesk is first, with more on the way.",
+    "comingSoon": "More integrations coming soon",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "Import tickets and conversations so Repvix can keep analysis in sync.",
+      "status": "Private beta",
+      "cta": "Request access",
+      "redirecting": "Redirecting...",
+      "missingSubdomain": "Please enter your Zendesk subdomain first.",
+      "subdomainLabel": "Enter your Zendesk subdomain",
+      "subdomainHint": "It is the part before .zendesk.com — for example: acme if your URL is acme.zendesk.com",
+      "connected": "Connected",
+      "alreadyConnected": "Zendesk is already connected.",
+      "connectedTo": "Connected to {subdomain}.zendesk.com",
+      "checking": "Checking connection...",
+      "disconnect": "Disconnect",
+      "disconnecting": "Disconnecting...",
+      "disconnected": "Zendesk disconnected.",
+      "disconnectError": "Could not disconnect. Please try again.",
+      "toast": "We saved your request. We'll notify you when Zendesk is ready.",
+      "points": {
+        "sync": "Sync tickets and conversations automatically.",
+        "automation": "Run quality and sentiment analysis on new or updated tickets.",
+        "insights": "Send insights back to Zendesk as tags or internal notes (coming soon)."
+      },
+      "checklistTitle": "To get connected soon",
+      "checklist": {
+        "admin": "Zendesk admin or API token with ticket access.",
+        "subdomain": "Your Zendesk subdomain to complete OAuth.",
+        "scopes": "Allow tickets:read, users:read, and tags:write."
+      }
+    }
   },
   "dashboard": {
     "welcome": "Welcome Back",
@@ -178,6 +214,16 @@
     "tryDifferentSearch": "Try adjusting your search terms",
     "uploadFirstChat": "Start by uploading your first chat conversation to get insights",
     "uploadNewChat": "Upload New Chat",
+    "chatsZendesk": "Zendesk chats",
+    "showZendesk": "Show Zendesk chats",
+    "hideZendesk": "Hide Zendesk chats",
+    "zendeskHidden": "Zendesk chats are hidden.",
+    "noZendeskChats": "No Zendesk chats yet.",
+    "zendeskTickets": "Zendesk tickets",
+    "zendeskComments": "Comments",
+    "zendeskReload": "Reload",
+    "zendeskLoading": "Loading...",
+    "zendeskNoComments": "No comments yet.",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Very negative",
@@ -310,6 +356,7 @@
     "breadcrumb": {
       "dashboard": "Dashboard",
       "analytics": "Analytics",
+      "integrations": "Integrations",
       "myTeam": "My Team",
       "settings": "Settings",
       "profile": "Profile",

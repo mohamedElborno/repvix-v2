@@ -139,6 +139,7 @@
     "faq": "FAQ",
     "dashboard": "ダッシュボード",
     "analytics": "分析",
+    "integrations": "連携",
     "myTeam": "マイチーム",
     "billing": "請求",
     "settings": "設定",
@@ -147,6 +148,41 @@
     "logoAlt": "Repvixロゴ",
     "brandName": "Repvix",
     "beta": "ベータ"
+  },
+  "integrations": {
+    "title": "連携",
+    "subtitle": "Repvix をサポート基盤とつなぎます。最初は Zendesk 連携です。",
+    "comingSoon": "今後さらに連携を追加予定",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "チケットと会話を取り込んで分析を最新に保ちます。",
+      "status": "プライベートベータ",
+      "cta": "アクセスをリクエスト",
+      "redirecting": "リダイレクト中…",
+      "missingSubdomain": "まず Zendesk のサブドメインを入力してください。",
+      "subdomainLabel": "Zendesk のサブドメインを入力",
+      "subdomainHint": ".zendesk.com の前の部分です。例: acme.zendesk.com の場合は acme",
+      "connected": "接続済み",
+      "alreadyConnected": "Zendesk はすでに接続済みです。",
+      "connectedTo": "{subdomain}.zendesk.com に接続済み",
+      "checking": "接続を確認しています...",
+      "disconnect": "接続を解除",
+      "disconnecting": "接続を解除中...",
+      "disconnected": "Zendesk の接続を解除しました。",
+      "disconnectError": "接続解除に失敗しました。もう一度お試しください。",
+      "toast": "リクエストを保存しました。Zendesk の準備ができ次第お知らせします。",
+      "points": {
+        "sync": "チケットと会話を自動で同期します。",
+        "automation": "新規または更新されたチケットで品質・感情分析を実行します。",
+        "insights": "インサイトを社内メモやタグとして Zendesk に送信します。"
+      },
+      "checklistTitle": "接続のために必要なもの",
+      "checklist": {
+        "admin": "Zendesk 管理者権限またはチケットアクセスを持つ API トークン。",
+        "subdomain": "OAuth を完了するための Zendesk サブドメイン。",
+        "scopes": "必要な権限: tickets:read、users:read、tags:write。"
+      }
+    }
   },
   "dashboard": {
     "welcome": "おかえりなさい",
@@ -178,6 +214,16 @@
     "tryDifferentSearch": "検索用語を変更してみてください",
     "uploadFirstChat": "インサイトを取得するために、まず最初のチャット会話をアップロードしてください",
     "uploadNewChat": "新しいチャットをアップロード",
+    "chatsZendesk": "Zendesk チャット",
+    "showZendesk": "Zendesk チャットを表示",
+    "hideZendesk": "Zendesk チャットを非表示",
+    "zendeskHidden": "Zendesk チャットは非表示です。",
+    "noZendeskChats": "Zendesk チャットはまだありません。",
+    "zendeskTickets": "Zendesk チケット",
+    "zendeskComments": "コメント",
+    "zendeskReload": "再読み込み",
+    "zendeskLoading": "読み込み中...",
+    "zendeskNoComments": "コメントはまだありません。",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "非常にネガティブ",
@@ -310,6 +356,7 @@
     "breadcrumb": {
       "dashboard": "ダッシュボード",
       "analytics": "分析",
+      "integrations": "連携",
       "myTeam": "マイチーム",
       "settings": "設定",
       "profile": "プロフィール",

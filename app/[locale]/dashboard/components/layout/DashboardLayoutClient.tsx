@@ -6,6 +6,7 @@ import {
   IconBrandTabler,
   IconCreditCard,
   IconCurrencyDollar,
+  IconPlugConnected,
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
@@ -36,6 +37,13 @@ export default function DashboardLayoutClient({
       href: "/dashboard/analytics",
       icon: (
         <IconAnalyze className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: t("integrations") || "Integrations",
+      href: "/dashboard/integrations",
+      icon: (
+        <IconPlugConnected className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {

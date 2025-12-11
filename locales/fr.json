@@ -139,6 +139,7 @@
     "faq": "FAQ",
     "dashboard": "Tableau de bord",
     "analytics": "Analyses",
+    "integrations": "Intégrations",
     "myTeam": "Mon équipe",
     "billing": "Facturation",
     "settings": "Paramètres",
@@ -147,6 +148,41 @@
     "logoAlt": "Logo Repvix",
     "brandName": "Repvix",
     "beta": "BÊTA"
+  },
+  "integrations": {
+    "title": "Intégrations",
+    "subtitle": "Connectez Repvix à votre stack support. Zendesk arrive en premier.",
+    "comingSoon": "D’autres intégrations arrivent bientôt",
+    "zendesk": {
+      "title": "Zendesk",
+      "description": "Importez les tickets et conversations pour garder l’analyse à jour.",
+      "status": "Bêta privée",
+      "cta": "Demander l’accès",
+      "redirecting": "Redirection...",
+      "missingSubdomain": "Veuillez saisir votre sous-domaine Zendesk d’abord.",
+      "subdomainLabel": "Saisissez votre sous-domaine Zendesk",
+      "subdomainHint": "C’est la partie avant .zendesk.com — par ex. acme si votre URL est acme.zendesk.com",
+      "connected": "Connecté",
+      "alreadyConnected": "Zendesk est déjà connecté.",
+      "connectedTo": "Connecté à {subdomain}.zendesk.com",
+      "checking": "Vérification de la connexion...",
+      "disconnect": "Déconnecter",
+      "disconnecting": "Déconnexion...",
+      "disconnected": "Zendesk déconnecté.",
+      "disconnectError": "Impossible de déconnecter. Veuillez réessayer.",
+      "toast": "Votre demande a été enregistrée. Nous vous préviendrons dès que Zendesk sera prêt.",
+      "points": {
+        "sync": "Synchronisez automatiquement les tickets et conversations.",
+        "automation": "Lancez l’analyse qualité et sentiment sur les tickets nouveaux ou mis à jour.",
+        "insights": "Renvoyez les insights en notes internes ou en tags dans Zendesk (bientôt)."
+      },
+      "checklistTitle": "Pour préparer la connexion",
+      "checklist": {
+        "admin": "Accès administrateur Zendesk ou jeton API avec accès aux tickets.",
+        "subdomain": "Votre sous-domaine Zendesk pour finaliser l’OAuth.",
+        "scopes": "Autorisations requises : tickets:read, users:read, tags:write."
+      }
+    }
   },
   "metadata": {
     "title": "Repvix – Analyse IA des conversations clients et commerciales | Insights multilingues",
@@ -192,6 +228,16 @@
     "tryDifferentSearch": "Essayez de modifier vos termes de recherche",
     "uploadFirstChat": "Commencez par importer votre première conversation pour obtenir des insights",
     "uploadNewChat": "Importer une nouvelle conversation",
+    "chatsZendesk": "Conversations Zendesk",
+    "showZendesk": "Afficher les conversations Zendesk",
+    "hideZendesk": "Masquer les conversations Zendesk",
+    "zendeskHidden": "Les conversations Zendesk sont masquées.",
+    "noZendeskChats": "Aucune conversation Zendesk pour l’instant.",
+    "zendeskTickets": "Tickets Zendesk",
+    "zendeskComments": "Commentaires",
+    "zendeskReload": "Recharger",
+    "zendeskLoading": "Chargement...",
+    "zendeskNoComments": "Aucun commentaire pour le moment.",
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Très négatif",
@@ -324,6 +370,7 @@
     "breadcrumb": {
       "dashboard": "Tableau de bord",
       "analytics": "Analyses",
+      "integrations": "Intégrations",
       "myTeam": "Mon équipe",
       "settings": "Paramètres",
       "profile": "Profil",
