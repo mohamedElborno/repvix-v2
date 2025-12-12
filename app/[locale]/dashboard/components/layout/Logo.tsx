@@ -16,7 +16,7 @@ export default function Logo({ open }: { open: boolean }) {
         width={500}
         height={500}
       />
-      <p className="text-xl font-medium text-white">{t("brandName")}</p>
+      <p className="text-xl font-medium dark:text-white">{t("brandName")}</p>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import {
   IconCreditCard,
   IconCurrencyDollar,
   IconPlugConnected,
-  IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
@@ -15,14 +14,13 @@ import { DashboardNavbar } from "./DashboardNavbar";
 import Logo from "./Logo";
 import type { DashboardLayoutClientProps } from "../../types/dashboard";
 import { NavUser } from "../NavUser";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 export default function DashboardLayoutClient({
   children,
 }: DashboardLayoutClientProps) {
   const t = useTranslations("header");
-  const locale = useLocale();
 
   const links = [
     {
