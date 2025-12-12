@@ -1,6 +1,6 @@
 "use client";
 
-import { CSSProperties, ReactNode, useState, useMemo } from "react";
+import { CSSProperties, ReactNode, useState, useMemo, useEffect } from "react";
 import {
   getDisplacementFilter,
   DisplacementOptions,
@@ -24,11 +24,21 @@ export const GlassElement = ({
   className,
   styles,
 }: GlassElementProps) => {
-  const isBrowser = typeof window !== "undefined";
-  const isMobile = isBrowser ? window.innerWidth < 768 : false;
+  const [isMobile, setIsMobile] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  // استخدام useEffect لتحديد isMobile بعد hydration
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const mobileBlur = blur * 0.5; // خفف إلى نصف القيمة
   const mobileDepth = baseDepth * 1;
-  const [clicked, setClicked] = useState(false);
   const depth = isMobile ? mobileDepth : baseDepth / (clicked ? 0.7 : 1);
 
   // نستخدم useMemo لتجنب إعادة توليد الفلتر عند كل إعادة رسم
@@ -52,7 +62,7 @@ export const GlassElement = ({
     backdropFilter: `blur(${
       isMobile ? mobileBlur : blur
     }px) url('${displacementFilter}')`,
-    WebkitBackdropFilter: `blur(${blur}px) url('${displacementFilter}')`,
+    WebkitBackdropFilter: `blur(${isMobile ? mobileBlur : blur}px) url('${displacementFilter}')`,
     // تحسين الأداء قليلاً
     willChange: "transform, backdrop-filter",
   };

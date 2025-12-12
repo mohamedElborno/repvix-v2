@@ -213,16 +213,16 @@
 
 @keyframes marquee-x-reverse {
   0% {
-    transform: translateX(-50%);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(0);
+    transform: translateX(50%);
   }
 }
 
 .marquee-track {
   display: flex;
-  gap: 4rem;
+  gap: 2rem;
   width: max-content;
   will-change: transform;
 }
@@ -230,16 +230,30 @@
 .marquee-group {
   display: inline-flex;
   align-items: center;
-  gap: 4rem;
+  gap: 2rem;
   padding-right: 0;
 }
 
 .marquee-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .marquee-track {
+    gap: 4rem;
+  }
+
+  .marquee-group {
+    gap: 4rem;
+  }
+
+  .marquee-item {
+    gap: 0.75rem;
+  }
 }
 
 .animate-marquee {
