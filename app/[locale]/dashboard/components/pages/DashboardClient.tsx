@@ -1139,7 +1139,7 @@ export default function DashboardClient({
             </div>
             <Button
               onClick={() => setIsUploadDialogOpen(true)}
-              className="max-h-9 group relative bg-linear-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-primary-foreground transition-all duration-300 shrink-0"
+              className="max-h-9 text-white group relative bg-purple-600 hover:bg-purple-500 transition-all duration-300 shrink-0"
             >
               <div className="relative flex items-center md:gap-2">
                 <div className="relative w-5 h-5 flex items-center justify-center">
@@ -1257,8 +1257,8 @@ export default function DashboardClient({
       {/* Floating feedback box – يظهر بعد أول تحليل */}
       {analyticsAvailable && (
         <div
-          className={`fixed bottom-4 ${
-            locale === "ar" ? "left-4" : "right-4"
+          className={`fixed bottom-8 ${
+            locale === "ar" ? "left-8" : "right-8"
           } z-20 flex flex-col items-end gap-2`}
         >
           {isFeedbackOpen ? (

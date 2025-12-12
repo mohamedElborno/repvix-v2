@@ -3,10 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Globe } from "lucide-react";
+import { Globe, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { GlassElement } from "./GlassElement/GlassElement";
 
 export default function LocaleSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,20 +15,18 @@ export default function LocaleSwitcher() {
   const t = useTranslations("locale");
 
   const languages = [
-    { code: "ar", name: t("arabic") },
-    { code: "en", name: t("english") },
-    { code: "fr", name: t("french") },
-    { code: "tr", name: t("turkish") },
-    { code: "es", name: t("spanish") },
-    { code: "hi", name: t("hindi") },
-    { code: "ja", name: t("japanese") },
+    { code: "ar", name: t("arabic"), flag: "🇸🇦" },
+    { code: "en", name: t("english"), flag: "🇬🇧" },
+    { code: "fr", name: t("french"), flag: "🇫🇷" },
+    { code: "tr", name: t("turkish"), flag: "🇹🇷" },
+    { code: "es", name: t("spanish"), flag: "🇪🇸" },
+    { code: "hi", name: t("hindi"), flag: "🇮🇳" },
+    { code: "ja", name: t("japanese"), flag: "🇯🇵" },
   ];
 
   const switchLocale = (newLocale: string) => {
     if (newLocale !== locale) {
       setTimeout(() => {
-        // pathname from next-intl usePathname() gives path without locale
-        // So we need to add the new locale prefix
         const newPath = `/${newLocale}${pathname}`;
         window.location.href = newPath;
       }, 200);
@@ -52,81 +49,49 @@ export default function LocaleSwitcher() {
   }, []);
 
   return (
-    <div className="z-50" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       {/* Locale Switcher Button */}
-      <GlassElement
-        className="flex items-center justify-center transition-all duration-300 hover:scale-[0.96] active:scale-90"
-        styles={{
-          background: "rgba(99, 99, 99, 0.089)",
-          boxShadow: "inset 0 0 4px 0px rgba(255, 255, 255, 0.192)",
-        }}
-        height={55}
-        width={55}
-        radius={999}
-        depth={2}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-3xl cursor-pointer h-10 w-10 bg-transparent hover:bg-purple-100/50 dark:hover:bg-purple-900/20 hover:scale-110 active:scale-95 transition-all duration-300 group"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Switch language"
       >
-        <Button
-          className="flex items-center justify-center bg-transparent hover:bg-transparent my-0 py-0 px-0 h-full w-full cursor-pointer active:scale-95 transition-transform duration-150 ease-out"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {/* Globe Icon */}
-          <Globe
-            size={16}
-            className="shrink-0 w-4 h-4 dark:text-white text-black/80 rounded-full group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_4px_rgba(168,85,247,0.3)]"
-            style={{
-              boxShadow: "0 0 8px 4px rgba(255, 255, 255, 0.192)",
-            }}
-          />
-
-          {/* Animated gradient border */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/20 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-          {/* Glow effect */}
-          <div className="absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.1)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        </Button>
-      </GlassElement>
+        <Globe className="h-5 w-5 text-black dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300" />
+      </Button>
 
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute max-h-fit max-w-fit rounded-3xl backdrop-blur-sm ${
-            locale === "ar" ? "left-0" : "right-0"
-          } mt-3 z-50`}
-          style={{
-            background: "rgba(99, 99, 99, 0.089)",
-            boxShadow: "inset 0 0 4px 0px rgba(255, 255, 255, 0.192)",
-          }}
+          className={cn(
+            "absolute mt-4 w-48 rounded-2xl border border-border/50 bg-background/95 backdrop-blur-xl shadow-xl z-50",
+            locale === "ar" ? "-left-2 md:-left-4" : "-right-2 md:-right-4"
+          )}
         >
-          <div className="p-2 space-y-2">
+          <div className="p-2 space-y-1">
             {languages.map((language) => (
               <button
                 key={language.code}
                 onClick={() => switchLocale(language.code)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-2 py-1 text-left rounded-full transition-all duration-300 group",
-                  "hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10",
-                  "active:scale-95 active:bg-white/30 transition-transform duration-150 ease-out",
-                  locale === language.code &&
-                    "bg-white/20 shadow-lg shadow-purple-500/10"
+                  "w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left rounded-xl transition-all duration-200",
+                  "hover:bg-purple-50 dark:hover:bg-purple-950/30",
+                  locale === language.code
+                    ? "bg-purple-100/80 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
+                    : "text-foreground"
                 )}
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-xs font-bold text-white">
-                    {language.code.toUpperCase().charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium dark:text-white/90 text-black/90 group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_4px_rgba(168,85,247,0.2)]">
-                    {language.name}
-                  </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{language.flag}</span>
+                  <span className="text-sm font-medium">{language.name}</span>
                 </div>
                 {locale === language.code && (
-                  <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
+                  <Check className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 )}
               </button>
             ))}
           </div>
-
-          {/* Bottom gradient line */}
-          <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
         </div>
       )}
     </div>

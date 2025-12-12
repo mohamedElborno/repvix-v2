@@ -2,21 +2,17 @@
   "home": {
     "hero": {
       "badge": "Analyse IA des conversations",
-      "title1": "Analysez chaque",
-      "title2": "conversation client.",
-      "title3": "Dans n’importe quelle langue.",
-      "subtitle": "Repvix transforme chaque conversation de support client ou de vente en insights exploitables. Mesurez la clarté, l’empathie et les résultats — grâce à une IA avancée qui comprend le ton, l’émotion et le contexte dans six langues. Gérez votre équipe, suivez les performances et assurez-vous que chaque échange respecte vos standards.",
+      "title": "Nous Analysons Vos Chats Clients et Révélons Ce Qui Nuit à Votre Entreprise",
+      "subtitle": "Analysez les conversations clients avec l'IA dans 7 langues.",
+      "cta": "Essayer Gratuitement",
       "feature1Title": "Insights comportementaux",
       "feature1Desc": "Comprenez comment votre équipe communique — clarté, empathie, ton et professionnalisme — le tout évalué automatiquement.",
       "feature2Title": "Analyse unifiée Support + Ventes",
       "feature2Desc": "Analysez à la fois les interactions de support et les négociations de vente pour améliorer la satisfaction et la conversion.",
       "feature3Title": "Détection des risques et du sentiment",
-      "feature3Desc": "Repérez la frustration client, les risques de perte ou les changements de ton avant qu’ils n’affectent votre réputation.",
+      "feature3Desc": "Repérez la frustration client, les risques de perte ou les changements de ton avant qu'ils n'affectent votre réputation.",
       "feature4Title": "Logique IA guidée",
-      "feature4Desc": "Le moteur de règles de Repvix garantit une analyse cohérente, fiable et éthique à chaque traitement.",
-      "getStarted": "Commencer gratuitement",
-      "learnMore": "Voir comment ça marche",
-      "trustNote": "Aucune configuration requise • Suivi de la performance inclus"
+      "feature4Desc": "Le moteur de règles de Repvix garantit une analyse cohérente, fiable et éthique à chaque traitement."
     },
     "features": {
       "title": "Analyse IA puissante pour chaque conversation",

@@ -2,10 +2,9 @@
   "home": {
     "hero": {
       "badge": "Análisis de Chats con IA",
-      "title1": "Analiza Cada",
-      "title2": "Conversación con el Cliente.",
-      "title3": "En Cualquier Idioma.",
-      "subtitle": "Repvix convierte cada conversación de soporte o ventas en información accionable. Mide la claridad, empatía y resultados, impulsado por IA avanzada que entiende el tono, la emoción y el contexto en seis idiomas. Gestiona a tu equipo, supervisa el rendimiento y asegura interacciones de alta calidad.",
+      "title": "Analizamos Tus Chats con Clientes y Te Mostramos Qué Está Dañando Tu Negocio",
+      "subtitle": "Analiza conversaciones de clientes con IA en 7 idiomas.",
+      "cta": "Prueba Gratis",
       "feature1Title": "Análisis del Comportamiento",
       "feature1Desc": "Comprende cómo se comunica tu equipo: claridad, empatía, tono y profesionalismo — todo medido automáticamente.",
       "feature2Title": "Analítica Unificada de Soporte y Ventas",
@@ -13,10 +12,7 @@
       "feature3Title": "Detección de Riesgos y Sentimiento",
       "feature3Desc": "Detecta frustración, riesgos de abandono y cambios de tono antes de que afecten tu reputación.",
       "feature4Title": "Lógica Guiada por IA",
-      "feature4Desc": "El motor de reglas personalizado de Repvix garantiza análisis consistentes, confiables y éticos.",
-      "getStarted": "Comienza Gratis",
-      "learnMore": "Ver Cómo Funciona",
-      "trustNote": "Sin configuración • Seguimiento del rendimiento del equipo incluido"
+      "feature4Desc": "El motor de reglas personalizado de Repvix garantiza análisis consistentes, confiables y éticos."
     },
     "features": {
       "title": "Análisis Avanzado Impulsado por IA para Cada Conversación",

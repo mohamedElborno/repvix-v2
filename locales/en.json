@@ -1,11 +1,10 @@
 {
   "home": {
     "hero": {
-      "badge": "AI Chat Analysis",
-      "title1": "Analyze Every",
-      "title2": "Customer Conversation.",
-      "title3": "In Any Language.",
-      "subtitle": "Repvix turns every customer support and sales conversation into actionable insights. Measure clarity, empathy, and results — powered by advanced AI that understands tone, emotion, and context across six languages. Manage your team, monitor performance, and ensure every interaction meets your standards.",
+      "badge": "AI-Powered Chat Analysis",
+      "title": "We Analyze Your Customer Chats and Show You What's Hurting Your Business",
+      "subtitle": "Analyze customer conversations with AI across 7 languages.",
+      "cta": "Try for Free",
       "feature1Title": "Behavioral Insights",
       "feature1Desc": "Understand how your team communicates — clarity, empathy, tone, and professionalism — all measured automatically.",
       "feature2Title": "Unified Support + Sales Analytics",
@@ -13,10 +12,7 @@
       "feature3Title": "Risk & Sentiment Detection",
       "feature3Desc": "Spot customer frustration, churn risks, and sentiment shifts before they affect your reputation.",
       "feature4Title": "Guided AI Logic",
-      "feature4Desc": "Repvix’s custom rule engine ensures every analysis follows consistent, reliable, and ethical standards.",
-      "getStarted": "Get Started Free",
-      "learnMore": "See How It Works",
-      "trustNote": "No setup required • Team performance tracking included"
+      "feature4Desc": "Repvix's custom rule engine ensures every analysis follows consistent, reliable, and ethical standards."
     },
     "features": {
       "title": "Powerful AI-Driven Analysis for Every Conversation",

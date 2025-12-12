@@ -2,10 +2,9 @@
   "home": {
     "hero": {
       "badge": "Yapay Zekâ Sohbet Analizi",
-      "title1": "Her Müşteri",
-      "title2": "Konuşmasını Analiz Et.",
-      "title3": "Altı Dilde.",
-      "subtitle": "Repvix, müşteri destek ve satış konuşmalarınızı eyleme dönüştürülebilir içgörülere dönüştürür. Netliği, empatiyi ve sonuçları ölçün — altı dilde tonu, duyguyu ve bağlamı anlayan gelişmiş yapay zekâ gücüyle. Ekibinizi yönetin, performansı izleyin ve her etkileşimin standartlarınıza uygun olduğundan emin olun.",
+      "title": "Müşteri Sohbetlerinizi Analiz Edip İşinize Zarar Vereni Gösteriyoruz",
+      "subtitle": "Müşteri konuşmalarını yapay zekâ ile 7 dilde analiz edin.",
+      "cta": "Ücretsiz Dene",
       "feature1Title": "Davranışsal İçgörüler",
       "feature1Desc": "Ekibinizin nasıl iletişim kurduğunu anlayın — netlik, empati, ton ve profesyonellik — hepsi otomatik olarak analiz edilir.",
       "feature2Title": "Destek + Satış Analitiği",
@@ -13,10 +12,7 @@
       "feature3Title": "Risk ve Duygu Analizi",
       "feature3Desc": "Müşteri memnuniyetsizliğini, kayıp riskini ve duygu değişimlerini itibarınıza zarar vermeden önce fark edin.",
       "feature4Title": "Kural Tabanlı Yapay Zekâ",
-      "feature4Desc": "Repvix’in özel kural motoru, her analizin tutarlı, güvenilir ve etik standartlarda yapılmasını sağlar.",
-      "getStarted": "Ücretsiz Başla",
-      "learnMore": "Nasıl Çalıştığını Gör",
-      "trustNote": "Kurulum gerekmez • Ekip performansı takibi dahil"
+      "feature4Desc": "Repvix'in özel kural motoru, her analizin tutarlı, güvenilir ve etik standartlarda yapılmasını sağlar."
     },
     "features": {
       "title": "Her Sohbet İçin Güçlü Yapay Zekâ Analizi",
