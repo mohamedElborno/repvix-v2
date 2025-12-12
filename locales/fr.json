@@ -2,7 +2,7 @@
   "home": {
     "hero": {
       "badge": "Analyse IA des conversations",
-      "title": "Nous Analysons Vos Chats Clients et Révélons Ce Qui Nuit à Votre Entreprise",
+      "title": "Nous Analysons Vos Chats Clients pour Révéler Ce Qui Nuit à Votre Entreprise",
       "subtitle": "Analysez les conversations clients avec l'IA dans 7 langues.",
       "cta": "Essayer Gratuitement",
       "feature1Title": "Insights comportementaux",
@@ -13,6 +13,13 @@
       "feature3Desc": "Repérez la frustration client, les risques de perte ou les changements de ton avant qu'ils n'affectent votre réputation.",
       "feature4Title": "Logique IA guidée",
       "feature4Desc": "Le moteur de règles de Repvix garantit une analyse cohérente, fiable et éthique à chaque traitement."
+    },
+    "integrationsMarquee": {
+      "label": "D'autres intégrations arrivent",
+      "badges": {
+        "new": "Nouveau",
+        "comingSoon": "Bientôt"
+      }
     },
     "features": {
       "title": "Analyse IA puissante pour chaque conversation",
@@ -50,8 +57,8 @@
       "title": "Comment ça marche",
       "subtitle": "Des exports de chats bruts aux insights profonds — en trois étapes simples.",
       "step1": {
-        "title": "Importer les conversations",
-        "desc": "Importez vos conversations WhatsApp ou fichiers TXT/CSV. Repvix nettoie et structure automatiquement vos données pour l’analyse.",
+        "title": "Ajouter des conversations",
+        "desc": "Collez un chat WhatsApp (copier/coller) ou connectez Zendesk pour importer les conversations automatiquement.",
         "badge": "Entrée"
       },
       "step2": {
@@ -139,6 +146,7 @@
     "myTeam": "Mon équipe",
     "billing": "Facturation",
     "settings": "Paramètres",
+    "more": "Plus",
     "signUp": "Créer un compte",
     "signIn": "Connexion",
     "logoAlt": "Logo Repvix",

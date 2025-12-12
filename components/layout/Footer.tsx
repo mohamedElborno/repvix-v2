@@ -28,7 +28,7 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-14 sm:mt-20 mb-5">
-      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
+      <div className="mx-auto w-full max-w-[1600px] px-6 sm:px-8">
         {/* Outer gradient ring */}
         <div className="rounded-3xl p-[1.5px] bg-gradient-to-br from-purple-400/20 via-fuchsia-400/10 to-purple-600/20 dark:from-purple-400/30 dark:via-fuchsia-400/20 dark:to-purple-600/30">
           <div className="relative overflow-hidden rounded-3xl border border-border bg-card backdrop-blur-md shadow-sm">

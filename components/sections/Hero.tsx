@@ -4,13 +4,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import DashboardMockup from "./DashboardMockup";
+import IntegrationsMarquee from "./IntegrationsMarquee";
 
 export default function Hero() {
   const t = useTranslations("home.hero");
 
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden">
-      <div className="relative mx-auto max-w-[1610px] px-6 sm:px-8 lg:px-16">
+      <div className="relative mx-auto max-w-[1600px] px-6 sm:px-8 lg:px-16">
         <div className="flex flex-col items-center justify-center min-h-screen py-20 gap-16">
           {/* Text Content - Centered */}
           <div className="flex flex-col items-center text-center gap-8">
@@ -42,6 +43,9 @@ export default function Hero() {
           {/* Dashboard Mockup */}
           <DashboardMockup />
         </div>
+
+        {/* Integrations Marquee */}
+        <IntegrationsMarquee />
       </div>
     </section>
   );

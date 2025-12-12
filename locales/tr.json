@@ -2,7 +2,7 @@
   "home": {
     "hero": {
       "badge": "Yapay Zekâ Sohbet Analizi",
-      "title": "Müşteri Sohbetlerinizi Analiz Edip İşinize Zarar Vereni Gösteriyoruz",
+      "title": "Müşteri Sohbetlerinizi Analiz Ederek İşinize Zarar Vereni Gösteriyoruz",
       "subtitle": "Müşteri konuşmalarını yapay zekâ ile 7 dilde analiz edin.",
       "cta": "Ücretsiz Dene",
       "feature1Title": "Davranışsal İçgörüler",
@@ -13,6 +13,13 @@
       "feature3Desc": "Müşteri memnuniyetsizliğini, kayıp riskini ve duygu değişimlerini itibarınıza zarar vermeden önce fark edin.",
       "feature4Title": "Kural Tabanlı Yapay Zekâ",
       "feature4Desc": "Repvix'in özel kural motoru, her analizin tutarlı, güvenilir ve etik standartlarda yapılmasını sağlar."
+    },
+    "integrationsMarquee": {
+      "label": "Daha fazla entegrasyon üzerinde çalışıyoruz",
+      "badges": {
+        "new": "Yeni",
+        "comingSoon": "Yakında"
+      }
     },
     "features": {
       "title": "Her Sohbet İçin Güçlü Yapay Zekâ Analizi",
@@ -50,8 +57,8 @@
       "title": "Nasıl Çalışır",
       "subtitle": "Ham sohbetlerden derin performans analizlerine — üç basit adımda.",
       "step1": {
-        "title": "Sohbetleri Yükle",
-        "desc": "WhatsApp veya metin dosyalarınızı (TXT/CSV) içe aktarın. Repvix verilerinizi otomatik olarak temizler ve analiz için hazırlar.",
+        "title": "Konuşmaları Ekleyin",
+        "desc": "WhatsApp sohbetini yapıştırın (kopyala/yapıştır) veya Zendesk'i bağlayarak konuşmaları otomatik içe aktarın.",
         "badge": "Girdi"
       },
       "step2": {
@@ -1003,6 +1010,7 @@
     "myTeam": "Ekibim",
     "billing": "Faturalandırma",
     "settings": "Ayarlar",
+    "more": "Daha Fazla",
     "signUp": "Kaydol",
     "signIn": "Giriş Yap",
     "logoAlt": "Repvix logosu",

@@ -16,6 +16,7 @@ import type { DashboardLayoutClientProps } from "../../types/dashboard";
 import { NavUser } from "../NavUser";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import BottomNav from "./BottomNav";
 
 export default function DashboardLayoutClient({
   children,
@@ -83,30 +84,38 @@ export default function DashboardLayoutClient({
   }, []);
 
   return (
-    <div className="mx-auto h-[100vh] flex w-full flex-1 flex-col overflow-hidden md:flex-row">
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10">
-          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            <Link href={`/`}>
-              <Logo open={open} />
-            </Link>
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
-              ))}
+    <div className="mx-auto h-screen flex w-full flex-1 flex-col overflow-hidden md:flex-row">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden md:block">
+        <Sidebar open={open} setOpen={setOpen}>
+          <SidebarBody className="justify-between gap-10">
+            <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+              <Link href={`/`}>
+                <Logo open={open} />
+              </Link>
+              <div className="mt-8 flex flex-col gap-2">
+                {links.map((link, idx) => (
+                  <SidebarLink key={idx} link={link} />
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
-            <NavUser />
-          </div>
-        </SidebarBody>
-      </Sidebar>
-      <div className="flex flex-col w-full h-full overflow-y-auto p-2">
-        <div className="dark:bg-muted/20 bg-neutral-100/50 rounded-2xl h-auto">
+            <div>
+              <NavUser />
+            </div>
+          </SidebarBody>
+        </Sidebar>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex flex-col w-full h-full overflow-hidden overflow-y-auto p-0 pb-16 md:p-2 md:pb-2">
+        <div className="dark:bg-muted/20 bg-neutral-100/50 md:rounded-2xl h-auto">
           <DashboardNavbar onToggleSidebar={() => setOpen(!open)} />
           <div className="gap-4 p-4 md:gap-6 md:p-6">{children}</div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }

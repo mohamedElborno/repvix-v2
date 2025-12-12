@@ -90,7 +90,7 @@ export function SiteHeader() {
                 : "inset 0 0 0px 0px rgba(255, 255, 255, 0.192)",
             }}
             height={60}
-            width={1600}
+            width={1472}
             radius={25}
             depth={2}
           >

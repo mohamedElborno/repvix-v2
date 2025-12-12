@@ -4,12 +4,19 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { almarai, eczar, whyteInktrap } from "@/lib/fonts";
+import { eczar, whyteInktrap } from "@/lib/fonts";
+import { Noto_Sans_Arabic } from "next/font/google";
 import { Toaster } from "sonner";
 import "../globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import { Analytics } from "@vercel/analytics/next";
+
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-noto-sans-arabic",
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale: string) => ({ locale }));
@@ -150,7 +157,7 @@ export default async function RootLayout({
         <body
           className={`${
             locale === "ar"
-              ? almarai.className
+              ? notoSansArabic.className
               : locale === "hi"
                 ? eczar.className
                 : locale === "en"

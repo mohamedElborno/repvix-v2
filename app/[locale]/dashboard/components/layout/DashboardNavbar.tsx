@@ -16,6 +16,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { MobileNavUser } from "./MobileNavUser";
 
 interface DashboardNavbarProps {
   onToggleSidebar: () => void;
@@ -57,7 +58,8 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
 
         let label = segment;
         if (segment === "analytics") label = tBreadcrumb("analytics");
-        else if (segment === "integrations") label = tBreadcrumb("integrations");
+        else if (segment === "integrations")
+          label = tBreadcrumb("integrations");
         else if (segment === "my-team") label = tBreadcrumb("myTeam");
         else if (segment === "settings") label = tBreadcrumb("settings");
         else if (segment === "profile") label = tBreadcrumb("profile");
@@ -90,45 +92,57 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
   const breadcrumbItems = getBreadcrumbItems();
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) py-2">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="flex p-0"
-          onClick={onToggleSidebar}
-        >
-          <Sidebar />
-        </Button>
-        <Separator
-          orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
-        />
-        <Breadcrumb>
-          <BreadcrumbList>
-            {breadcrumbItems.map((item, index) => (
-              <div key={index} className="flex items-center gap-1.5">
-                {index > 0 && <BreadcrumbSeparator />}
-                <BreadcrumbItem>
-                  {item.isActive ? (
-                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                  ) : (
-                    <BreadcrumbLink asChild>
-                      <Link href={item.href}>{item.label}</Link>
-                    </BreadcrumbLink>
-                  )}
-                </BreadcrumbItem>
-              </div>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div
-          className={`flex items-center gap-2 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
-        >
+    <div className="flex flex-col gap-2 top-0 z-50 overflow-hidden">
+      {/* Desktop Navbar */}
+      <header className="hidden md:flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) py-2">
+        <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex p-0"
+            onClick={onToggleSidebar}
+          >
+            <Sidebar />
+          </Button>
+          <Separator
+            orientation="vertical"
+            className="mx-2 data-[orientation=vertical]:h-4"
+          />
+          <Breadcrumb>
+            <BreadcrumbList>
+              {breadcrumbItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-1.5">
+                  {index > 0 && <BreadcrumbSeparator />}
+                  <BreadcrumbItem>
+                    {item.isActive ? (
+                      <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink asChild>
+                        <Link href={item.href}>{item.label}</Link>
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </div>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div
+            className={`flex items-center gap-2 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
+          >
+            <ThemeSwitcher />
+            <LocaleSwitcher />
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Navbar */}
+      <header className="md:hidden flex items-center justify-between gap-2 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-2.5 z-50">
+        <MobileNavUser />
+        <div className="flex items-center gap-2 z-50">
           <ThemeSwitcher />
           <LocaleSwitcher />
         </div>
-      </div>
-    </header>
+      </header>
+    </div>
   );
 }

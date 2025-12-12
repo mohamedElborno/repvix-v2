@@ -2,10 +2,18 @@
 
 import Image from "next/image";
 import { useLocale } from "next-intl";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 export default function DashboardMockup() {
   const locale = useLocale();
   const isRTL = locale === "ar";
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="relative w-full max-w-6xl">
@@ -34,14 +42,29 @@ export default function DashboardMockup() {
           {/* Dashboard Preview */}
           <div className="bg-linear-to-br from-purple-500/5 via-transparent to-fuchsia-500/5">
             <div className="relative aspect-video w-full rounded-b-xl overflow-hidden border border-white/10 bg-white/5 dark:bg-black/20 backdrop-blur-sm">
-              <Image
-                src="/Repvix.png"
-                alt="Repvix Dashboard"
-                fill
-                className="object-cover"
-                priority
-              />
-              {/* Overlay gradient that appears on hover */}
+              {mounted && (
+                <>
+                  {theme === "dark" ? (
+                    <Image
+                      src="/RepvixDashboardDarkMode.png"
+                      alt="Repvix Dashboard"
+                      width={10000}
+                      height={10000}
+                      className="object-cover"
+                      priority
+                    />
+                  ) : (
+                    <Image
+                      src="/RepvixDashboard.png"
+                      alt="Repvix Dashboard"
+                      width={10000}
+                      height={10000}
+                      className="object-cover"
+                      priority
+                    />
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
   "home": {
     "hero": {
       "badge": "AI-Powered Chat Analysis",
-      "title": "We Analyze Your Customer Chats and Show You What's Hurting Your Business",
+      "title": "We Analyze Your Customer Chats to Show What's Hurting Your Business",
       "subtitle": "Analyze customer conversations with AI across 7 languages.",
       "cta": "Try for Free",
       "feature1Title": "Behavioral Insights",
@@ -13,6 +13,13 @@
       "feature3Desc": "Spot customer frustration, churn risks, and sentiment shifts before they affect your reputation.",
       "feature4Title": "Guided AI Logic",
       "feature4Desc": "Repvix's custom rule engine ensures every analysis follows consistent, reliable, and ethical standards."
+    },
+    "integrationsMarquee": {
+      "label": "Working on more integrations",
+      "badges": {
+        "new": "New",
+        "comingSoon": "Coming Soon"
+      }
     },
     "features": {
       "title": "Powerful AI-Driven Analysis for Every Conversation",
@@ -50,8 +57,8 @@
       "title": "How It Works",
       "subtitle": "From raw chat exports to deep performance insights — in three simple steps.",
       "step1": {
-        "title": "Upload Conversations",
-        "desc": "Import your WhatsApp or chat transcripts (TXT/CSV). Repvix automatically cleans and structures your data for analysis.",
+        "title": "Add Conversations",
+        "desc": "Paste a WhatsApp chat (copy/paste) or connect Zendesk to import conversations automatically.",
         "badge": "Input"
       },
       "step2": {
@@ -139,6 +146,7 @@
     "myTeam": "My Team",
     "billing": "Billing",
     "settings": "Settings",
+    "more": "More",
     "signUp": "Sign Up",
     "signIn": "Sign In",
     "logoAlt": "Repvix logo",

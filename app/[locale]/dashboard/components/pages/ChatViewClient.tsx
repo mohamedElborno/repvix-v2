@@ -209,8 +209,8 @@ export default function ChatViewClient({
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-card/80 backdrop-blur-xl border-b border-border dark:border-purple-500/20 rounded-2xl">
+      {/* Header - Desktop */}
+      <div className="hidden md:block sticky top-0 z-20 bg-card/80 backdrop-blur-xl border-b border-border dark:border-purple-500/20 rounded-2xl">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -364,6 +364,83 @@ export default function ChatViewClient({
                   </div>
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Header - Mobile (Modern) */}
+      <div className="md:hidden sticky top-2 overflow-hidden z-30 bg-linear-to-b from-background via-background/95 to-background/90 backdrop-blur-xl border-b border-border/50 shadow-lg rounded-2xl">
+        <div className="px-4 py-3">
+          {/* Top Row: Title + Analyze Button */}
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-0">
+              {/* Chat Title */}
+              <h1 className="text-lg font-bold text-foreground truncate leading-tight mb-1">
+                {chat.title || t("untitledChat") || "Untitled Chat"}
+              </h1>
+
+              {/* Date & Time + Message Count */}
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/50">
+                  <Calendar className="w-3 h-3 text-purple-500 dark:text-purple-400" />
+                  <span className="text-[10px] font-medium text-foreground">
+                    {formatDate(chat.startedAt)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/50">
+                  <Hash className="w-3 h-3 text-purple-500 dark:text-purple-400" />
+                  <span className="text-[10px] font-medium text-foreground">
+                    {messages.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Analyze Button - Modern Design */}
+            <button
+              type="button"
+              onClick={openLanguageModal}
+              disabled={isAnalyzing || canAnalyze?.allowed === false}
+              className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-purple-600 to-purple-700 disabled:from-muted disabled:to-muted text-white disabled:text-foreground font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 active:scale-95 disabled:shadow-none"
+            >
+              {isAnalyzing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Brain className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+
+          {/* Tabs - Mobile (Only if analysis exists) */}
+          {analysis && (
+            <div className="flex gap-1 pt-2 border-t border-border/30">
+              <button
+                onClick={() => setActiveTab("messages")}
+                className={`relative flex-1 px-4 py-2.5 text-sm font-semibold transition-all ${
+                  activeTab === "messages"
+                    ? "text-purple-600 dark:text-purple-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t("messages")}
+                {activeTab === "messages" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400 rounded-t-full" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("analysis")}
+                className={`relative flex-1 px-4 py-2.5 text-sm font-semibold transition-all ${
+                  activeTab === "analysis"
+                    ? "text-purple-600 dark:text-purple-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t("analysis")}
+                {activeTab === "analysis" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400 rounded-t-full" />
+                )}
+              </button>
             </div>
           )}
         </div>
@@ -1192,60 +1269,6 @@ export default function ChatViewClient({
           </div>
         ) : null}
       </div>
-
-      {/* Language Selection Modal */}
-      {showLanguageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">
-              {t("selectAnalysisLanguage") || "Select Analysis Language"}
-            </h3>
-            <p className="text-muted-foreground text-sm mb-6">
-              {t("selectAnalysisLanguageHint") ||
-                "Choose the language for the AI analysis output"}
-            </p>
-
-            <div className="space-y-3 mb-6">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() =>
-                    setSelectedLanguage(lang.code as AnalysisLanguage)
-                  }
-                  className={`w-full p-3 rounded-lg border transition-all ${
-                    selectedLanguage === lang.code
-                      ? "bg-purple-500/10 border-purple-500 text-foreground"
-                      : "bg-muted/50 border-border text-muted-foreground hover:bg-muted/70"
-                  }`}
-                >
-                  {lang.name}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowLanguageModal(false)}
-                className="px-4 py-2 rounded-lg border border-border text-sm text-foreground hover:bg-muted"
-              >
-                {t("cancel") || "Cancel"}
-              </button>
-              <button
-                onClick={handleConfirmAnalyze}
-                disabled={isAnalyzing}
-                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm disabled:opacity-60"
-              >
-                {isAnalyzing ? (
-                  <Loader2 className="w-4 h-4 mr-2 inline animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4 mr-2 inline" />
-                )}
-                {t("startAnalysis") || "Start Analysis"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

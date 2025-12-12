@@ -201,6 +201,69 @@
   outline: none !important;
 }
 
+/* Proper infinite marquee (seamless): one track with two identical groups */
+@keyframes marquee-x {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-x-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  gap: 4rem;
+  width: max-content;
+  will-change: transform;
+}
+
+.marquee-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rem;
+  padding-right: 0;
+}
+
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.animate-marquee {
+  animation: marquee-x var(--marquee-duration, 26s) linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-x-reverse var(--marquee-duration, 26s) linear infinite;
+}
+
+/* pause on hover */
+.animate-marquee:hover,
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation: none;
+    transform: none;
+  }
+}
+
 @media print {
   body * {
     visibility: hidden;

@@ -93,7 +93,7 @@ export default function Pricing() {
     >
       <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-fuchsia-400 to-purple-500 dark:from-purple-300 dark:via-fuchsia-200 dark:to-purple-400 mb-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3">
             {t("title")}
           </h2>
           <p className="mt-3 text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
@@ -105,29 +105,24 @@ export default function Pricing() {
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative p-6 sm:p-8 bg-card border-border backdrop-blur-md shadow-sm overflow-hidden rounded-2xl ${
+              className={`relative p-6 sm:p-8 bg-card border backdrop-blur-md overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group ${
                 plan.popular
-                  ? "ring-2 ring-purple-400 dark:ring-purple-500 md:scale-105 md:-translate-y-2"
-                  : ""
-              } transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-500/20 group`}
+                  ? "border-purple-600 dark:border-purple-500 shadow-md"
+                  : "border-border hover:border-border/80"
+              }`}
             >
-              {/* Gradient background for popular plan */}
-              {plan.popular && (
-                <div className="absolute z-10 inset-0 bg-gradient-to-br from-purple-500/5 via-fuchsia-500/5 to-purple-500/5 dark:from-purple-500/10 dark:via-fuchsia-500/10 dark:to-purple-500/10 pointer-events-none" />
-              )}
-
               {/* Popular badge */}
               {plan.popular && (
-                <div className="absolute top-1 right-1/6 translate-x-1/2 z-10">
-                  <span className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 dark:from-purple-600 dark:to-fuchsia-600 text-white text-xs font-semibold rounded-full flex items-center gap-1.5 shadow-lg shadow-purple-500/30">
-                    <Star className="w-3.5 h-3.5 fill-current" /> {t("popular")}
+                <div className="absolute top-4 right-4 z-10">
+                  <span className="px-3 py-1 bg-purple-600 dark:bg-purple-500 text-white text-xs font-semibold rounded-md flex items-center gap-1.5">
+                    <Star className="w-3 h-3 fill-current" /> {t("popular")}
                   </span>
                 </div>
               )}
 
-              <div className="relative z-10">
+              <div className="relative z-10 flex flex-col h-full">
                 {/* Plan title */}
-                <div className="mb-4">
+                <div className="mb-6">
                   <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
                     {plan.title}
                   </h3>
@@ -139,7 +134,7 @@ export default function Pricing() {
                 {/* Price */}
                 <div className="mb-6 pb-6 border-b border-border">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-fuchsia-500 dark:from-purple-400 dark:to-fuchsia-400">
+                    <span className="text-4xl sm:text-5xl font-bold text-foreground">
                       {plan.price === t("customPrice")
                         ? t("customPrice")
                         : `$${plan.price}`}
@@ -153,16 +148,14 @@ export default function Pricing() {
                 </div>
 
                 {/* Features */}
-                <ul className="mb-8 space-y-3.5 min-h-[200px]">
+                <ul className="mb-8 space-y-3 grow">
                   {plan.features.map((f, i) => (
                     <li
                       key={i}
-                      className="flex items-start text-foreground text-sm group/item"
+                      className="flex items-start text-foreground text-sm"
                     >
-                      <div className="mt-0.5 mr-3 flex-shrink-0">
-                        <div className="w-5 h-5 rounded-full bg-green-500/10 dark:bg-green-500/20 flex items-center justify-center group-hover/item:bg-green-500/20 dark:group-hover/item:bg-green-500/30 transition-colors">
-                          <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                        </div>
+                      <div className="mt-0.5 mr-3 shrink-0">
+                        <Check className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <span className="leading-relaxed">{f}</span>
                     </li>
@@ -172,10 +165,10 @@ export default function Pricing() {
                 {/* CTA Button */}
                 <Button
                   onClick={() => router.push("/dashboard/pricing")}
-                  className={`w-full rounded-lg transition-all duration-300 font-semibold ${
+                  className={`w-full rounded-xl transition-all duration-300 font-semibold mt-auto ${
                     plan.popular
-                      ? "bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600 dark:from-purple-600 dark:to-fuchsia-600 dark:hover:from-purple-700 dark:hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 hover:scale-[1.02]"
-                      : "bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 text-purple-600 dark:text-purple-400 border border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/40 dark:hover:border-purple-500/50 hover:scale-[1.02]"
+                      ? "bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white"
+                      : "bg-muted hover:bg-muted/80 text-foreground border border-border"
                   }`}
                 >
                   {plan.price === t("customPrice") ? (
