@@ -18,24 +18,68 @@ export async function GET(req: NextRequest) {
 
   if (!code || !state) {
     return NextResponse.json(
-      { ok: false, error: "Missing code or state" },
+      { ok: false, error: "Missing OAuth parameters" },
       { status: 400 }
     );
   }
 
+  // 🔒 SECURITY: Validate code format (should be alphanumeric)
+  if (!/^[a-zA-Z0-9_-]+$/.test(code)) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid authorization code" },
+      { status: 400 }
+    );
+  }
+
+  // 🔒 SECURITY: Validate code length (typical OAuth codes are 20-100 chars)
+  if (code.length < 10 || code.length > 200) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid authorization code" },
+      { status: 400 }
+    );
+  }
+
+  // 🔒 SECURITY: CSRF protection - verify state matches cookie nonce
   const cookieState = req.cookies.get("zendesk_oauth_state")?.value;
   if (!cookieState || !state.startsWith(cookieState)) {
     return NextResponse.json(
-      { ok: false, error: "Invalid state" },
+      { ok: false, error: "Invalid OAuth state" },
       { status: 400 }
     );
   }
 
-  const [, subdomain] = state.split("|");
+  // 🔒 SECURITY: Extract and validate state components
+  // Expected format: nonce|subdomain|orgId
+  const stateParts = state.split("|");
+  if (stateParts.length !== 3) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid OAuth state format" },
+      { status: 400 }
+    );
+  }
+
+  const [, subdomain, stateOrgId] = stateParts;
+
   if (!subdomain) {
     return NextResponse.json(
       { ok: false, error: "Missing subdomain in state" },
       { status: 400 }
+    );
+  }
+
+  // 🔒 SECURITY: Validate subdomain format (same as authorize)
+  if (!/^[a-zA-Z0-9-]+$/.test(subdomain)) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid subdomain format" },
+      { status: 400 }
+    );
+  }
+
+  // 🔒 SECURITY: Verify orgId matches the one that initiated OAuth
+  if (stateOrgId !== orgId) {
+    return NextResponse.json(
+      { ok: false, error: "Organization mismatch" },
+      { status: 403 }
     );
   }
 
@@ -45,7 +89,7 @@ export async function GET(req: NextRequest) {
 
   if (!clientId || !clientSecret || !redirectUri) {
     return NextResponse.json(
-      { ok: false, error: "Missing Zendesk OAuth env vars" },
+      { ok: false, error: "Server configuration error" }, // 🔒 Don't expose internal details
       { status: 500 }
     );
   }
@@ -58,22 +102,37 @@ export async function GET(req: NextRequest) {
     redirect_uri: redirectUri,
   });
 
-  const tokenRes = await fetch(
-    `https://${subdomain}.zendesk.com/oauth/tokens`,
-    {
+  // 🔒 SECURITY: Use timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+  let tokenRes;
+  try {
+    tokenRes = await fetch(`https://${subdomain}.zendesk.com/oauth/tokens`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
-    }
-  );
+      signal: controller.signal,
+    });
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error("[Zendesk OAuth] Token exchange request failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "Connection timeout. Please try again." },
+      { status: 500 }
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!tokenRes.ok) {
     const errorText = await tokenRes.text();
+    // 🔒 SECURITY: Log error server-side, don't expose to user
+    console.error("[Zendesk OAuth] Token exchange failed:", errorText);
     return NextResponse.json(
       {
         ok: false,
-        error: "Failed to exchange code",
-        details: errorText,
+        error: "Authentication failed. Please try again.",
       },
       { status: 500 }
     );
@@ -99,18 +158,38 @@ export async function GET(req: NextRequest) {
     tokenJson?.access_token?.scope;
 
   if (!accessToken) {
+    // 🔒 SECURITY: Log error server-side, don't expose token response to user
+    console.error("[Zendesk OAuth] Missing access token in response");
     return NextResponse.json(
       {
         ok: false,
-        error: "Missing access token",
-        details: tokenJson,
+        error: "Authentication failed. Please try again.",
       },
+      { status: 500 }
+    );
+  }
+
+  // 🔒 SECURITY: Validate token format (basic check)
+  if (typeof accessToken !== "string" || accessToken.length < 10) {
+    console.error("[Zendesk OAuth] Invalid access token format");
+    return NextResponse.json(
+      { ok: false, error: "Authentication failed. Please try again." },
       { status: 500 }
     );
   }
 
   // Zendesk may omit expires_in; default to 3600s if absent
   if (!expiresIn) {
+    expiresIn = 3600;
+  }
+
+  // 🔒 SECURITY: Validate expiresIn is reasonable (between 1 minute and 1 year)
+  const MIN_EXPIRES_IN = 60; // 1 minute
+  const MAX_EXPIRES_IN = 365 * 24 * 60 * 60; // 1 year
+  if (expiresIn < MIN_EXPIRES_IN || expiresIn > MAX_EXPIRES_IN) {
+    console.warn(
+      `[Zendesk OAuth] Suspicious expires_in value: ${expiresIn}, using default`
+    );
     expiresIn = 3600;
   }
 
@@ -124,11 +203,20 @@ export async function GET(req: NextRequest) {
 
   if (!convexOrgId) {
     return NextResponse.json(
-      { ok: false, error: "Organization not found for this Clerk org" },
+      { ok: false, error: "Organization not found" },
       { status: 400 }
     );
   }
 
+  // 🔒 SECURITY: Double-check subdomain format before saving
+  if (!/^[a-zA-Z0-9-]+$/.test(subdomain)) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid subdomain" },
+      { status: 400 }
+    );
+  }
+
+  // Save connection to database
   await convex.mutation(api.zendesk.saveConnection, {
     organizationId: convexOrgId as any,
     subdomain,
@@ -139,11 +227,13 @@ export async function GET(req: NextRequest) {
     createdBy: userId,
   });
 
+  // 🔒 SECURITY: Clear OAuth state cookie after successful completion
   const redirectTo = new URL(
     "/dashboard/integrations?connected=zendesk",
     url.origin
   ).toString();
   const res = NextResponse.redirect(redirectTo);
   res.cookies.delete("zendesk_oauth_state");
+
   return res;
 }

@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
 import {
-  ArrowLeft,
-  ArrowRight,
   MessageSquare,
   Clock,
   User,
@@ -46,7 +43,6 @@ export default function ChatViewClient({
   analysis: initialAnalysis,
 }: ChatViewClientProps) {
   const t = useTranslations("chat");
-  const router = useRouter();
   const locale = useLocale();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

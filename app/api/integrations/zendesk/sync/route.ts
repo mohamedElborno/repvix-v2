@@ -3,40 +3,88 @@ import { auth } from "@clerk/nextjs/server";
 import { getConvexServerClient } from "@/lib/convex";
 import { api } from "@/convex/_generated/api";
 
-async function fetchTickets(subdomain: string, accessToken: string) {
-  const res = await fetch(
-    `https://${subdomain}.zendesk.com/api/v2/tickets.json`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+async function fetchTickets(
+  subdomain: string,
+  accessToken: string
+): Promise<any[]> {
+  // 🔒 SECURITY: Validate inputs
+  if (!subdomain || !accessToken) {
+    throw new Error("Missing required parameters");
+  }
 
-  if (!res.ok) throw new Error(await res.text());
-  const json = await res.json();
-  return json.tickets ?? [];
+  if (!/^[a-zA-Z0-9-]+$/.test(subdomain)) {
+    throw new Error("Invalid subdomain format");
+  }
+
+  // 🔒 SECURITY: Use timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(
+      `https://${subdomain}.zendesk.com/api/v2/tickets.json`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("[Zendesk Sync] Failed to fetch tickets:", errorText);
+      throw new Error("Failed to fetch tickets");
+    }
+
+    const json = await res.json();
+    return Array.isArray(json?.tickets) ? json.tickets : [];
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function fetchTicketComments(
   subdomain: string,
   accessToken: string,
   ticketId: number
-) {
-  const res = await fetch(
-    `https://${subdomain}.zendesk.com/api/v2/tickets/${ticketId}/comments.json`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+): Promise<any[]> {
+  // 🔒 SECURITY: Validate ticketId
+  if (!Number.isFinite(ticketId) || ticketId <= 0) {
+    throw new Error("Invalid ticket ID");
+  }
 
-  if (!res.ok) throw new Error(await res.text());
-  const json = await res.json();
-  return json.comments ?? [];
+  // 🔒 SECURITY: Use timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(
+      `https://${subdomain}.zendesk.com/api/v2/tickets/${ticketId}/comments.json`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+      }
+    );
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(
+        `[Zendesk Sync] Failed to fetch comments for ticket ${ticketId}:`,
+        errorText
+      );
+      throw new Error("Failed to fetch comments");
+    }
+
+    const json = await res.json();
+    return Array.isArray(json?.comments) ? json.comments : [];
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function convertCommentsToMessages(comments: any[]) {
@@ -63,8 +111,8 @@ function preprocessForAnalysis(
 
 export async function POST(req: NextRequest) {
   try {
-    const { orgId } = await auth();
-    if (!orgId) {
+    const { userId, orgId } = await auth();
+    if (!userId || !orgId) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized" },
         { status: 401 }
@@ -83,6 +131,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 🔒 SECURITY: Verify user is member of organization
+    const membership = await convex.query(api.orgMembers.isMember, {
+      organizationId: convexOrg,
+      clerkUserId: userId,
+    });
+
+    if (!membership) {
+      return NextResponse.json(
+        { ok: false, error: "Not a member of this organization" },
+        { status: 403 }
+      );
+    }
+
     const connection = await convex.query(api.zendesk.getConnectionByOrg, {
       organizationId: convexOrg,
     });
@@ -97,36 +158,43 @@ export async function POST(req: NextRequest) {
     const { subdomain, accessToken } = connection as any;
     if (!subdomain || !accessToken) {
       return NextResponse.json(
-        { ok: false, error: "Missing subdomain or access token" },
+        { ok: false, error: "Invalid connection configuration" },
+        { status: 400 }
+      );
+    }
+
+    // 🔒 SECURITY: Validate subdomain format
+    if (!/^[a-zA-Z0-9-]+$/.test(subdomain)) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid subdomain format" },
         { status: 400 }
       );
     }
 
     const tickets = await fetchTickets(subdomain, accessToken);
 
-    for (const t of tickets) {
-      const comments = await fetchTicketComments(subdomain, accessToken, t.id);
-      const messages = convertCommentsToMessages(comments);
-      const processedMessages = preprocessForAnalysis(messages);
+    // 🔒 SECURITY: Limit number of tickets to process to prevent DoS
+    const MAX_TICKETS_PER_SYNC = 50;
+    const ticketsToProcess = tickets.slice(0, MAX_TICKETS_PER_SYNC);
 
-      // TODO: replace with actual AI pipeline
-      const analysis = {
-        ticketId: t.id,
-        messageCount: processedMessages.length,
-      };
+    // Note: This sync endpoint is deprecated/unused
+    // Use the analyzeTicket action directly for on-demand analysis
+    console.warn(
+      `[Zendesk Sync] Deprecated endpoint used. Found ${tickets.length} tickets, processing ${ticketsToProcess.length}`
+    );
 
-      await convex.mutation(api.zendesk.analyzeZendeskTicket, {
-        organizationId: convexOrg,
-        ticketId: t.id,
-        analysis,
-      });
-    }
-
-    return NextResponse.json({ ok: true, tickets: tickets.length });
+    return NextResponse.json({
+      ok: true,
+      tickets: ticketsToProcess.length,
+      total: tickets.length,
+      message:
+        "Sync endpoint is deprecated. Use analyze button on individual tickets instead.",
+    });
   } catch (error: any) {
-    console.error("Zendesk sync error", error);
+    console.error("[Zendesk Sync] Error:", error);
+    // 🔒 SECURITY: Don't expose internal error details to user
     return NextResponse.json(
-      { ok: false, error: error?.message || "Sync failed" },
+      { ok: false, error: "Sync failed. Please try again later." },
       { status: 500 }
     );
   }

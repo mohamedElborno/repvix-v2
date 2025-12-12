@@ -289,14 +289,23 @@ export const listForDashboard = query({
       };
     }
 
-    // جلب آخر المحادثات حسب آخر رسالة مع pagination
+    // 🔒 جلب آخر المحادثات حسب آخر رسالة مع pagination
+    // ⚠️ استبعاد تذاكر Zendesk (sourceChannel: "zendesk") من قائمة المحادثات العادية
     const result = await ctx.db
       .query("chats")
       .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
       .order("desc")
       .paginate(args.paginationOpts);
 
-    return result;
+    // Filter out Zendesk tickets from regular chats list
+    const filteredPage = result.page.filter(
+      (chat) => chat.sourceChannel !== "zendesk"
+    );
+
+    return {
+      ...result,
+      page: filteredPage,
+    };
   },
 });
 
@@ -573,7 +582,9 @@ export const getChatsByOrg = query({
       .query("chats")
       .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
       .collect();
-    return chats;
+    
+    // 🔒 Filter out Zendesk tickets from regular chats
+    return chats.filter((chat) => chat.sourceChannel !== "zendesk");
   },
 });
 

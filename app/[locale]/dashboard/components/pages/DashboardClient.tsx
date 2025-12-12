@@ -121,17 +121,14 @@ export default function DashboardClient({
 
   type WidgetKey = "kpis" | "charts" | "chats" | "zendeskChats";
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const [layoutOrder, setLayoutOrder] = useState<WidgetKey[]>([
-    "chats",
-    "zendeskChats",
-  ]);
+  const [layoutOrder, setLayoutOrder] = useState<WidgetKey[]>(["chats"]);
   const [visibleWidgets, setVisibleWidgets] = useState<
     Record<WidgetKey, boolean>
   >({
     kpis: false,
     charts: false,
     chats: true,
-    zendeskChats: true,
+    zendeskChats: false, // Will be enabled if connection exists
   });
   const [draggingKey, setDraggingKey] = useState<WidgetKey | null>(null);
 
@@ -170,6 +167,13 @@ export default function DashboardClient({
   );
   const showTrialBanner = !!organizationId && latestSubscription === null;
 
+  // 🔒 Check if Zendesk is connected before showing the section
+  const zendeskConnection = useQuery(
+    api.zendesk.getConnectionByOrg,
+    organizationId ? { organizationId } : "skip"
+  );
+  const hasZendeskConnection = !!zendeskConnection;
+
   const deleteChat = useMutation(api.chats.deleteChat);
   const submitFeedback = useMutation(api.feedbacks.submitFeedback);
 
@@ -188,20 +192,6 @@ export default function DashboardClient({
   >([]);
   const [zendeskLoading, setZendeskLoading] = useState(false);
   const [zendeskError, setZendeskError] = useState<string | null>(null);
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [ticketComments, setTicketComments] = useState<
-    Array<{
-      role: string;
-      content: string;
-      timestamp: number;
-      authorId: number;
-      public?: boolean;
-    }>
-  >([]);
-  const [ticketCommentsLoading, setTicketCommentsLoading] = useState(false);
-  const [ticketCommentsError, setTicketCommentsError] = useState<string | null>(
-    null
-  );
 
   // جلب جميع الرسائل لكل المحادثات للبحث النصي
   const chatIds = useMemo(() => safeChats.map((chat) => chat._id), [safeChats]);
@@ -332,8 +322,15 @@ export default function DashboardClient({
     setUseSemanticSearch(shouldUseSemantic);
   }, [searchQuery]);
 
-  // Fetch Zendesk tickets on mount
+  // Fetch Zendesk tickets only if connected
   useEffect(() => {
+    if (!hasZendeskConnection) {
+      setZendeskTickets([]);
+      setZendeskLoading(false);
+      setZendeskError(null);
+      return;
+    }
+
     const loadTickets = async () => {
       try {
         setZendeskLoading(true);
@@ -349,26 +346,7 @@ export default function DashboardClient({
       }
     };
     loadTickets();
-  }, []);
-
-  const loadTicketComments = async (ticketId: number) => {
-    try {
-      setSelectedTicketId(ticketId);
-      setTicketComments([]);
-      setTicketCommentsError(null);
-      setTicketCommentsLoading(true);
-      const res = await fetch(
-        `/api/integrations/zendesk/tickets/${ticketId}/comments`
-      );
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || "Failed to fetch comments");
-      setTicketComments(json.comments || []);
-    } catch (err: any) {
-      setTicketCommentsError(err?.message || "Failed to load comments");
-    } finally {
-      setTicketCommentsLoading(false);
-    }
-  };
+  }, [hasZendeskConnection]);
 
   // Process global analysis data for KPIs and charts
   useEffect(() => {
@@ -467,7 +445,11 @@ export default function DashboardClient({
       !!kpiData?.charts?.sentimentDistribution);
 
   const availableWidgets = useMemo<WidgetKey[]>(() => {
-    const widgets: WidgetKey[] = ["chats", "zendeskChats"];
+    const widgets: WidgetKey[] = ["chats"];
+    // 🔒 Only show Zendesk widget if connected
+    if (hasZendeskConnection) {
+      widgets.push("zendeskChats");
+    }
     if (analyticsAvailable) {
       widgets.unshift("kpis");
     }
@@ -475,7 +457,13 @@ export default function DashboardClient({
       widgets.splice(widgets.indexOf("chats"), 0, "charts");
     }
     return widgets;
-  }, [analyticsAvailable, chartsAvailable]);
+  }, [analyticsAvailable, chartsAvailable, hasZendeskConnection]);
+
+  // Create a stable string representation for dependency array
+  const availableWidgetsKey = useMemo(
+    () => availableWidgets.join(","),
+    [availableWidgets]
+  );
 
   // Keep layout order aligned with available widgets and ensure defaults exist
   useEffect(() => {
@@ -489,9 +477,18 @@ export default function DashboardClient({
       (["kpis", "charts"] as WidgetKey[]).forEach((k) => {
         if (!availableWidgets.includes(k)) next[k] = false;
       });
+      // 🔒 Auto-enable Zendesk widget if connected (first time only)
+      if (hasZendeskConnection && !prev.zendeskChats) {
+        next.zendeskChats = true;
+      }
+      // Hide if connection is removed
+      if (!hasZendeskConnection) {
+        next.zendeskChats = false;
+      }
       return next;
     });
-  }, [availableWidgets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableWidgetsKey, hasZendeskConnection]);
 
   // Persist customizer choices per organization
   const prefsKey = organizationId ? `dashboard_prefs_${organizationId}` : null;
@@ -845,7 +842,7 @@ export default function DashboardClient({
                       <MessageSquare className="w-5 h-5 text-primary-foreground" />
                     </div>
                     <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                      {t("zendeskTickets") || "Zendesk tickets"}
+                      {t("zendeskTickets") || "Zendesk Tickets"}
                     </h2>
                   </div>
                   <Button
@@ -876,104 +873,109 @@ export default function DashboardClient({
                   </Button>
                 </div>
 
-                {visibleWidgets.zendeskChats ? (
-                  <div className="space-y-4">
-                    {zendeskError && (
+                {zendeskError && (
+                  <div className="relative group/empty">
+                    <div className="absolute -inset-1 bg-linear-to-r from-muted/20 via-muted/10 to-muted/20 rounded-xl blur-lg opacity-50"></div>
+                    <div className="relative bg-muted/50 rounded-xl p-6 text-center border border-border/30">
                       <p className="text-sm text-destructive">{zendeskError}</p>
-                    )}
+                    </div>
+                  </div>
+                )}
 
-                    {zendeskLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {t("zendeskLoading") || "Loading..."}
+                {zendeskLoading ? (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-8">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    <span>{t("zendeskLoading") || "Loading tickets..."}</span>
+                  </div>
+                ) : zendeskTickets.length === 0 && !zendeskError ? (
+                  <div className="relative group/empty">
+                    <div className="absolute -inset-1 bg-linear-to-r from-muted/20 via-muted/10 to-muted/20 rounded-xl blur-lg opacity-50"></div>
+                    <div className="relative bg-muted/50 rounded-xl p-12 text-center border border-border/30">
+                      <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted border border-border/50 flex items-center justify-center">
+                        <MessageSquare className="w-10 h-10 text-muted-foreground" />
                       </div>
-                    ) : zendeskTickets.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        {t("noZendeskChats") || "No Zendesk chats yet."}
+                      <h3 className="text-lg sm:text-xl font-semibold text-foreground/90 mb-2">
+                        {t("noZendeskTickets") || "No Zendesk Tickets"}
+                      </h3>
+                      <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
+                        {t("noZendeskTicketsDesc") ||
+                          "Your Zendesk tickets will appear here once available."}
                       </p>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {zendeskTickets.map((ticket) => (
-                          <Card
-                            key={ticket.id}
-                            className={`p-3 border cursor-pointer ${
-                              selectedTicketId === ticket.id
-                                ? "border-blue-400"
-                                : "border-border"
-                            }`}
-                            onClick={() => loadTicketComments(ticket.id)}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm font-semibold truncate">
-                                {ticket.subject || `#${ticket.id}`}
-                              </span>
-                              <span className="text-[11px] text-muted-foreground">
-                                {ticket.status || ""}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground line-clamp-2">
-                              {ticket.priority
-                                ? `Priority: ${ticket.priority}`
-                                : ""}
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-
-                    {selectedTicketId && (
-                      <div className="rounded-xl border border-border p-3 space-y-2 bg-card/70">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-semibold">
-                            {t("zendeskComments") || "Comments"}
-                          </h4>
-                          {ticketCommentsLoading && (
-                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                          )}
-                        </div>
-                        {ticketCommentsError ? (
-                          <p className="text-sm text-destructive">
-                            {ticketCommentsError}
-                          </p>
-                        ) : ticketCommentsLoading ? (
-                          <p className="text-sm text-muted-foreground">
-                            {t("zendeskLoading") || "Loading..."}
-                          </p>
-                        ) : ticketComments.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            {t("zendeskNoComments") || "No comments yet."}
-                          </p>
-                        ) : (
-                          <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {ticketComments.map((m, idx) => (
-                              <div
-                                key={idx}
-                                className="rounded-lg border border-border/50 p-2 bg-muted/40"
-                              >
-                                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                                  <span className="uppercase font-medium">
-                                    {m.role}
-                                  </span>
-                                  <span>
-                                    {m.timestamp
-                                      ? new Date(m.timestamp).toLocaleString()
-                                      : ""}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-foreground whitespace-pre-wrap">
-                                  {m.content}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {t("zendeskHidden") || "Zendesk chats are hidden."}
-                  </p>
+                  <div className="grid grid-cols-1 gap-3">
+                    {zendeskTickets.map((ticket) => {
+                      const ticketLabel =
+                        ticket.subject || `Ticket #${ticket.id}`;
+                      const { initials, color } = getAvatarData(ticketLabel);
+                      const statusLabel = ticket.status
+                        ? ticket.status.charAt(0).toUpperCase() +
+                          ticket.status.slice(1)
+                        : "";
+                      const priorityText = ticket.priority
+                        ? `${ticket.priority.charAt(0).toUpperCase()}${ticket.priority.slice(1)} priority`
+                        : t("noPriority") || "No priority set";
+
+                      // Format timestamp
+                      const timestamp = ticket.updated_at || ticket.created_at;
+                      const formattedTime = timestamp
+                        ? formatTimeShort(new Date(timestamp).getTime())
+                        : "";
+
+                      return (
+                        <Card
+                          key={ticket.id}
+                          className="p-3 border border-border bg-card/90 hover:bg-muted/50 transition cursor-pointer"
+                          onClick={() =>
+                            window.location.assign(
+                              `/${locale}/dashboard/zendesk/${ticket.id}`
+                            )
+                          }
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage alt={ticketLabel} />
+                              <AvatarFallback className={`${color} text-white`}>
+                                {initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="font-semibold text-sm truncate">
+                                  {ticketLabel}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground shrink-0">
+                                  {formattedTime}
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between gap-2 mt-0.5">
+                                <div className="text-xs text-muted-foreground line-clamp-1 flex-1">
+                                  {priorityText}
+                                </div>
+                                {statusLabel && (
+                                  <span
+                                    className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
+                                      ticket.status === "open"
+                                        ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                                        : ticket.status === "pending"
+                                          ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                                          : ticket.status === "solved" ||
+                                              ticket.status === "closed"
+                                            ? "bg-gray-500/20 text-gray-600 dark:text-gray-400"
+                                            : "bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                                    }`}
+                                  >
+                                    {statusLabel}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>
