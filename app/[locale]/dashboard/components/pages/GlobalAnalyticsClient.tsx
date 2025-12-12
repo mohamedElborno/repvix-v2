@@ -27,6 +27,7 @@ import {
   Zap,
   HelpCircle,
   Download,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +49,7 @@ import {
 import { GlobalAnalysisReport } from "../GlobalAnalysisReport";
 import { useExportMarkdown } from "../../hooks/useExportMarkdown";
 import type { GlobalAnalysis } from "../../types/dashboard";
+import { IconPdf } from "@tabler/icons-react";
 
 const CHART_COLORS = [
   "#8b5cf6",
@@ -463,7 +465,7 @@ export default function GlobalAnalyticsClient() {
   return (
     <div className="min-h-[calc(100vh-110px)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 dark:bg-background/70 backdrop-blur-xl border-b border-border rounded-2xl mb-6 shadow-sm">
+      <div className="sticky top-2 md:top-0 z-10 bg-background/80 dark:bg-background/70 backdrop-blur-xl border-b border-border rounded-2xl mb-6 shadow-sm">
         <div className="p-3 sm:p-4 md:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -480,33 +482,39 @@ export default function GlobalAnalyticsClient() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {analysis && (
                 <>
                   <Button
                     onClick={handleDownloadPDF}
-                    className="group relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40"
+                    className="group relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    {t("downloadPdf") || "Download PDF"}
+                    <FileText className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      {t("downloadPdf") || "Download PDF"}
+                    </span>
                   </Button>
                   <Button
                     onClick={handleDownloadMarkdown}
                     disabled={!canExportMarkdown}
-                    className="group relative bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-lg shadow-emerald-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/40 disabled:opacity-60"
+                    className="group relative bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-lg shadow-emerald-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/40 disabled:opacity-60"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    {t("downloadMarkdown") || "Export Markdown"}
+                    <IconPdf className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      {t("downloadMarkdown") || "Export Markdown"}
+                    </span>
                   </Button>
                   <Button
                     onClick={() => handleGenerate(true)}
                     disabled={isGenerating}
-                    className="group relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/30 rounded-lg sm:rounded-xl px-4 sm:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40"
+                    className="group relative bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 mr-2 ${isGenerating ? "animate-spin" : ""} group-hover:rotate-180 transition-transform duration-500`}
+                      className={`w-4 h-4 sm:mr-2 ${isGenerating ? "animate-spin" : ""} group-hover:rotate-180 transition-transform duration-500`}
                     />
-                    {t("regenerate") || "Regenerate"}
+                    <span className="hidden sm:inline">
+                      {t("regenerate") || "Regenerate"}
+                    </span>
                   </Button>
                 </>
               )}
@@ -1138,54 +1146,63 @@ export default function GlobalAnalyticsClient() {
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-blue-500/10 to-purple-600/20 dark:from-purple-600/30 dark:via-blue-500/20 dark:to-purple-600/30 rounded-2xl sm:rounded-3xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
               <div className="relative bg-card backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border shadow-sm">
-                <div className="flex items-start gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
-                    <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-indigo-600 dark:from-white dark:via-purple-200 dark:to-indigo-200 bg-clip-text text-transparent mb-2">
-                      {t("faqs.title") || "FAQs from your data"}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {t("faqs.subtitle") ||
-                        "Generate frequently asked questions based on your aggregated analyses."}
-                    </p>
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+                  <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
+                      <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground via-purple-600 to-indigo-600 dark:from-white dark:via-purple-200 dark:to-indigo-200 bg-clip-text text-transparent mb-1 sm:mb-2">
+                        {t("faqs.title") || "FAQs from your data"}
+                      </h2>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        {t("faqs.subtitle") ||
+                          "Generate frequently asked questions based on your aggregated analyses."}
+                      </p>
+                    </div>
                   </div>
                   <Button
                     onClick={handleGenerateFaqs}
                     disabled={!hasAutoFaqs || isGeneratingFaqs}
-                    className="bg-purple-600 hover:bg-purple-600/90 text-white"
+                    className="bg-purple-600 hover:bg-purple-600/90 text-white rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-6 py-2 shrink-0 w-full sm:w-auto"
                   >
                     {isGeneratingFaqs ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
                     ) : (
-                      <Sparkles className="w-4 h-4 mr-2" />
+                      <Sparkles className="w-4 h-4 sm:mr-2" />
                     )}
-                    {hasAutoFaqs
-                      ? t("faqs.generate") || "Generate FAQs"
-                      : t("faqs.planRequired") || "Upgrade plan for FAQs"}
+                    <span className="hidden sm:inline">
+                      {hasAutoFaqs
+                        ? t("faqs.generate") || "Generate FAQs"
+                        : t("faqs.planRequired") || "Upgrade plan for FAQs"}
+                    </span>
+                    <span className="sm:hidden">
+                      {hasAutoFaqs
+                        ? t("faqs.generate") || "Generate"
+                        : t("faqs.planRequired") || "Upgrade"}
+                    </span>
                   </Button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {faqs && faqs.length > 0 ? (
                     faqs.map((faq, index) => (
                       <div
                         key={`${faq._id}-${index}`}
-                        className="bg-muted/50 rounded-xl p-4 border border-border hover:border-purple-500/40 transition-all duration-300"
+                        className="bg-muted/50 rounded-xl p-3 sm:p-4 border border-border hover:border-purple-500/40 transition-all duration-300"
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mt-0.5">
-                            <span className="text-xs font-bold text-purple-500">
+                        <div className="flex items-start gap-2 sm:gap-3">
+                          <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mt-0.5">
+                            <span className="text-[10px] sm:text-xs font-bold text-purple-500">
                               {index + 1}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0 space-y-1">
-                            <p className="text-sm font-semibold text-foreground leading-snug">
+                            <p className="text-xs sm:text-sm font-semibold text-foreground leading-snug wrap-break-word">
                               {faq.question}
                             </p>
                             {faq.answer && (
-                              <p className="text-sm text-muted-foreground leading-relaxed">
+                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed wrap-break-word">
                                 {faq.answer}
                               </p>
                             )}
@@ -1194,7 +1211,7 @@ export default function GlobalAnalyticsClient() {
                       </div>
                     ))
                   ) : (
-                    <div className="bg-muted/40 rounded-xl p-4 border border-dashed border-border text-sm text-muted-foreground">
+                    <div className="bg-muted/40 rounded-xl p-3 sm:p-4 border border-dashed border-border text-xs sm:text-sm text-muted-foreground text-center">
                       {t("faqs.empty") ||
                         "No FAQs yet. Generate them from your analyses."}
                     </div>

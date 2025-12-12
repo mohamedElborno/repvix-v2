@@ -92,7 +92,7 @@ export function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
   const breadcrumbItems = getBreadcrumbItems();
 
   return (
-    <div className="flex flex-col gap-2 top-0 z-50 overflow-hidden">
+    <div className="flex flex-col gap-2 top-0 z-50">
       {/* Desktop Navbar */}
       <header className="hidden md:flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) py-2">
         <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
