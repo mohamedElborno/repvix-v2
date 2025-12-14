@@ -50,7 +50,7 @@ export async function generateMetadata({
       siteName: "Repvix",
       images: [
         {
-          url: "/Repvix.png",
+          url: "/thumbnail.png",
           width: 1200,
           height: 630,
           alt: "Repvix AI Chat Analysis Dashboard Preview",
@@ -61,7 +61,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: t("title"),
       description: t("description"),
-      images: ["/Repvix.png"],
+      images: ["/thumbnail.png"],
       creator: "@repvix",
     },
     alternates: {
@@ -136,7 +136,7 @@ export default async function RootLayout({
   "applicationCategory": "BusinessApplication",
   "description": "Repvix analyzes customer support and sales chats using AI to deliver performance insights, sentiment analytics, and multilingual reports.",
   "url": "https://repvix.com",
-  "image": "https://repvix.com/Repvix.png",
+  "image": "https://repvix.com/thumbnail.png",
   "author": {
     "@type": "Person",
     "name": "Mohamed Elborno"
