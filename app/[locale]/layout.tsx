@@ -88,9 +88,9 @@ export async function generateMetadata({
       },
     },
     icons: {
-      icon: "/logo.png",
-      shortcut: "/logo.png",
-      apple: "/logo.png",
+      icon: "/RepvixLogo.png",
+      shortcut: "/RepvixLogo.png",
+      apple: "/RepvixLogo.png",
     },
   };
 }

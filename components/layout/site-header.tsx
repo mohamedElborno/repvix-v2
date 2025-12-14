@@ -97,11 +97,11 @@ export function SiteHeader() {
             {/* Logo - Left side */}
             <div className="flex items-center pointer-events-auto p-4 relative">
               <Image
-                src={`/logo.svg`}
+                src={`/RepvixLogo.png`}
                 alt={t("logoAlt") || "Repvix logo"}
                 width={500}
                 height={500}
-                className="h-8 w-auto dark:invert shrink-0 hover:scale-105 transition-all duration-300 cursor-pointer hover:rotate-6"
+                className="h-7 w-auto dark:invert shrink-0 hover:scale-105 transition-all duration-300 cursor-pointer hover:rotate-6"
               />
               {/* Beta Badge */}
               <span
