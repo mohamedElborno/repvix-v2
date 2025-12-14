@@ -32,6 +32,8 @@ import { api } from "@/convex/_generated/api";
 import { useLocale } from "next-intl";
 import { useRef } from "react";
 import { toast } from "sonner";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
+import Image from "next/image";
 
 // Lazy load الرسوم البيانية لتحسين الأداء - تحميل فقط عند الحاجة
 const ChatVolume = dynamic(() => import("../ChatVolume"), {
@@ -603,7 +605,7 @@ export default function DashboardClient({
   const widgetLabels: Record<WidgetKey, string> = {
     kpis: t("keyMetrics") || "Key Metrics",
     charts: t("charts") || "Charts",
-    chats: t("yourChats") || "Chats",
+    chats: t("whatsappChats") || "Whatsapp chats",
     zendeskChats: t("zendeskTickets") || "Zendesk tickets",
   };
 
@@ -838,8 +840,14 @@ export default function DashboardClient({
               <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-border dark:border-blue-500/20 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                      <MessageSquare className="w-5 h-5 text-primary-foreground" />
+                    <div className="w-10 h-10 rounded-xl dark:bg-white bg-black flex items-center justify-center shadow-lg shadow-blue-500/30">
+                      <Image
+                        src="/Zendesk.svg"
+                        alt="Zendesk"
+                        width={500}
+                        height={500}
+                        className="w-6 h-6 dark:invert-0 invert-100"
+                      />
                     </div>
                     <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                       {t("zendeskTickets") || "Zendesk Tickets"}
@@ -988,11 +996,11 @@ export default function DashboardClient({
             <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-border dark:border-indigo-500/20 space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                    <MessageSquare className="w-5 h-5 text-primary-foreground" />
+                  <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+                    <IconBrandWhatsapp className="w-6 h-6 text-white" />
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                    {t("yourChats")}
+                    {t("whatsappChats")}
                   </h2>
                 </div>
               </div>
