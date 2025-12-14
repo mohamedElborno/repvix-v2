@@ -487,9 +487,9 @@ export default function GlobalAnalyticsClient() {
                 <>
                   <Button
                     onClick={handleDownloadPDF}
-                    className="group relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40"
+                    className="group relative bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white shadow-lg shadow-red-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/40"
                   >
-                    <FileText className="w-4 h-4 sm:mr-2" />
+                    <IconPdf className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">
                       {t("downloadPdf") || "Download PDF"}
                     </span>
@@ -497,9 +497,9 @@ export default function GlobalAnalyticsClient() {
                   <Button
                     onClick={handleDownloadMarkdown}
                     disabled={!canExportMarkdown}
-                    className="group relative bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-lg shadow-emerald-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/40 disabled:opacity-60"
+                    className="group relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/30 rounded-lg sm:rounded-xl px-2 sm:px-4 md:px-6 py-2 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-60"
                   >
-                    <IconPdf className="w-4 h-4 sm:mr-2" />
+                    <FileText className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">
                       {t("downloadMarkdown") || "Export Markdown"}
                     </span>
