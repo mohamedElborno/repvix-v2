@@ -130,7 +130,7 @@ export default function ConversationInsightsPage() {
                   <p>{t("hero.chat.customerLine1")}</p>
                 </div>
                 <div
-                  className={`max-w-[85%] rounded-2xl bg-foreground text-white px-3 py-2 text-foreground/95 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
+                  className={`max-w-[85%] rounded-2xl bg-foreground text-white dark:text-black px-3 py-2 text-foreground/95 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
                 >
                   <p>{t("hero.chat.agentLine1")}</p>
                 </div>
@@ -138,7 +138,7 @@ export default function ConversationInsightsPage() {
                   <p>{t("hero.chat.customerLine2")}</p>
                 </div>
                 <div
-                  className={`max-w-[85%] rounded-2xl bg-foreground text-white px-3 py-2 text-foreground/95 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
+                  className={`max-w-[85%] rounded-2xl bg-foreground text-white dark:text-black px-3 py-2 text-foreground/95 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
                 >
                   <p>{t("hero.chat.agentLine2")}</p>
                 </div>
