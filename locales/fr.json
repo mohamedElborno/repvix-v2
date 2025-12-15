@@ -1060,5 +1060,70 @@
       "notAdmin": "Seuls les administrateurs de l'organisation peuvent gérer la facturation.",
       "portalFailed": "URL du portail de facturation indisponible. Réessayez."
     }
+  },
+  "lp": {
+    "conversationInsights": {
+      "hero": {
+        "badge": "CONVERSATIONS CLIENTS RÉELLES",
+        "heading": "Votre équipe répond vite. Les clients partent quand même.",
+        "subheading": "Le problème n’est pas le temps de réponse, mais les moments dans vos conversations qui poussent discrètement les clients à partir.",
+        "cta": "Analysez vos conversations gratuitement",
+        "trust": "Fonctionne avec de vraies conversations et Zendesk. Aucune configuration complexe.",
+        "chat": {
+          "customerLine1": "On a une petite équipe, est-ce que ce serait adapté pour nous ?",
+          "agentLine1": "Oui, ça fonctionne bien pour des équipes de toutes tailles et ça aide à mieux comprendre les conversations.",
+          "customerLine2": "D’accord, ça a l’air bien. C’est combien ?",
+          "agentLine2": "49 $ par mois",
+          "highlight": "Le prix a été mentionné sans relier la valeur à la taille de l’équipe ou à ses besoins réels.",
+          "privacyNote": "Les noms et numéros sont masqués pour des raisons de confidentialité"
+        }
+      },
+      "problem": {
+        "title": "Une seule conversation peut vous coûter un client.",
+        "copy": "La plupart des équipes perdent des clients sans savoir précisément où la conversation a dérapé. Repvix analyse les échanges de support et de vente pour révéler les causes cachées du churn : confusion, manque d’empathie, friction sur les prix et objections non traitées.",
+        "bullets": {
+          "confusion": "Confusion → le client n’atteint jamais une vraie clarté",
+          "empathy": "Manque d’empathie → la conversation paraît froide ou expéditive",
+          "pricing": "Friction sur les prix → l’élan s’arrête aux chiffres",
+          "objections": "Objections non résolues → l’intérêt disparaît sans conclusion"
+        }
+      },
+      "example": {
+        "title": "À quoi ressemble un churn caché dans une vraie conversation",
+        "note": "Repvix analyse le déroulement des messages, le ton et l’intention pour identifier où la confiance se brise et où les décisions s’arrêtent.",
+        "shortLabel": "EXEMPLE DE CONVERSATION RÉELLE",
+        "chat": {
+          "customerLine1": "Bonjour, pouvez-vous m’expliquer ce qui est inclus dans l’abonnement ?",
+          "agentLine1": "Bonjour 🌸 L’abonnement comprend l’analyse des conversations et des rapports prêts à l’emploi, pour 49 $ par mois.",
+          "highlight": "La conversation s’est arrêtée sans qu’une prochaine étape claire soit définie."
+        },
+        "toggleMore": "Afficher plus de contexte",
+        "toggleLess": "Masquer les détails"
+      },
+      "insight": {
+        "title": "SYNTHÈSE DE L’INSIGHT",
+        "triggerLabel": "Déclencheur du churn",
+        "trigger": "Déclencheur probable du churn : le prix a été mentionné avant que la valeur ne soit claire",
+        "confidenceLabel": "Niveau de confiance",
+        "confidence": "Moyen – Élevé",
+        "fixLabel": "Action recommandée",
+        "fix": "Clarifier la prochaine étape et reformuler la valeur en une seule phrase claire."
+      },
+      "why": {
+        "title": "Corrigez ce qui provoque réellement le churn",
+        "points": {
+          "point1": "Identifier les moments précis où les clients décident de partir",
+          "point2": "Former votre équipe à partir de conversations réelles, pas de suppositions",
+          "point3": "Réduire le churn grâce à des améliorations ciblées et fondées sur des preuves"
+        }
+      },
+      "cta": {
+        "heading": "Découvrez ce que vos conversations cachent",
+        "micro": "Aucune carte bancaire requise. Des insights concrets en quelques minutes."
+      },
+      "footer": {
+        "backToMain": "Retour au site principal"
+      }
+    }
   }
 }

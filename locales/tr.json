@@ -1085,5 +1085,70 @@
     "analysisCompleted": "Analiz tamamlandı!",
     "actionFailed": "İşlem başarısız. Lütfen tekrar dene.",
     "saved": "Değişiklikler kaydedildi."
+  },
+  "lp": {
+    "conversationInsights": {
+      "hero": {
+        "badge": "GERÇEK MÜŞTERİ KONUŞMALARI",
+        "heading": "Ekibiniz hızlı yanıtlıyor. Müşteriler yine de ayrılıyor.",
+        "subheading": "Sorun yanıt süresi değil; konuşmaların içindeki bazı anlar müşterileri sessizce uzaklaştırıyor.",
+        "cta": "Konuşmalarınızı ücretsiz analiz edin",
+        "trust": "Gerçek sohbet verileri ve Zendesk ile çalışır. Karmaşık kurulum yok.",
+        "chat": {
+          "customerLine1": "Ekibimiz küçük, bu hizmet bizim için uygun olur mu?",
+          "agentLine1": "Evet, her büyüklükteki ekip için uygundur ve konuşmaları daha iyi anlamanıza yardımcı olur.",
+          "customerLine2": "Anladım, güzel. Ücreti nedir?",
+          "agentLine2": "Aylık 49 $",
+          "highlight": "Fiyat belirtildi ancak değer, ekibin büyüklüğü veya gerçek ihtiyacıyla ilişkilendirilmedi.",
+          "privacyNote": "Gizlilik için isimler ve numaralar gizlenmiştir"
+        }
+      },
+      "problem": {
+        "title": "Tek bir konuşma size bir müşteriye mal olabilir.",
+        "copy": "Çoğu ekip, konuşmanın tam olarak nerede yanlış gittiğini bilmeden müşteri kaybeder. Repvix; kafa karışıklığı, zayıf empati, fiyat sürtüşmesi ve çözülmemiş itirazlar gibi gizli churn nedenlerini ortaya çıkarmak için destek ve satış konuşmalarını analiz eder.",
+        "bullets": {
+          "confusion": "Kafa karışıklığı → müşteri netliğe ulaşamaz",
+          "empathy": "Zayıf empati → konuşma soğuk veya aceleci hissedilir",
+          "pricing": "Fiyat sürtüşmesi → momentum sayılarda durur",
+          "objections": "Çözülmemiş itirazlar → ilgi sonuçlanmadan kaybolur"
+        }
+      },
+      "example": {
+        "title": "Gerçek bir konuşmada gizli churn nasıl görünür",
+        "note": "Repvix; mesaj akışını, tonu ve niyeti analiz ederek güvenin nerede kırıldığını ve kararların nerede durduğunu ortaya çıkarır.",
+        "shortLabel": "GERÇEK SOHBET ÖRNEĞİ",
+        "chat": {
+          "customerLine1": "Merhaba, aboneliğin neleri kapsadığını biraz anlatabilir misiniz?",
+          "agentLine1": "Merhaba 🌸 Konuşma analizi ve hazır raporlar dahildir, aylık ücreti 49 $’dır.",
+          "highlight": "Net bir sonraki adım belirtilmeden konuşma sona erdi."
+        },
+        "toggleMore": "Daha fazla bağlam göster",
+        "toggleLess": "Detayları gizle"
+      },
+      "insight": {
+        "title": "ANALİZ ÖZETİ",
+        "triggerLabel": "Churn tetikleyicisi",
+        "trigger": "Olası churn tetikleyicisi: Değer netleşmeden fiyatın söylenmesi",
+        "confidenceLabel": "Güven seviyesi",
+        "confidence": "Orta – Yüksek",
+        "fixLabel": "Önerilen çözüm",
+        "fix": "Bir sonraki adımı netleştirin ve değeri tek, açık bir cümleyle yeniden ifade edin."
+      },
+      "why": {
+        "title": "Churn’e gerçekten neden olan şeyi düzeltin",
+        "points": {
+          "point1": "Müşterilerin ayrılmaya karar verdiği anları net olarak görün",
+          "point2": "Tahminlere değil, gerçek konuşmalara dayanarak ekibinizi geliştirin",
+          "point3": "Kanıta dayalı, odaklı değişikliklerle churn’ü azaltın"
+        }
+      },
+      "cta": {
+        "heading": "Konuşmalarınızın neleri gizlediğini keşfedin",
+        "micro": "Kredi kartı gerekmez. Dakikalar içinde gerçek içgörüler."
+      },
+      "footer": {
+        "backToMain": "Ana siteye dön"
+      }
+    }
   }
 }

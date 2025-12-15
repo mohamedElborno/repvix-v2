@@ -1060,5 +1060,70 @@
       "notAdmin": "Only org admins can manage billing.",
       "portalFailed": "Billing portal URL not available. Please try again."
     }
+  },
+  "lp": {
+    "conversationInsights": {
+      "hero": {
+        "badge": "REAL CUSTOMER CONVERSATIONS",
+        "heading": "Your support team replies fast. Customers still leave.",
+        "subheading": "The problem isn’t response time. It’s the moments inside your conversations that quietly push customers away.",
+        "cta": "Analyze your conversations for free",
+        "trust": "Works with real chat exports and Zendesk. No setup headaches.",
+        "chat": {
+          "customerLine1": "We have a small team — would this be a good fit for us?",
+          "agentLine1": "Yes, it works well for teams of all sizes and helps you better understand your conversations.",
+          "customerLine2": "Okay, sounds good. How much does it cost?",
+          "agentLine2": "$49 per month",
+          "highlight": "Pricing was mentioned without connecting the value to the team’s size or specific needs.",
+          "privacyNote": "Names and numbers are blurred for privacy"
+        }
+      },
+      "problem": {
+        "title": "One conversation can cost you a customer.",
+        "copy": "Most teams lose customers without knowing exactly where the conversation went wrong. Repvix analyzes support and sales chats to uncover hidden churn drivers like confusion, weak empathy, pricing friction, and unresolved objections.",
+        "bullets": {
+          "confusion": "Confusion → the customer never reaches clarity",
+          "empathy": "Weak empathy → the conversation feels cold or rushed",
+          "pricing": "Pricing friction → momentum stalls at numbers",
+          "objections": "Unresolved objections → interest fades without closure"
+        }
+      },
+      "example": {
+        "title": "What hidden churn looks like in a real chat",
+        "note": "Repvix analyzes message flow, tone, and intent to reveal where trust breaks and decisions stall.",
+        "shortLabel": "REAL CHAT EXAMPLE",
+        "chat": {
+          "customerLine1": "Hi, can you explain what’s included in the subscription?",
+          "agentLine1": "Hi there 🌸 The subscription includes conversation analysis and ready-made reports, and it costs $49 per month.",
+          "highlight": "The conversation ended without a clear next step being defined."
+        },
+        "toggleMore": "Show more context",
+        "toggleLess": "Hide details"
+      },
+      "insight": {
+        "title": "INSIGHT SUMMARY",
+        "triggerLabel": "Churn trigger",
+        "trigger": "Likely churn trigger: Price mentioned before value was clear",
+        "confidenceLabel": "Confidence",
+        "confidence": "Medium–High",
+        "fixLabel": "Suggested fix",
+        "fix": "Clarify the next step and restate the value in one clear sentence."
+      },
+      "why": {
+        "title": "Fix what actually drives churn",
+        "points": {
+          "point1": "See the exact moments customers decide to leave",
+          "point2": "Coach your team using real conversations, not guesses",
+          "point3": "Reduce churn with focused, evidence-based changes"
+        }
+      },
+      "cta": {
+        "heading": "See what your chats are hiding",
+        "micro": "No credit card required. See real insights in minutes."
+      },
+      "footer": {
+        "backToMain": "Back to main site"
+      }
+    }
   }
 }
