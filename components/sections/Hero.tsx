@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import DashboardMockup from "./DashboardMockup";
 import IntegrationsMarquee from "./IntegrationsMarquee";
+import { trackLpEvent } from "@/lib/lpTelemetry";
 
 export default function Hero() {
   const t = useTranslations("home.hero");
+
+  const handleCtaClick = () => {
+    trackLpEvent("home_hero_cta_click");
+  };
 
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden">
@@ -36,7 +41,9 @@ export default function Hero() {
               asChild
               className="rounded-2xl text-white px-8 py-6 text-lg font-normal bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all"
             >
-              <Link href="/sign-up">{t("cta")}</Link>
+              <Link href="/sign-up" onClick={handleCtaClick}>
+                {t("cta")}
+              </Link>
             </Button>
           </div>
 

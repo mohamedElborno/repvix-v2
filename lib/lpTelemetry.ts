@@ -15,4 +15,9 @@ export function trackLpEvent(
   if (typeof w.gtag === "function") {
     w.gtag("event", name, params || {});
   }
+
+  // Microsoft Clarity
+  if (typeof w.clarity === "function") {
+    w.clarity("event", name);
+  }
 }

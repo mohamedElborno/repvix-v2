@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useLocale } from "next-intl";
+import { trackLpEvent } from "@/lib/lpTelemetry";
 
 export function SiteHeader() {
   const t = useTranslations("header");
@@ -117,6 +118,10 @@ export function SiteHeader() {
                 <li key={link.href} className="cursor-pointer">
                   <Link
                     href={link.href}
+                    onClick={() => {
+                      const section = link.href.split("#")[1] || "home";
+                      trackLpEvent("home_header_nav_click", { section });
+                    }}
                     className="flex items-center text-foreground gap-1 md:gap-2 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 hover:scale-105 group"
                   >
                     <span className="text-xs md:text-[16px] font-semibold">
@@ -129,14 +134,20 @@ export function SiteHeader() {
             {/* Buttons - Right side */}
             <div className="flex items-center gap-2 pointer-events-auto p-1 xl:p-4">
               {user ? (
-                <Link href={`/${locale}/dashboard`}>
+                <Link
+                  href={`/${locale}/dashboard`}
+                  onClick={() => trackLpEvent("home_header_dashboard_click")}
+                >
                   <Button className="hidden cursor-pointer xl:flex items-center gap-2 rounded-2xl bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-6 py-2.5 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300">
                     {t("dashboard")}
                   </Button>
                 </Link>
               ) : (
                 <>
-                  <Link href={`/${locale}/sign-up`}>
+                  <Link
+                    href={`/${locale}/sign-up`}
+                    onClick={() => trackLpEvent("home_header_signup_click")}
+                  >
                     <Button
                       variant="ghost"
                       className="hidden xl:block rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400 hover:scale-105 transition-all duration-300 font-medium px-5 py-2"
@@ -144,7 +155,10 @@ export function SiteHeader() {
                       {t("signUp")}
                     </Button>
                   </Link>
-                  <Link href={`/${locale}/sign-in`}>
+                  <Link
+                    href={`/${locale}/sign-in`}
+                    onClick={() => trackLpEvent("home_header_signin_click")}
+                  >
                     <Button className="hidden xl:block rounded-2xl bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-6 py-2.5 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300">
                       {t("signIn")}
                     </Button>
@@ -242,7 +256,11 @@ export function SiteHeader() {
                       key={link.href}
                       href={link.href}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl dark:text-white text-black"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => {
+                        const section = link.href.split("#")[1] || "home";
+                        trackLpEvent("home_header_nav_click", { section });
+                        setIsMobileMenuOpen(false);
+                      }}
                     >
                       <link.icon className="w-4 h-4 shadow-lg" />
                       <span
@@ -259,7 +277,11 @@ export function SiteHeader() {
               })}
 
               {user ? (
-                <Link href={`/${locale}/dashboard`} className="w-full">
+                <Link
+                  href={`/${locale}/dashboard`}
+                  className="w-full"
+                  onClick={() => trackLpEvent("home_header_dashboard_click")}
+                >
                   <Button className="w-full rounded-2xl bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 shadow-lg shadow-purple-500/30 flex items-center justify-center gap-2">
                     <LayoutDashboard className="w-4 h-4" />
                     {t("dashboard")}
@@ -267,7 +289,11 @@ export function SiteHeader() {
                 </Link>
               ) : (
                 <div className="flex flex-col w-full items-center gap-2">
-                  <Link href={`/${locale}/sign-up`} className="w-full">
+                  <Link
+                    href={`/${locale}/sign-up`}
+                    className="w-full"
+                    onClick={() => trackLpEvent("home_header_signup_click")}
+                  >
                     <Button
                       variant="outline"
                       className="w-full rounded-2xl border-purple-500/30 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400 font-medium py-3"
@@ -275,7 +301,11 @@ export function SiteHeader() {
                       {t("signUp")}
                     </Button>
                   </Link>
-                  <Link href={`/${locale}/sign-in`} className="w-full">
+                  <Link
+                    href={`/${locale}/sign-in`}
+                    className="w-full"
+                    onClick={() => trackLpEvent("home_header_signin_click")}
+                  >
                     <Button className="w-full rounded-2xl bg-linear-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 shadow-lg shadow-purple-500/30">
                       {t("signIn")}
                     </Button>

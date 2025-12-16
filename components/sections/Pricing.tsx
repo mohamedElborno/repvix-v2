@@ -5,10 +5,16 @@ import { Button } from "../ui/button";
 import { Check, ArrowRight, Star } from "lucide-react";
 import { Card } from "../ui/card";
 import { useRouter } from "next/navigation";
+import { trackLpEvent } from "@/lib/lpTelemetry";
 
 export default function Pricing() {
   const t = useTranslations("dashboard.pricing");
   const router = useRouter();
+
+  const handlePricingCtaClick = (planId: string) => {
+    trackLpEvent("home_pricing_cta_click", { plan_id: planId });
+    router.push("/dashboard/pricing");
+  };
   const plans = [
     {
       id: "basic",
@@ -164,7 +170,7 @@ export default function Pricing() {
 
                 {/* CTA Button */}
                 <Button
-                  onClick={() => router.push("/dashboard/pricing")}
+                  onClick={() => handlePricingCtaClick(plan.id)}
                   className={`w-full rounded-xl transition-all duration-300 font-semibold mt-auto ${
                     plan.popular
                       ? "bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white"

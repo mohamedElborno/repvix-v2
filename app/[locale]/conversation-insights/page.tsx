@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -35,7 +35,6 @@ function useScroll50Event() {
 export default function ConversationInsightsPage() {
   const locale = useLocale();
   const t = useTranslations("lp.conversationInsights");
-  const [exampleExpanded, setExampleExpanded] = useState(false);
 
   useEffect(() => {
     trackLpEvent("ad_view_lp");

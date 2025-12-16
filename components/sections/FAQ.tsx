@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
+import { trackLpEvent } from "@/lib/lpTelemetry";
 
 type Item = { q: string; a: string };
 
@@ -17,10 +18,17 @@ const QA = ({
   open: boolean;
   onToggle: () => void;
 }) => {
+  const handleToggle = () => {
+    trackLpEvent("home_faq_toggle", {
+      question_index: i,
+      is_open: !open,
+    });
+    onToggle();
+  };
   return (
     <div className="group relative rounded-2xl border border-border bg-card backdrop-blur-md px-4 sm:px-5 md:px-6 py-4 md:py-5 transition-all duration-300 hover:bg-muted/50 hover:border-purple-300/50 dark:hover:border-purple-500/50 shadow-sm">
       <button
-        onClick={onToggle}
+        onClick={handleToggle}
         className="w-full flex items-center justify-between text-left"
       >
         <div className="flex items-center gap-3">
@@ -68,7 +76,10 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative py-16 md:py-20 bg-background scroll-mt-20">
+    <section
+      id="faq"
+      className="relative py-16 md:py-20 bg-background scroll-mt-20"
+    >
       <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
         <div className="text-center mb-10 md:mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-fuchsia-400 to-purple-500 dark:from-purple-300 dark:via-fuchsia-200 dark:to-purple-400">
