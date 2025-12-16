@@ -99,6 +99,7 @@
       "howItWorks": "How it works",
       "pricing": "Pricing",
       "faq": "FAQ",
+      "conversationInsights": "Conversation Insights",
       "terms": "Terms",
       "privacy": "Privacy",
       "contact": "Contact",
@@ -1068,6 +1069,9 @@
         "heading": "Your support team replies fast. Customers still leave.",
         "subheading": "The problem isn’t response time. It’s the moments inside your conversations that quietly push customers away.",
         "cta": "Analyze your conversations for free",
+        "pricingCta": "See pricing",
+        "trialNote": "Free trial. No credit card.",
+        "plansStartAt": "Plans start at $4.99",
         "trust": "Works with real chat exports and Zendesk. No setup headaches.",
         "chat": {
           "customerLine1": "We have a small team — would this be a good fit for us?",

@@ -99,6 +99,7 @@
       "howItWorks": "Comment ça marche",
       "pricing": "Tarifs",
       "faq": "FAQ",
+      "conversationInsights": "Insights de conversation",
       "terms": "Conditions",
       "privacy": "Confidentialité",
       "contact": "Contact",
@@ -1068,6 +1069,9 @@
         "heading": "Votre équipe répond vite. Les clients partent quand même.",
         "subheading": "Le problème n’est pas le temps de réponse, mais les moments dans vos conversations qui poussent discrètement les clients à partir.",
         "cta": "Analysez vos conversations gratuitement",
+        "pricingCta": "Voir les tarifs",
+        "trialNote": "Essai gratuit. Sans carte.",
+        "plansStartAt": "Les plans commencent à $4.99",
         "trust": "Fonctionne avec de vraies conversations et Zendesk. Aucune configuration complexe.",
         "chat": {
           "customerLine1": "On a une petite équipe, est-ce que ce serait adapté pour nous ?",

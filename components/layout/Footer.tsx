@@ -15,6 +15,10 @@ export default function Footer() {
       { href: "#howItWorks", label: t("howItWorks") || "How it works" },
       { href: "#pricing", label: t("pricing") || "Pricing" },
       { href: "#faq", label: t("faq") || "FAQ" },
+      {
+        href: `/${locale}/conversation-insights`,
+        label: t("conversationInsights") || "Conversation Insights",
+      },
     ],
     company: [
       { href: `/${locale}/terms`, label: t("terms") || "Terms" },
@@ -30,10 +34,10 @@ export default function Footer() {
     <footer className="relative mt-14 sm:mt-20 mb-5">
       <div className="mx-auto w-full max-w-[1600px] px-6 sm:px-8">
         {/* Outer gradient ring */}
-        <div className="rounded-3xl p-[1.5px] bg-gradient-to-br from-purple-400/20 via-fuchsia-400/10 to-purple-600/20 dark:from-purple-400/30 dark:via-fuchsia-400/20 dark:to-purple-600/30">
+        <div className="rounded-3xl p-[1.5px] bg-linear-to-br from-purple-400/20 via-fuchsia-400/10 to-purple-600/20 dark:from-purple-400/30 dark:via-fuchsia-400/20 dark:to-purple-600/30">
           <div className="relative overflow-hidden rounded-3xl border border-border bg-card backdrop-blur-md shadow-sm">
             {/* soft glow */}
-            <div className="pointer-events-none absolute -top-10 inset-x-0 h-16 bg-gradient-to-b from-purple-500/5 dark:from-white/10 to-transparent" />
+            <div className="pointer-events-none absolute -top-10 inset-x-0 h-16 bg-linear-to-b from-purple-500/5 dark:from-white/10 to-transparent" />
 
             <div className="px-5 sm:px-6 py-8 sm:py-10">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -116,7 +120,7 @@ export default function Footer() {
               </div>
 
               {/* Divider */}
-              <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+              <div className="mt-8 h-px w-full bg-linear-to-r from-transparent via-border to-transparent" />
 
               {/* Bottom bar */}
               <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3">

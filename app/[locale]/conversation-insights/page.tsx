@@ -49,6 +49,10 @@ export default function ConversationInsightsPage() {
     window.location.href = `/${baseLocale}/sign-in`;
   };
 
+  const handlePricingClick = () => {
+    trackLpEvent("lp_pricing_click");
+  };
+
   const handleSecondaryCtaClick = () => {
     trackLpEvent("lp_secondary_cta_click");
     const baseLocale = locale || "en";
@@ -98,15 +102,28 @@ export default function ConversationInsightsPage() {
               {t("hero.subheading")}
             </p>
             <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handlePrimaryCtaClick}
-                className="inline-flex items-center justify-center rounded-2xl bg-foreground text-background px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold shadow-lg shadow-foreground/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-              >
-                {t("hero.cta")}
-              </button>
-              <p className="text-xs sm:text-[13px] text-muted-foreground">
-                {t("hero.trust")}
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={handlePrimaryCtaClick}
+                  className="inline-flex items-center justify-center rounded-2xl bg-foreground text-background px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold shadow-lg shadow-foreground/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  {t("hero.cta")}
+                </button>
+
+                <Link
+                  href="/#pricing"
+                  onClick={handlePricingClick}
+                  className="inline-flex items-center justify-center rounded-2xl border border-border bg-transparent px-6 sm:px-4 py-2 text-sm sm:text-base font-semibold text-foreground hover:bg-muted/50 transition-colors duration-200"
+                >
+                  {t("hero.pricingCta", { default: "See pricing" })}
+                </Link>
+              </div>
+              <p className="text-[11px] sm:text-xs text-muted-foreground">
+                {t("hero.trust")} {t("hero.trialNote")}{" "}
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  {t("hero.plansStartAt")}
+                </span>
               </p>
             </div>
           </div>
@@ -129,7 +146,7 @@ export default function ConversationInsightsPage() {
                   <p>{t("hero.chat.customerLine1")}</p>
                 </div>
                 <div
-                  className={`max-w-[85%] rounded-2xl bg-foreground text-white dark:text-black px-3 py-2 text-foreground/95 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
+                  className={`max-w-[85%] rounded-2xl bg-foreground text-background px-3 py-2 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
                 >
                   <p>{t("hero.chat.agentLine1")}</p>
                 </div>
@@ -137,7 +154,7 @@ export default function ConversationInsightsPage() {
                   <p>{t("hero.chat.customerLine2")}</p>
                 </div>
                 <div
-                  className={`max-w-[85%] rounded-2xl bg-foreground text-white dark:text-black px-3 py-2 text-foreground/95 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
+                  className={`max-w-[85%] rounded-2xl bg-foreground text-background px-3 py-2 ${locale === "ar" ? "mr-auto" : "ml-auto"}`}
                 >
                   <p>{t("hero.chat.agentLine2")}</p>
                 </div>

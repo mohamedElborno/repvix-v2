@@ -99,6 +99,7 @@
       "howItWorks": "Nasıl Çalışır",
       "pricing": "Fiyatlandırma",
       "faq": "SSS",
+      "conversationInsights": "Konuşma İçgörüleri",
       "terms": "Şartlar",
       "privacy": "Gizlilik",
       "contact": "İletişim",
@@ -1093,6 +1094,9 @@
         "heading": "Ekibiniz hızlı yanıtlıyor. Müşteriler yine de ayrılıyor.",
         "subheading": "Sorun yanıt süresi değil; konuşmaların içindeki bazı anlar müşterileri sessizce uzaklaştırıyor.",
         "cta": "Konuşmalarınızı ücretsiz analiz edin",
+        "pricingCta": "Fiyatları gör",
+        "trialNote": "Ücretsiz deneme. Kredi kartı gerekmez.",
+        "plansStartAt": "Planlar $4.99’dan başlar",
         "trust": "Gerçek sohbet verileri ve Zendesk ile çalışır. Karmaşık kurulum yok.",
         "chat": {
           "customerLine1": "Ekibimiz küçük, bu hizmet bizim için uygun olur mu?",
