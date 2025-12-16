@@ -11,6 +11,7 @@ import "../globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 
 const notoSansArabic = Noto_Sans_Arabic({
   subsets: ["latin"],
@@ -153,6 +154,19 @@ export default async function RootLayout({
 }
 `}
           </script>
+          <Script
+            id="clarity"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/${process.env.NEXT_PUBLIC_CLARITY_ID}";
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script");
+    `,
+            }}
+          />
         </head>
         <body
           className={`${
