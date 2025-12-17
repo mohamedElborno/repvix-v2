@@ -1101,9 +1101,9 @@
         "note": "يحلل Repvix تسلسل الرسائل ونبرة الحديث والنية ليكشف أين يتكسر الثقة وأين تتوقف القرارات.",
         "shortLabel": "مثال محادثة حقيقية",
         "chat": {
-          "customerLine1": "Hi, can you explain what’s included in the subscription?",
-          "agentLine1": "Hi there 🌸 The subscription includes conversation analysis and ready-made reports, and it costs $149 per month.",
-          "highlight": "هنا قرر العميل بهدوء أن يرحل."
+          "customerLine1": "مرحبًا، ممكن توضّح لي ايش يشمل الاشتراك؟",
+          "agentLine1": "أهلًا وسهلًا 🌸 الاشتراك يشمل تحليل المحادثات وتقارير جاهزة، وسعره 149$ شهريًا.",
+          "highlight": "المحادثة توقفت بدون تحديد خطوة تالية."
         },
         "toggleMore": "عرض مزيد من السياق",
         "toggleLess": "إخفاء التفاصيل"
