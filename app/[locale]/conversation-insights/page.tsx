@@ -22,7 +22,11 @@ function useScroll50Event() {
       const bottomPosition = scrollY + viewportHeight;
       if (bottomPosition >= docHeight * 0.5) {
         fired = true;
-        trackLpEvent("lp_scroll_50");
+        trackLpEvent("lp_scroll_50", {
+          scrollY,
+          viewportHeight,
+          docHeight,
+        });
         window.removeEventListener("scroll", onScroll);
       }
     };
@@ -46,7 +50,9 @@ export default function ConversationInsightsPage() {
     trackLpEvent("lp_hero_cta_click");
     // Simple flow start: redirect to sign-in (can be refined later)
     const baseLocale = locale || "en";
-    window.location.href = `/${baseLocale}/sign-in`;
+    setTimeout(() => {
+      window.location.href = `/${baseLocale}/sign-in`;
+    }, 120);
   };
 
   const handlePricingClick = () => {
