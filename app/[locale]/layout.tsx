@@ -11,7 +11,7 @@ import "../globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import { Analytics } from "@vercel/analytics/next";
-import Clarity from "@/components/analytics/Clarity";
+import ClientLayout from "@/components/layout/ClientLayout";
 
 const notoSansArabic = Noto_Sans_Arabic({
   subsets: ["latin"],
@@ -174,13 +174,14 @@ export default async function RootLayout({
           >
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ConvexClientProvider>
-                <div dir={locale === "ar" ? "rtl" : "ltr"}>{children}</div>
+                <ClientLayout>
+                  <div dir={locale === "ar" ? "rtl" : "ltr"}>{children}</div>
+                </ClientLayout>
                 <Toaster position="top-right" richColors />
               </ConvexClientProvider>
             </NextIntlClientProvider>
           </ThemeProvider>
           <Analytics />
-          <Clarity />
         </body>
       </html>
     </ClerkProvider>
