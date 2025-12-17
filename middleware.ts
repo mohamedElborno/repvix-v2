@@ -9,12 +9,16 @@ const intlMiddleware = createMiddleware(routing);
 export default clerkMiddleware((auth, request) => {
   const { pathname } = request.nextUrl;
 
-  // ✅ 1. استثناء الملفات الثابتة تمامًا (يشمل sitemap, robots, manifest)
+  // ✅ 1. استثناء الملفات الثابتة تمامًا (يشمل sitemap, robots, manifest, videos)
   if (
     pathname === "/sitemap.xml" ||
     pathname === "/sitemap" ||
     pathname === "/robots.txt" ||
-    pathname === "/manifest.json"
+    pathname === "/manifest.json" ||
+    pathname.endsWith(".mp4") ||
+    pathname.endsWith(".webm") ||
+    pathname.endsWith(".mov") ||
+    pathname.startsWith("/videos/")
   ) {
     return NextResponse.next();
   }
@@ -31,7 +35,7 @@ export default clerkMiddleware((auth, request) => {
 export const config = {
   matcher: [
     // الصفحات العادية (مع Clerk + intl)
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|mp4|webm|mov)).*)",
 
     // ✅ API/TRPC فقط لـ Clerk (بدون intl لأننا أوقفناه في الكود أعلاه)
     "/(api|trpc)(.*)",

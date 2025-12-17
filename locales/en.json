@@ -1068,12 +1068,14 @@
     "conversationInsights": {
       "hero": {
         "badge": "REAL CUSTOMER CONVERSATIONS",
+        "logoAlt": "Repvix logo",
         "heading": "Your support team replies fast. Customers still leave.",
         "subheading": "The problem isn’t response time. It’s the moments inside your conversations that quietly push customers away.",
         "cta": "Analyze your conversations for free",
         "pricingCta": "See pricing",
         "trialNote": "Free trial. No credit card.",
-        "plansStartAt": "Plans start at $4.99",
+        "plansStartAtLabel": "Plans start at",
+        "plansStartAtPrice": "$4.99",
         "trust": "Works with real chat exports and Zendesk. No setup headaches.",
         "chat": {
           "customerLine1": "We have a small team — would this be a good fit for us?",
@@ -1085,7 +1087,7 @@
         }
       },
       "problem": {
-        "title": "One conversation can cost you a customer.",
+        "title": "One unnoticed conversation can cost you a customer.",
         "copy": "Most teams lose customers without knowing exactly where the conversation went wrong. Repvix analyzes support and sales chats to uncover hidden churn drivers like confusion, weak empathy, pricing friction, and unresolved objections.",
         "bullets": {
           "confusion": "Confusion → the customer never reaches clarity",
@@ -1100,11 +1102,17 @@
         "shortLabel": "REAL CHAT EXAMPLE",
         "chat": {
           "customerLine1": "Hi, can you explain what’s included in the subscription?",
-          "agentLine1": "Hi there 🌸 The subscription includes conversation analysis and ready-made reports, and it costs $49 per month.",
-          "highlight": "The conversation ended without a clear next step being defined."
+          "agentLine1": "Hi there 🌸 The subscription includes conversation analysis and ready-made reports, and it costs $149 per month.",
+          "highlight": "This is where the customer quietly decided to leave."
         },
         "toggleMore": "Show more context",
         "toggleLess": "Hide details"
+      },
+      "video": {
+        "title": "This is what the system sees",
+        "subtitle": "A real dashboard analyzing a real conversation.",
+        "play": "Play video",
+        "cantPlay": "Video couldn't be played. Please use the controls or try another browser."
       },
       "insight": {
         "title": "INSIGHT SUMMARY",
@@ -1124,10 +1132,12 @@
         }
       },
       "cta": {
-        "heading": "See what your chats are hiding",
+        "heading": "Reveal what your chats are hiding",
         "micro": "No credit card required. See real insights in minutes."
       },
       "footer": {
+        "privacy": "Privacy",
+        "terms": "Terms",
         "backToMain": "Back to main site"
       }
     }
