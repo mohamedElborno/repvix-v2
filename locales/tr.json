@@ -549,6 +549,8 @@
     "agent": "Temsilci",
     "analyzing": "Analiz Ediliyor",
     "analyzeChat": "Sohbeti Analiz Et",
+    "chooseAnalysisLanguage": "Analiz Dili Seç",
+    "chooseAnalysisLanguageHint": "Yapay zeka analiz çıktısı için dili seçin",
     "selectAnalysisLanguage": "Analiz Dili Seç",
     "selectAnalysisLanguageHint": "Yapay zeka analiz çıktısı için dili seçin",
     "startAnalysis": "Analizi Başlat",

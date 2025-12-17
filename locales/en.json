@@ -612,6 +612,8 @@
     "agent": "Agent",
     "analyzing": "Analyzing",
     "analyzeChat": "Analyze Chat",
+    "chooseAnalysisLanguage": "Select Analysis Language",
+    "chooseAnalysisLanguageHint": "Choose the language for the AI analysis output",
     "selectAnalysisLanguage": "Select Analysis Language",
     "selectAnalysisLanguageHint": "Choose the language for the AI analysis output",
     "startAnalysis": "Start Analysis",

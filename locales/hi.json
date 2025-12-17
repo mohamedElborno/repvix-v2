@@ -612,6 +612,8 @@
     "agent": "एजेंट",
     "analyzing": "विश्लेषण जारी है",
     "analyzeChat": "चैट का विश्लेषण करें",
+    "chooseAnalysisLanguage": "विश्लेषण भाषा चुनें",
+    "chooseAnalysisLanguageHint": "AI विश्लेषण आउटपुट के लिए भाषा चुनें",
     "selectAnalysisLanguage": "विश्लेषण भाषा चुनें",
     "selectAnalysisLanguageHint": "AI विश्लेषण आउटपुट के लिए भाषा चुनें",
     "startAnalysis": "विश्लेषण शुरू करें",

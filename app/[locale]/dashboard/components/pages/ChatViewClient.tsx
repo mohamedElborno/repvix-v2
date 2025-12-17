@@ -15,6 +15,14 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Convex types
 import type { Doc, Id } from "@/convex/_generated/dataModel";
@@ -1269,6 +1277,57 @@ export default function ChatViewClient({
           </div>
         ) : null}
       </div>
+
+      {/* Analyze language modal */}
+      <Dialog open={showLanguageModal} onOpenChange={setShowLanguageModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {t("chooseAnalysisLanguage") || "Choose language"}
+            </DialogTitle>
+            <DialogDescription>
+              {t("chooseAnalysisLanguageHint") ||
+                "Select the output language for the analysis."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() =>
+                  setSelectedLanguage(lang.code as AnalysisLanguage)
+                }
+                className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-colors ${
+                  selectedLanguage === (lang.code as AnalysisLanguage)
+                    ? "bg-purple-600 text-white border-purple-500"
+                    : "bg-muted/30 text-foreground border-border hover:bg-muted/50"
+                }`}
+              >
+                {lang.name}
+              </button>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setShowLanguageModal(false)}
+              className="px-4 py-2 rounded-xl border border-border bg-transparent text-sm font-semibold hover:bg-muted/50"
+            >
+              {t("cancel") || "Cancel"}
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmAnalyze}
+              className="px-4 py-2 rounded-xl bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700"
+            >
+              {t("startAnalysis") || "Start analysis"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

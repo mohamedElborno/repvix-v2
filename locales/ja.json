@@ -612,6 +612,8 @@
     "agent": "エージェント",
     "analyzing": "分析中",
     "analyzeChat": "チャットを分析",
+    "chooseAnalysisLanguage": "分析言語を選択",
+    "chooseAnalysisLanguageHint": "AI分析出力の言語を選択してください",
     "selectAnalysisLanguage": "分析言語を選択",
     "selectAnalysisLanguageHint": "AI分析出力の言語を選択してください",
     "startAnalysis": "分析を開始",

@@ -612,6 +612,8 @@
     "agent": "الموظف",
     "analyzing": "جارٍ التحليل...",
     "analyzeChat": "تحليل المحادثة",
+    "chooseAnalysisLanguage": "اختر لغة التحليل",
+    "chooseAnalysisLanguageHint": "اختر اللغة لإخراج تحليل الذكاء الاصطناعي",
     "selectAnalysisLanguage": "اختر لغة التحليل",
     "selectAnalysisLanguageHint": "اختر اللغة لإخراج تحليل الذكاء الاصطناعي",
     "startAnalysis": "بدء التحليل",
