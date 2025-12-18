@@ -414,7 +414,7 @@ export default function GlobalAnalyticsClient() {
   const memberIdToName = useMemo(() => {
     const map: Record<string, string> = {};
     if (organizationMembers) {
-      organizationMembers.forEach((member) => {
+      organizationMembers.forEach((member: { _id: string; name?: string }) => {
         map[member._id] = member.name || "Unknown";
       });
     }
@@ -1186,30 +1186,39 @@ export default function GlobalAnalyticsClient() {
 
                 <div className="space-y-2 sm:space-y-3">
                   {faqs && faqs.length > 0 ? (
-                    faqs.map((faq, index) => (
-                      <div
-                        key={`${faq._id}-${index}`}
-                        className="bg-muted/50 rounded-xl p-3 sm:p-4 border border-border hover:border-purple-500/40 transition-all duration-300"
-                      >
-                        <div className="flex items-start gap-2 sm:gap-3">
-                          <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mt-0.5">
-                            <span className="text-[10px] sm:text-xs font-bold text-purple-500">
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <p className="text-xs sm:text-sm font-semibold text-foreground leading-snug wrap-break-word">
-                              {faq.question}
-                            </p>
-                            {faq.answer && (
-                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed wrap-break-word">
-                                {faq.answer}
+                    faqs.map(
+                      (
+                        faq: {
+                          _id?: string;
+                          question?: string;
+                          answer?: string;
+                        },
+                        index: number
+                      ) => (
+                        <div
+                          key={`${faq._id}-${index}`}
+                          className="bg-muted/50 rounded-xl p-3 sm:p-4 border border-border hover:border-purple-500/40 transition-all duration-300"
+                        >
+                          <div className="flex items-start gap-2 sm:gap-3">
+                            <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mt-0.5">
+                              <span className="text-[10px] sm:text-xs font-bold text-purple-500">
+                                {index + 1}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <p className="text-xs sm:text-sm font-semibold text-foreground leading-snug wrap-break-word">
+                                {faq.question}
                               </p>
-                            )}
+                              {faq.answer && (
+                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed wrap-break-word">
+                                  {faq.answer}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      )
+                    )
                   ) : (
                     <div className="bg-muted/40 rounded-xl p-3 sm:p-4 border border-dashed border-border text-xs sm:text-sm text-muted-foreground text-center">
                       {t("faqs.empty") ||

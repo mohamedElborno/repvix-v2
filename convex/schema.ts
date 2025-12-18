@@ -11,7 +11,10 @@ export default defineSchema({
   // =============================
   // convex/schema.ts
   organizations: defineTable({
-    clerkOrgId: v.string(),
+    clerkOrgId: v.optional(v.string()), // لم يعد إجباريًا
+
+    zendeskAccountId: v.optional(v.string()), // NEW
+    zendeskSubdomain: v.optional(v.string()), // NEW
     name: v.string(),
     createdBy: v.string(),
     createdAt: v.number(),
@@ -814,4 +817,15 @@ export default defineSchema({
     analysis: v.any(),
     createdAt: v.number(),
   }).index("by_org_ticket", ["organizationId", "ticketId"]),
+
+  zendeskUsage: defineTable({
+    zendeskAccountKey: v.string(),
+    plan: v.union(v.literal("trial"), v.literal("paid")),
+    monthlyQuota: v.number(),
+    usedThisMonth: v.number(),
+    periodStart: v.number(),
+  })
+    .index("by_zendeskAccountKey", ["zendeskAccountKey"])
+    .index("by_plan", ["plan"])
+    .index("by_periodStart", ["periodStart"]),
 });

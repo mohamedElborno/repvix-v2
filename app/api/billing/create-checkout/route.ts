@@ -3,14 +3,32 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { organizationId, clerkUserId, variantId, userEmail } =
-      await req.json();
+    const {
+      organizationId,
+      clerkUserId,
+      variantId,
+      userEmail,
+      zendeskSubdomain,
+    } = await req.json();
 
     if (!organizationId || !clerkUserId || !variantId) {
       return NextResponse.json(
         { ok: false, error: "Missing required fields" },
         { status: 400 }
       );
+    }
+
+    // Validate Zendesk subdomain if provided
+    if (zendeskSubdomain) {
+      if (!/^[a-zA-Z0-9-]+$/.test(zendeskSubdomain)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Invalid Zendesk subdomain format",
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const apiKey = process.env.LEMON_SECRET_KEY;
@@ -83,13 +101,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Create Checkout
+    const customData: any = { organizationId, clerkUserId };
+    if (zendeskSubdomain) {
+      customData.zendesk_subdomain = zendeskSubdomain;
+    }
+
     const checkoutPayload = {
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
             email: userEmail,
-            custom: { organizationId, clerkUserId },
+            custom: customData,
           },
         },
         relationships: {

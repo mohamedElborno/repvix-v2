@@ -1,7 +1,7 @@
 // convex/orgs.ts
 
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requireAdmin, requireOrgMembership } from "./auth";
 import { limitsForTier } from "./billingPlan";
 import { Id } from "./_generated/dataModel";
@@ -317,5 +317,29 @@ export const removeMember = mutation({
     await ctx.db.delete(target._id);
 
     return true;
+  },
+});
+
+export const getOrCreateZendeskOrg = internalMutation({
+  args: {
+    zendeskAccountId: v.string(),
+    zendeskSubdomain: v.string(),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("organizations")
+      .filter((q) => q.eq(q.field("zendeskAccountId"), args.zendeskAccountId))
+      .first();
+
+    if (existing) return existing._id;
+
+    return await ctx.db.insert("organizations", {
+      zendeskAccountId: args.zendeskAccountId,
+      zendeskSubdomain: args.zendeskSubdomain,
+      name: args.name,
+      createdBy: "zendesk_system",
+      createdAt: Date.now(),
+    });
   },
 });

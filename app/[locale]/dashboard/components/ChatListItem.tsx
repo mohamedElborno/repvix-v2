@@ -10,6 +10,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import clsx from "clsx";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { NormalizedMessage } from "@/lib/types/chat";
 
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -224,52 +225,52 @@ export default function ChatListItem({ chat, onDelete }: ChatListItemProps) {
             {previewMessages && previewMessages.length > 0 ? (
               <div className="relative">
                 <div className="space-y-1.5 mb-2 max-h-[100px] overflow-hidden">
-                  {previewMessages.slice(0, 2).map((message) => (
-                    <div
-                      key={
-                        message._id ||
-                        message.externalMessageId ||
-                        message.internalTimestamp
-                      }
-                      className={clsx(
-                        "relative p-2 rounded-lg backdrop-blur-md border transition-all duration-300",
-                        message.senderType === "customer"
-                          ? "bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/30 ml-0"
-                          : "bg-muted/50 border-border/50 mr-0"
-                      )}
-                    >
-                      <div className="flex items-start gap-1.5">
-                        <div
-                          className={clsx(
-                            "p-1 rounded-md shrink-0",
-                            message.senderType === "customer"
-                              ? "bg-primary/20 dark:bg-primary/30"
-                              : "bg-muted"
-                          )}
-                        >
-                          {message.senderType === "customer" ? (
-                            <User className="w-2.5 h-2.5 text-primary dark:text-primary-foreground" />
-                          ) : (
-                            <Bot className="w-2.5 h-2.5 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
-                              {message.senderType === "customer"
-                                ? message.senderName ||
-                                  t("chats.customer", { default: "Customer" })
-                                : message.senderName ||
-                                  t("chats.agent", { default: "Agent" })}
-                            </span>
+                  {previewMessages
+                    .slice(0, 2)
+                    .map((message: NormalizedMessage) => (
+                      <div
+                        key={
+                          message.externalMessageId || message.internalTimestamp
+                        }
+                        className={clsx(
+                          "relative p-2 rounded-lg backdrop-blur-md border transition-all duration-300",
+                          message.senderType === "customer"
+                            ? "bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/30 ml-0"
+                            : "bg-muted/50 border-border/50 mr-0"
+                        )}
+                      >
+                        <div className="flex items-start gap-1.5">
+                          <div
+                            className={clsx(
+                              "p-1 rounded-md shrink-0",
+                              message.senderType === "customer"
+                                ? "bg-primary/20 dark:bg-primary/30"
+                                : "bg-muted"
+                            )}
+                          >
+                            {message.senderType === "customer" ? (
+                              <User className="w-2.5 h-2.5 text-primary dark:text-primary-foreground" />
+                            ) : (
+                              <Bot className="w-2.5 h-2.5 text-muted-foreground" />
+                            )}
                           </div>
-                          <p className="text-[11px] text-foreground/90 leading-snug line-clamp-1">
-                            {message.textClean || message.textRaw}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
+                                {message.senderType === "customer"
+                                  ? message.senderName ||
+                                    t("chats.customer", { default: "Customer" })
+                                  : message.senderName ||
+                                    t("chats.agent", { default: "Agent" })}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-foreground/90 leading-snug line-clamp-1">
+                              {message.textClean || message.textRaw}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
                 {/* Gradient fade overlay */}
                 <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />

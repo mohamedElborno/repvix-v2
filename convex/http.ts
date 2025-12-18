@@ -2,7 +2,24 @@ import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 
+type ZendeskAnalyzePayload = {
+  subdomain: string;
+  ticketId: number;
+  subject: string;
+  requesterId?: number;
+  comments: {
+    author_id: number;
+    body: string;
+    created_at: string;
+  }[];
+};
+
 const http = httpRouter();
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
 // WebCrypto implementation for HMAC-SHA256
 async function verifySignature(
@@ -70,6 +87,146 @@ http.route({
   path: "/lemon/webhook",
   method: "POST",
   handler: lemonWebhook,
+});
+
+http.route({
+  path: "/zendesk/analyze",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }),
+});
+
+http.route({
+  path: "/zendesk/analyze",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    let body: ZendeskAnalyzePayload;
+    try {
+      body = (await request.json()) as ZendeskAnalyzePayload;
+    } catch {
+      return new Response(JSON.stringify({ error: "invalid_json" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { subdomain, ticketId, subject, comments, requesterId } = body;
+
+    // Validation
+    if (!subdomain || typeof subdomain !== "string") {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_payload",
+          message: "subdomain required",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!Array.isArray(comments) || comments.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_payload",
+          message: "comments array required",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!subject || typeof subject !== "string") {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_payload",
+          message: "subject required",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const zendeskAccountKey = subdomain;
+
+    // 1️⃣ Get or init usage
+    const usage = await ctx.runMutation(internal.zendeskUsage.getOrInit, {
+      zendeskAccountKey,
+    });
+
+    // Type guard: usage could be Id or object
+    if (typeof usage === "string") {
+      return new Response(JSON.stringify({ error: "usage_init_failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 2️⃣ Check quota
+    if (usage.usedThisMonth >= usage.monthlyQuota) {
+      return new Response(
+        JSON.stringify({
+          error: "quota_exceeded",
+          upgradeUrl: `https://repvix.com/zendesk/upgrade?account=${zendeskAccountKey}`,
+        }),
+        {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 3️⃣ Run analysis (stateless, no DB writes)
+    let analysis;
+    try {
+      analysis = await ctx.runAction(
+        api.zendeskStatelessAnalysis.zendeskSidebarAnalyze,
+        {
+          subject,
+          comments,
+          requesterId: requesterId ?? undefined,
+        }
+      );
+    } catch (error: any) {
+      return new Response(
+        JSON.stringify({
+          error: "analysis_failed",
+          message: error?.message ?? "Analysis failed",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 4️⃣ Increment usage (only after successful analysis)
+    await ctx.runMutation(internal.zendeskUsage.increment, {
+      zendeskAccountKey,
+    });
+
+    // 5️⃣ Return success
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        analysis,
+        remaining: usage.monthlyQuota - usage.usedThisMonth - 1,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }),
 });
 
 export default http;

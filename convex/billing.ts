@@ -411,6 +411,34 @@ export const handleEvent = internalMutation({
         });
       }
 
+      // Handle Zendesk plan upgrade (if subscription is active and created/updated)
+      if (
+        (eventName === "subscription_created" ||
+          eventName === "subscription_updated") &&
+        status === "active"
+      ) {
+        const zendeskSubdomain = custom?.zendesk_subdomain as
+          | string
+          | undefined;
+
+        if (
+          typeof zendeskSubdomain === "string" &&
+          zendeskSubdomain.length > 0
+        ) {
+          try {
+            await ctx.runMutation(internal.zendeskUsage.setPaidPlan, {
+              zendeskAccountKey: zendeskSubdomain,
+            });
+          } catch (error) {
+            // Log but don't fail the webhook processing
+            console.error(
+              `Failed to upgrade Zendesk plan for ${zendeskSubdomain}:`,
+              error
+            );
+          }
+        }
+      }
+
       // Update org billing info
       const tier = getTier(subscriptionUpdate.variantId ?? null);
       const isCancelled = status === "cancelled" || status === "expired";
@@ -601,7 +629,17 @@ export const createCheckout = action({
   handler: async (
     ctx,
     { organizationId, clerkUserId, variantId, userEmail }
-  ) => {
+  ): Promise<{
+    ok: boolean;
+    error: string;
+    details?: string;
+    code?: string;
+    url?: string;
+    tier?: string;
+    hint?: string;
+    variantId?: string;
+    storeId?: string;
+  }> => {
     const caller = await ctx.auth.getUserIdentity();
     if (!caller || caller.subject !== clerkUserId) {
       return { ok: false, error: "Unauthorized" };
@@ -699,14 +737,36 @@ export const createCheckout = action({
       // Note: we might need a product-to-store check depending on Lemon API shape
     }
 
+    // Get Zendesk subdomain from connection (required for Zendesk plan)
+    const zendeskConnection = await ctx.runQuery(
+      api.zendesk.getConnectionByOrg,
+      {
+        organizationId,
+      }
+    );
+    const zendeskSubdomain = zendeskConnection?.subdomain as string | undefined;
+
+    if (!zendeskSubdomain) {
+      return {
+        ok: false,
+        error: "Zendesk connection not found",
+        code: "ZENDESK_NOT_CONNECTED",
+        hint: "Please connect your Zendesk account before subscribing to the Zendesk plan.",
+      };
+    }
+
     // Create Checkout
-    const checkoutPayload = {
+    const checkoutPayload: any = {
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
             email: userEmail,
-            custom: { organizationId, clerkUserId },
+            custom: {
+              organizationId,
+              clerkUserId,
+              zendesk_subdomain: zendeskSubdomain,
+            },
           },
         },
         relationships: {
@@ -727,7 +787,7 @@ export const createCheckout = action({
     });
 
     if (!res.ok) {
-      const err = await res.text();
+      const err: string = await res.text();
       let errorDetails;
       try {
         errorDetails = JSON.parse(err);
@@ -748,15 +808,19 @@ export const createCheckout = action({
     }
 
     const json = await res.json();
-    const checkoutUrl = json?.data?.attributes?.url;
+    const checkoutUrl = json?.data?.attributes?.url as string | undefined;
     if (!checkoutUrl) {
       return {
         ok: false,
         error: "Missing checkout URL",
+        details: json?.data?.attributes?.url,
+        variantId,
+        storeId,
+        hint: "Check if variant exists and is linked to the correct store",
       };
     }
 
-    return { ok: true, url: checkoutUrl };
+    return { ok: true, url: checkoutUrl, error: "" };
   },
 });
 

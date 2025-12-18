@@ -31,6 +31,8 @@ import type * as orgMembers from "../orgMembers.js";
 import type * as orgs from "../orgs.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as zendesk from "../zendesk.js";
+import type * as zendeskStatelessAnalysis from "../zendeskStatelessAnalysis.js";
+import type * as zendeskUsage from "../zendeskUsage.js";
 
 import type {
   ApiFromModules,
@@ -62,6 +64,8 @@ declare const fullApi: ApiFromModules<{
   orgs: typeof orgs;
   subscriptions: typeof subscriptions;
   zendesk: typeof zendesk;
+  zendeskStatelessAnalysis: typeof zendeskStatelessAnalysis;
+  zendeskUsage: typeof zendeskUsage;
 }>;
 
 /**
