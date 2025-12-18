@@ -41,6 +41,45 @@ function normalizeKeyQuotePurpose(purpose: string): KeyQuotePurpose {
   return "other";
 }
 
+const CUSTOMER_ACTION_CHANNELS = [
+  "email",
+  "whatsapp",
+  "phone",
+  "in_app",
+  "other",
+] as const;
+
+type CustomerActionChannel = (typeof CUSTOMER_ACTION_CHANNELS)[number];
+
+function normalizeCustomerActionChannel(
+  channel: string | undefined
+): CustomerActionChannel | undefined {
+  if (!channel) return undefined;
+
+  const c = channel.toLowerCase().trim();
+
+  if (CUSTOMER_ACTION_CHANNELS.includes(c as CustomerActionChannel)) {
+    return c as CustomerActionChannel;
+  }
+
+  // Map common variations to valid channels
+  if (c.includes("email") || c === "mail") {
+    return "email";
+  }
+  if (c.includes("whatsapp") || c === "wa") {
+    return "whatsapp";
+  }
+  if (c.includes("phone") || c.includes("call") || c.includes("sms")) {
+    return "phone";
+  }
+  if (c.includes("app") || c.includes("in-app") || c.includes("platform")) {
+    return "in_app";
+  }
+
+  // For any other channel (bank_transfer, telegram, etc.), map to "other"
+  return "other";
+}
+
 // =============================
 // 1) Query: getChatWithMessagesForAnalysis
 // =============================
@@ -287,7 +326,17 @@ export const storeChatAnalysis = internalMutation({
       internalActions:
         (aiOutput as ChatAnalysisAiOutput).actions.internalActions ?? undefined,
       customerActions:
-        (aiOutput as ChatAnalysisAiOutput).actions.customerActions ?? undefined,
+        (aiOutput as ChatAnalysisAiOutput).actions.customerActions?.map(
+          (action: {
+            title: string;
+            description: string;
+            channel?: string;
+          }) => ({
+            title: action.title,
+            description: action.description,
+            channel: normalizeCustomerActionChannel(action.channel),
+          })
+        ) ?? undefined,
       productFeedback:
         (aiOutput as ChatAnalysisAiOutput).actions.productFeedback ?? undefined,
 
