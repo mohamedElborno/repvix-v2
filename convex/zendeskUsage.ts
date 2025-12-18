@@ -96,13 +96,13 @@ export const setPaidPlan = internalMutation({
     }
 
     // Prevent re-activation (idempotency)
-    if (record.plan === "paid") {
+    if (record.plan === "pro") {
       return;
     }
 
     await ctx.db.patch(record._id, {
-      plan: "paid",
-      monthlyQuota: 150,
+      plan: "pro",
+      monthlyQuota: 200,
       usedThisMonth: 0, // Reset counter on upgrade
     });
   },

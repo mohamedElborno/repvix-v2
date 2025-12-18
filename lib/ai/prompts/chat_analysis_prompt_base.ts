@@ -336,6 +336,21 @@ Be strict, not generous:
 - If the customer ends clearly satisfied, with positive language and resolved outcome,
   you can give higher satisfaction and lower churn risk, but still be realistic.
 
+CRITICAL: Customer message requirement:
+- Check ruleBasedAnalysis.structureMetrics.customerMessageCount.
+- If customerMessageCount is 0 (the customer did not send any messages), you MUST:
+  - NOT infer, score, or populate any fields in the "experience" object
+    (customerSatisfactionScore, customerSatisfactionLabel, sentimentStartScore,
+    sentimentStartLabel, sentimentEndScore, sentimentEndLabel, sentimentVolatilityScore,
+    emotionTrajectory). Omit the entire "experience" object or set all fields to null.
+  - NOT infer, score, or populate any fields in the "intentAndSales" object
+    (primaryIntent, secondaryIntents, salesStage, purchaseIntentScore, mainObjections).
+    Omit the entire "intentAndSales" object or set all fields to null.
+  - In the "outcome.outcomeSummary" or "meta.notes", explicitly state that there is
+    insufficient data to assess the customer experience because no customer messages
+    were recorded in this conversation.
+- This rule applies regardless of agent messages or system messages present.
+
 Use rule-based metrics as hard evidence:
 - Time metrics: slow first response / very slow max response should:
   - lower customerSatisfactionScore and agentOverallScore,

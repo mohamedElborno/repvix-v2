@@ -7,187 +7,31 @@ import {
   type SupportedLanguage,
   type TimeRuleBasedResult,
 } from "../lib/chat/ruleBasedTime";
-import {
-  computeRuleBasedFlags,
-  type RuleBasedMetricsPatch,
-} from "../lib/chat/ruleBasedFlags";
+import { computeRuleBasedFlags } from "../lib/chat/ruleBasedFlags";
 import {
   buildChatAnalysisAiInput,
   type AiInputMessage,
   type AiStructureMetricsInput,
 } from "../lib/chat/buildChatAnalysisAiInput";
+import {
+  computeStructureRuleBased,
+  type ChatMessageDoc as StructureChatMessageDoc,
+} from "../lib/chat/ruleBasedStructure";
 import { getOpenAiClient, CHAT_ANALYSIS_MODEL } from "../lib/openai/client";
 import { getChatAnalysisSystemPrompt } from "@/lib/ai/chat_analysis_prompt";
+import {
+  normalizeMessages,
+  type RawMessageInput,
+  type NormalizedMessage,
+} from "../lib/chat/normalize";
 
 type SenderRole = "customer" | "agent" | "system";
 
-interface ZendeskMessageForStructure {
-  senderType: SenderRole;
-  textClean: string;
-  internalTimestamp: number;
-}
-
-function cleanText(input: string | undefined | null): string {
-  if (!input) return "";
-
-  // إزالة HTML tags
-  let cleaned = input.replace(/<[^>]+>/g, "");
-
-  // إزالة HTML entities
-  cleaned = cleaned
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-
-  // إزالة المسافات الزائدة وتنظيف النص
-  cleaned = cleaned.replace(/\s+/g, " ").trim();
-
-  return cleaned;
-}
-
-function computeStructureMetrics(messages: ZendeskMessageForStructure[]): {
-  structureMetrics: AiStructureMetricsInput;
-  ruleBasedMetrics: {
-    customerMessageCount?: number;
-    agentMessageCount?: number;
-    turnCount?: number;
-    topicsCount?: number;
-    durationMs?: number;
-  };
-} {
-  if (messages.length === 0) {
-    const empty: AiStructureMetricsInput = {
-      totalMessages: 0,
-      customerMessageCount: 0,
-      agentMessageCount: 0,
-      systemMessageCount: 0,
-      turnCount: 0,
-      roundTripCount: 0,
-      customerTalkRatio: 0,
-      agentTalkRatio: 0,
-      avgCustomerCharsPerMessage: undefined,
-      avgAgentCharsPerMessage: undefined,
-      maxCustomerChars: 0,
-      maxAgentChars: 0,
-      durationMs: undefined,
-    };
-
-    return {
-      structureMetrics: empty,
-      ruleBasedMetrics: {
-        customerMessageCount: 0,
-        agentMessageCount: 0,
-        turnCount: 0,
-        topicsCount: undefined,
-        durationMs: undefined,
-      },
-    };
-  }
-
-  const sorted = [...messages].sort(
-    (a, b) => a.internalTimestamp - b.internalTimestamp
-  );
-
-  const totalMessages = sorted.length;
-
-  let customerMessageCount = 0;
-  let agentMessageCount = 0;
-  let systemMessageCount = 0;
-
-  let customerCharsTotal = 0;
-  let agentCharsTotal = 0;
-  let maxCustomerChars = 0;
-  let maxAgentChars = 0;
-
-  let turnCount = 0;
-  let lastSpeaker: SenderRole | null = null;
-
-  let roundTripCount = 0;
-  let hasOpenCustomerBlock = false;
-
-  for (const m of sorted) {
-    const len = m.textClean?.length ?? 0;
-
-    if (m.senderType === "customer") {
-      customerMessageCount++;
-      customerCharsTotal += len;
-      if (len > maxCustomerChars) maxCustomerChars = len;
-
-      if (lastSpeaker !== "customer") {
-        turnCount++;
-        lastSpeaker = "customer";
-      }
-
-      hasOpenCustomerBlock = true;
-    } else if (m.senderType === "agent") {
-      agentMessageCount++;
-      agentCharsTotal += len;
-      if (len > maxAgentChars) maxAgentChars = len;
-
-      if (lastSpeaker !== "agent") {
-        turnCount++;
-        lastSpeaker = "agent";
-      }
-
-      if (hasOpenCustomerBlock) {
-        roundTripCount++;
-        hasOpenCustomerBlock = false;
-      }
-    } else {
-      systemMessageCount++;
-    }
-  }
-
-  const customerTalkRatio =
-    totalMessages > 0 ? customerMessageCount / totalMessages : 0;
-  const agentTalkRatio =
-    totalMessages > 0 ? agentMessageCount / totalMessages : 0;
-
-  const avgCustomerCharsPerMessage =
-    customerMessageCount > 0
-      ? customerCharsTotal / customerMessageCount
-      : undefined;
-
-  const avgAgentCharsPerMessage =
-    agentMessageCount > 0 ? agentCharsTotal / agentMessageCount : undefined;
-
-  const firstTs = sorted[0]?.internalTimestamp;
-  const lastTs = sorted[sorted.length - 1]?.internalTimestamp;
-  const durationMs =
-    typeof firstTs === "number" &&
-    typeof lastTs === "number" &&
-    lastTs >= firstTs
-      ? lastTs - firstTs
-      : undefined;
-
-  const structureMetrics: AiStructureMetricsInput = {
-    totalMessages,
-    customerMessageCount,
-    agentMessageCount,
-    systemMessageCount,
-    turnCount,
-    roundTripCount,
-    customerTalkRatio,
-    agentTalkRatio,
-    avgCustomerCharsPerMessage,
-    avgAgentCharsPerMessage,
-    maxCustomerChars,
-    maxAgentChars,
-    durationMs,
-  };
-
-  const ruleBasedMetrics = {
-    customerMessageCount,
-    agentMessageCount,
-    turnCount,
-    topicsCount: undefined as number | undefined,
-    durationMs,
-  };
-
-  return { structureMetrics, ruleBasedMetrics };
+function normalizeTs(ts: number | null | undefined): number | undefined {
+  if (ts == null) return undefined;
+  // لو timestamp أقل من 1 تريليون → هذا يعني أنه seconds وليس ms
+  if (ts > 0 && ts < 1e12) return ts * 1000;
+  return ts;
 }
 
 export const zendeskSidebarAnalyze = action({
@@ -198,6 +42,20 @@ export const zendeskSidebarAnalyze = action({
         author_id: v.number(),
         body: v.string(),
         created_at: v.string(),
+        public: v.optional(v.boolean()),
+        via: v.optional(
+          v.object({
+            source: v.optional(
+              v.object({
+                from: v.optional(
+                  v.object({
+                    address: v.optional(v.string()),
+                  })
+                ),
+              })
+            ),
+          })
+        ),
       })
     ),
     requesterId: v.optional(v.number()),
@@ -208,60 +66,123 @@ export const zendeskSidebarAnalyze = action({
     }
 
     // ==========================================
-    // المرحلة 1: تطبيع الرسائل (Normalization)
+    // المرحلة 1: تطبيع الرسائل (Normalization) - نفس المراحل في التحليل العادي
     // ==========================================
     const MAX_MESSAGES = 500;
     const commentsToProcess = args.comments.slice(0, MAX_MESSAGES);
 
-    const normalizedMessages = commentsToProcess
-      .map((c, idx) => {
-        const ts = c.created_at ? new Date(c.created_at).getTime() : Date.now();
-        const senderType: SenderRole =
-          args.requesterId && c.author_id === args.requesterId
-            ? "customer"
-            : "agent";
-        const textRaw = (c.body ?? "").toString();
-        const textClean = cleanText(textRaw);
+    // تحويل Zendesk comments إلى RawMessageInput format
+    // استخدام نفس منطق Zendesk لتحديد customer vs agent
+    const rawMessages: RawMessageInput[] = commentsToProcess
+      .map((c) => {
+        const externalTs = c.created_at
+          ? new Date(c.created_at).getTime()
+          : undefined;
+        const normalizedTs = normalizeTs(externalTs);
+
+        // تحديد customer vs agent - نفس المنطق المستخدم في Zendesk integration
+        // 1. إذا كان author_id === requesterId → customer
+        // 2. إذا كان via.source.from.address === author_id → customer (رسالة من العميل)
+        // 3. إذا كان public === true → غالباً customer
+        // 4. غير ذلك → agent
+        let senderType: "customer" | "agent" = "agent";
+
+        if (args.requesterId && c.author_id === args.requesterId) {
+          senderType = "customer";
+        } else if (
+          c.via?.source?.from?.address &&
+          String(c.via.source.from.address) === String(c.author_id)
+        ) {
+          senderType = "customer";
+        } else if (c.public === true && !args.requesterId) {
+          // إذا كانت الرسالة public ولا يوجد requesterId، افترض أنها من customer
+          // (هذا ليس دقيق 100% لكنه أفضل من افتراض agent)
+          senderType = "customer";
+        }
 
         return {
-          id: `zd-${c.author_id}-${idx}`,
           senderType,
-          senderName: c.author_id ? `User ${c.author_id}` : null,
-          textRaw,
-          textClean,
-          internalTimestamp: ts,
-          externalTimestamp: ts,
+          senderName: c.author_id ? `User ${c.author_id}` : undefined,
+          text: (c.body ?? "").toString(),
+          externalMessageId: `zd-${c.author_id}-${c.created_at}`,
+          externalTimestamp: normalizedTs,
+          metadata: {
+            zendeskAuthorId: c.author_id,
+            zendeskPublic: c.public,
+            zendeskVia: c.via,
+          },
         };
       })
-      .filter((m) => m.textClean && m.textClean.length > 0)
+      .filter((m) => m.text && m.text.trim().length > 0);
+
+    // استخدام normalizeMessages من lib/chat/normalize.ts (نفس التحليل العادي)
+    const normalizedMessages: NormalizedMessage[] = normalizeMessages(
+      rawMessages,
+      {
+        detectLanguage: true, // كشف اللغة تلقائياً
+        defaultLanguage: "en",
+      }
+    );
+
+    // تحويل إلى format مناسب للتحليل
+    const messagesForAnalysis = normalizedMessages
+      .map((m, idx) => ({
+        id: m.externalMessageId ?? `zd-msg-${idx}`,
+        senderType: m.senderType as SenderRole,
+        senderName: m.senderName ?? null,
+        textRaw: m.textRaw,
+        textClean: m.textClean,
+        language: m.language,
+        internalTimestamp: m.internalTimestamp,
+        externalTimestamp: m.externalTimestamp,
+      }))
       .sort((a, b) => a.internalTimestamp - b.internalTimestamp);
 
-    if (normalizedMessages.length === 0) {
+    if (messagesForAnalysis.length === 0) {
       throw new Error("No valid messages after cleaning");
     }
 
-    const startedAt = normalizedMessages[0].internalTimestamp;
+    const startedAt = messagesForAnalysis[0].internalTimestamp;
     const endedAt =
-      normalizedMessages[normalizedMessages.length - 1]?.internalTimestamp ??
+      messagesForAnalysis[messagesForAnalysis.length - 1]?.internalTimestamp ??
       startedAt;
 
     // ==========================================
     // المرحلة 2: اختيار لغة التحليل ولغة المحادثة
     // ==========================================
+    // استخدام اللغة المكتشفة من الرسائل
+    const detectedLanguages = messagesForAnalysis
+      .map((m) => m.language)
+      .filter(
+        (l): l is SupportedLanguage =>
+          typeof l === "string" &&
+          l !== "unknown" &&
+          ["ar", "en", "tr", "fr", "es", "hi", "ja"].includes(l)
+      );
+    const mostCommonLanguage: SupportedLanguage | null =
+      detectedLanguages.length > 0
+        ? (detectedLanguages.reduce((a, b, _, arr) =>
+            arr.filter((v) => v === a).length >=
+            arr.filter((v) => v === b).length
+              ? a
+              : b
+          ) as SupportedLanguage)
+        : null;
+
     const analysisLanguage: SupportedLanguage = chooseAnalysisLanguage({
       analysisLanguageFromUser: undefined,
-      chatLanguage: null,
+      chatLanguage: mostCommonLanguage,
       orgDefaultLanguage: undefined,
     });
 
-    const timeMessages = normalizedMessages.map((m) => ({
+    const timeMessages = messagesForAnalysis.map((m) => ({
       senderType: m.senderType,
       internalTimestamp: m.internalTimestamp,
-      language: undefined,
+      language: m.language,
     }));
 
     const conversationLanguage: SupportedLanguage = chooseConversationLanguage({
-      chatLanguage: null,
+      chatLanguage: mostCommonLanguage,
       analysisLanguage,
       messages: timeMessages,
     });
@@ -273,39 +194,65 @@ export const zendeskSidebarAnalyze = action({
     const mockChat = {
       sourceType: "integration" as const,
       sourceChannel: "zendesk" as const,
-      language: undefined,
+      language: mostCommonLanguage ?? undefined,
     };
 
     const timeResult: TimeRuleBasedResult = computeTimeRuleBased(
       mockChat,
-      normalizedMessages.map((m) => ({
+      messagesForAnalysis.map((m) => ({
         senderType: m.senderType,
         internalTimestamp: m.internalTimestamp,
-        language: undefined,
+        language: m.language,
       })),
-      normalizedMessages.filter((m) => m.senderType === "customer").length
+      messagesForAnalysis.filter((m) => m.senderType === "customer").length
     );
 
     // ==========================================
     // المرحلة 4: حساب بنية المحادثة - Rule-based
     // ==========================================
-    const { structureMetrics } = computeStructureMetrics(
-      normalizedMessages.map((m) => ({
-        senderType: m.senderType,
-        textClean: m.textClean,
-        internalTimestamp: m.internalTimestamp,
-      }))
+    // استخدام computeStructureRuleBased من lib/chat/ruleBasedStructure.ts
+    // (نفس الدالة المستخدمة في التحليل العادي)
+    const structureResult = computeStructureRuleBased(
+      messagesForAnalysis.map(
+        (m): StructureChatMessageDoc => ({
+          senderType: m.senderType,
+          internalTimestamp: m.internalTimestamp,
+          textRaw: m.textRaw, // مهم: نستخدم textRaw وليس textClean
+          language: m.language,
+        })
+      )
     );
+
+    // تحويل StructureMetrics إلى AiStructureMetricsInput
+    // ملاحظة: StructureMetrics لا يحتوي على durationMs، لكن ruleBasedMetricsPatch يحتوي عليه
+    const structureMetrics: AiStructureMetricsInput = {
+      totalMessages: structureResult.structureMetrics.totalMessages,
+      customerMessageCount:
+        structureResult.structureMetrics.customerMessageCount,
+      agentMessageCount: structureResult.structureMetrics.agentMessageCount,
+      systemMessageCount: structureResult.structureMetrics.systemMessageCount,
+      turnCount: structureResult.structureMetrics.turnCount,
+      roundTripCount: structureResult.structureMetrics.roundTripCount,
+      customerTalkRatio: structureResult.structureMetrics.customerTalkRatio,
+      agentTalkRatio: structureResult.structureMetrics.agentTalkRatio,
+      avgCustomerCharsPerMessage:
+        structureResult.structureMetrics.avgCustomerCharsPerMessage,
+      avgAgentCharsPerMessage:
+        structureResult.structureMetrics.avgAgentCharsPerMessage,
+      maxCustomerChars: structureResult.structureMetrics.maxCustomerChars,
+      maxAgentChars: structureResult.structureMetrics.maxAgentChars,
+      durationMs: structureResult.ruleBasedMetricsPatch.durationMs,
+    };
 
     // ==========================================
     // المرحلة 5: حساب الأعلام والكلمات المفتاحية - Rule-based
     // ==========================================
     const { flags, metricsPatch } = computeRuleBasedFlags({
-      messages: normalizedMessages.map((m) => ({
+      messages: messagesForAnalysis.map((m) => ({
         senderType: m.senderType,
         textClean: m.textClean,
-        language: undefined,
-        containsProfanity: undefined,
+        language: m.language,
+        containsProfanity: undefined, // سيتم اكتشافه من textClean
         toxicityScore: undefined,
       })),
       conversationLanguage,
@@ -329,7 +276,7 @@ export const zendeskSidebarAnalyze = action({
         endedAt,
         customerName: null,
       },
-      messages: normalizedMessages.map(
+      messages: messagesForAnalysis.map(
         (m): AiInputMessage => ({
           id: m.id,
           role: m.senderType,
@@ -378,6 +325,15 @@ export const zendeskSidebarAnalyze = action({
       );
     }
 
-    return analysisJson;
+    // Extract token usage from OpenAI response
+    const tokenInputCount = completion.usage?.prompt_tokens ?? undefined;
+    const tokenOutputCount = completion.usage?.completion_tokens ?? undefined;
+
+    // Return analysis with token usage information
+    return {
+      analysis: analysisJson,
+      tokenInputCount,
+      tokenOutputCount,
+    };
   },
 });

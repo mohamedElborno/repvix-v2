@@ -11,6 +11,7 @@ import { api, internal } from "./_generated/api";
 import { mapVariantToPlan, limitsForTier } from "./billingPlan";
 import { assertOrgRole } from "./lib/guard";
 import { requireOrgMembership } from "./auth";
+import { isZendeskVariant } from "./zendeskPlan";
 
 // === Helper Functions ======================================================
 
@@ -283,6 +284,9 @@ export const handleEvent = internalMutation({
     const orgRef = custom?.organizationId as string | undefined;
     const clerkUserId = custom?.clerkUserId as string | undefined;
 
+    // Log custom data for debugging (especially for Zendesk)
+    // Note: Detailed logging moved to audit logs for better tracking
+
     const organizationId = await resolveOrganizationId(ctx, orgRef);
 
     // Log for debugging
@@ -383,13 +387,197 @@ export const handleEvent = internalMutation({
           attr?.urls?.customer_portal_update_subscription || undefined,
       };
 
-      if (!organizationId) {
+      // Check if this is a Zendesk-only checkout BEFORE checking organizationId
+      const checkoutType = custom?.checkout_type as string | undefined;
+      const zendeskSubdomain = custom?.zendesk_subdomain as string | undefined;
+      const isZendeskOnlyCheckout =
+        checkoutType === "zendesk" ||
+        (typeof zendeskSubdomain === "string" &&
+          zendeskSubdomain.length > 0 &&
+          !organizationId);
+
+      // If this is a Zendesk-only checkout, handle it separately (below)
+      // Otherwise, require organizationId
+      if (!isZendeskOnlyCheckout && !organizationId) {
         console.error(
           `Cannot process subscription ${subExternal}: organizationId is null. orgRef: ${orgRef}, event: ${eventName}`
         );
         return;
       }
 
+      // Handle Zendesk plan upgrade FIRST (if subscription is active and created/updated)
+      // Note: isZendeskOnlyCheckout is already defined above
+      // Zendesk subscriptions should NOT be saved in the "subscriptions" table
+
+      if (
+        isZendeskOnlyCheckout &&
+        (eventName === "subscription_created" ||
+          eventName === "subscription_updated") &&
+        status === "active"
+      ) {
+        if (
+          typeof zendeskSubdomain === "string" &&
+          zendeskSubdomain.length > 0
+        ) {
+          // Security: Validate zendesk_subdomain format (alphanumeric, hyphens, underscores only)
+          const subdomainRegex = /^[a-z0-9_-]+$/i;
+          if (!subdomainRegex.test(zendeskSubdomain)) {
+            console.error(
+              `[Zendesk Webhook] Invalid zendesk_subdomain format: ${zendeskSubdomain}`
+            );
+            // Log security event
+            await ctx.runMutation(internal.zendeskAudit.logEvent, {
+              zendeskAccountKey: zendeskSubdomain,
+              lemonSubscriptionId: subExternal,
+              eventType: "invalid_subdomain",
+              action: "rejected_invalid_subdomain",
+              severity: "error",
+              details: JSON.stringify({
+                subdomain: zendeskSubdomain,
+                subscriptionId: subExternal,
+              }),
+            });
+            return; // Reject invalid subdomain format
+          }
+
+          try {
+            const variantId = subscriptionUpdate.variantId;
+
+            // Security: Verify that this is actually a Zendesk variant
+            if (!variantId || !isZendeskVariant(variantId)) {
+              console.error(
+                `[Zendesk Webhook] Invalid or non-Zendesk variant: ${variantId} for subdomain: ${zendeskSubdomain}`
+              );
+              // Log security event
+              await ctx.runMutation(internal.zendeskAudit.logEvent, {
+                zendeskAccountKey: zendeskSubdomain,
+                lemonSubscriptionId: subExternal,
+                eventType: "invalid_variant",
+                action: "invalid_variant_id",
+                severity: "warning",
+                details: JSON.stringify({
+                  variantId,
+                  subdomain: zendeskSubdomain,
+                  subscriptionId: subExternal,
+                }),
+              });
+              // Still save subscription but don't upgrade plan
+            }
+
+            // Processing logged via audit logs
+
+            // Always save subscription details first (even if variant check fails)
+            // This ensures we have a record of the subscription
+            try {
+              const subscriptionId = await ctx.runMutation(
+                internal.zendeskSubscriptions.getOrCreate,
+                {
+                  zendeskAccountKey: zendeskSubdomain,
+                  lemonSubscriptionId: subExternal,
+                  productId: subscriptionUpdate.productId,
+                  variantId: subscriptionUpdate.variantId ?? undefined,
+                  status: subscriptionUpdate.status,
+                  planName: subscriptionUpdate.planName,
+                  customerPortal: subscriptionUpdate.customerPortal,
+                  updatePaymentMethodUrl:
+                    subscriptionUpdate.updatePaymentMethodUrl,
+                  updateSubscriptionUrl:
+                    subscriptionUpdate.updateSubscriptionUrl,
+                  currentPeriodEnd: subscriptionUpdate.currentPeriodEnd,
+                  renewsAt: subscriptionUpdate.renewsAt,
+                  canceledAt: subscriptionUpdate.canceledAt,
+                  trialEndsAt: subscriptionUpdate.trialEndsAt,
+                }
+              );
+
+              // Audit log: subscription created/updated
+              await ctx.runMutation(internal.zendeskAudit.logEvent, {
+                zendeskAccountKey: zendeskSubdomain,
+                lemonSubscriptionId: subExternal,
+                eventType:
+                  eventName === "subscription_created"
+                    ? "subscription_created"
+                    : "subscription_updated",
+                action: "subscription_saved",
+                severity: "info",
+                details: JSON.stringify({
+                  subscriptionId,
+                  variantId: subscriptionUpdate.variantId,
+                  status: subscriptionUpdate.status,
+                  planName: subscriptionUpdate.planName,
+                }),
+              });
+            } catch (subError) {
+              console.error(
+                `[Zendesk Webhook] Failed to save subscription for ${zendeskSubdomain}:`,
+                subError
+              );
+            }
+
+            // Only update usage plan if this is a Zendesk variant
+            if (variantId && isZendeskVariant(variantId)) {
+              try {
+                // First, ensure usage record exists
+                await ctx.runMutation(internal.zendeskUsage.getOrInit, {
+                  zendeskAccountKey: zendeskSubdomain,
+                });
+
+                // Update usage plan
+                await ctx.runMutation(internal.zendeskUsage.setPaidPlan, {
+                  zendeskAccountKey: zendeskSubdomain,
+                });
+
+                // Audit log: plan upgraded
+                await ctx.runMutation(internal.zendeskAudit.logEvent, {
+                  zendeskAccountKey: zendeskSubdomain,
+                  lemonSubscriptionId: subExternal,
+                  eventType: "plan_upgraded",
+                  action: "upgrade_to_pro",
+                  severity: "info",
+                  details: JSON.stringify({
+                    variantId,
+                    planName: subscriptionUpdate.planName,
+                  }),
+                });
+              } catch (usageError) {
+                console.error(
+                  `[Zendesk Webhook] Failed to update usage plan for ${zendeskSubdomain}:`,
+                  usageError
+                );
+                // Don't throw - subscription is already saved
+              }
+            } else {
+              console.warn(
+                `[Zendesk Webhook] Variant ${variantId} is not a Zendesk variant (not in ZENDESK_LEMON_VARIANT_TO_TIER). Subscription saved but plan not upgraded.`
+              );
+            }
+          } catch (error) {
+            // Log but don't fail the webhook processing
+            console.error(
+              `[Zendesk Webhook] Failed to upgrade Zendesk plan for ${zendeskSubdomain}:`,
+              error
+            );
+          }
+        } else {
+          console.warn(
+            `[Zendesk Webhook] Missing or invalid zendeskSubdomain: ${zendeskSubdomain}`
+          );
+        }
+        // For Zendesk-only checkouts, don't process organization updates
+        // Return early to skip organization billing updates
+        return;
+      }
+
+      // Only process organization subscriptions if this is NOT a Zendesk-only checkout
+      // Zendesk subscriptions are handled above and return early
+      if (!organizationId) {
+        console.error(
+          `Cannot process subscription ${subExternal}: organizationId is null and not a Zendesk checkout. orgRef: ${orgRef}, event: ${eventName}`
+        );
+        return;
+      }
+
+      // Handle regular organization subscriptions
       const existing = await ctx.db
         .query("subscriptions")
         .withIndex("by_sub", (q: any) =>
@@ -411,16 +599,14 @@ export const handleEvent = internalMutation({
         });
       }
 
-      // Handle Zendesk plan upgrade (if subscription is active and created/updated)
+      // Handle regular Zendesk upgrade (when organizationId exists and zendesk_subdomain is present)
+      // This is for main platform subscriptions that include Zendesk
       if (
+        organizationId &&
         (eventName === "subscription_created" ||
           eventName === "subscription_updated") &&
         status === "active"
       ) {
-        const zendeskSubdomain = custom?.zendesk_subdomain as
-          | string
-          | undefined;
-
         if (
           typeof zendeskSubdomain === "string" &&
           zendeskSubdomain.length > 0

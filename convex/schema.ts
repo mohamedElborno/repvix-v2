@@ -820,7 +820,7 @@ export default defineSchema({
 
   zendeskUsage: defineTable({
     zendeskAccountKey: v.string(),
-    plan: v.union(v.literal("trial"), v.literal("paid")),
+    plan: v.union(v.literal("trial"), v.literal("pro")),
     monthlyQuota: v.number(),
     usedThisMonth: v.number(),
     periodStart: v.number(),
@@ -828,4 +828,88 @@ export default defineSchema({
     .index("by_zendeskAccountKey", ["zendeskAccountKey"])
     .index("by_plan", ["plan"])
     .index("by_periodStart", ["periodStart"]),
+
+  zendeskSubscriptions: defineTable({
+    zendeskAccountKey: v.string(), // subdomain
+    lemonSubscriptionId: v.string(), // Lemon Squeezy subscription ID
+    productId: v.optional(v.string()),
+    variantId: v.optional(v.string()),
+    status: v.string(), // active|paused|cancelled|expired|on_trial...
+    planName: v.optional(v.string()),
+    currentPeriodEnd: v.optional(v.number()), // ms
+    renewsAt: v.optional(v.number()),
+    canceledAt: v.optional(v.number()),
+    trialEndsAt: v.optional(v.number()),
+    customerPortal: v.optional(v.string()), // URL for managing subscription
+    updatePaymentMethodUrl: v.optional(v.string()),
+    updateSubscriptionUrl: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_zendeskAccountKey", ["zendeskAccountKey"])
+    .index("by_subscription", ["lemonSubscriptionId"])
+    .index("by_status", ["status"]),
+
+  // Audit log for security monitoring
+  zendeskAuditLogs: defineTable({
+    zendeskAccountKey: v.optional(v.string()),
+    lemonSubscriptionId: v.optional(v.string()),
+    eventType: v.string(), // subscription_created, subscription_updated, hijacking_attempt, etc.
+    action: v.string(), // upgrade, downgrade, cancel, hijack_attempt
+    details: v.optional(v.string()), // JSON string with additional details
+    severity: v.union(
+      v.literal("info"),
+      v.literal("warning"),
+      v.literal("error"),
+      v.literal("critical")
+    ),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_zendeskAccountKey", ["zendeskAccountKey"])
+    .index("by_subscription", ["lemonSubscriptionId"])
+    .index("by_eventType", ["eventType"])
+    .index("by_severity", ["severity"])
+    .index("by_createdAt", ["createdAt"]),
+
+  // Rate limiting for webhooks
+  webhookRateLimits: defineTable({
+    identifier: v.string(), // IP address or webhook ID
+    count: v.number(),
+    windowStart: v.number(),
+    lastRequestAt: v.number(),
+  })
+    .index("by_identifier", ["identifier"])
+    .index("by_windowStart", ["windowStart"]),
+
+  // =============================
+  // Analysis Jobs (for realtime progress tracking)
+  // =============================
+  analysisJobs: defineTable({
+    zendeskAccountKey: v.string(),
+    ticketId: v.number(),
+
+    status: v.union(
+      v.literal("idle"),
+      v.literal("preparing"),
+      v.literal("analyzing"),
+      v.literal("generating"),
+      v.literal("finalizing"),
+      v.literal("done"),
+      v.literal("error")
+    ),
+
+    progressMessage: v.string(),
+    startedAt: v.number(),
+    updatedAt: v.number(),
+
+    result: v.optional(v.any()),
+    error: v.optional(v.string()),
+  })
+    .index("by_zendeskAccountKey_ticketId", [
+      "zendeskAccountKey",
+      "ticketId",
+    ])
+    .index("by_status", ["status"]),
 });

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as analysisJobs from "../analysisJobs.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
 import type * as billingCheckout from "../billingCheckout.js";
@@ -30,8 +31,13 @@ import type * as messages from "../messages.js";
 import type * as orgMembers from "../orgMembers.js";
 import type * as orgs from "../orgs.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as webhookRateLimit from "../webhookRateLimit.js";
 import type * as zendesk from "../zendesk.js";
+import type * as zendeskAudit from "../zendeskAudit.js";
+import type * as zendeskBilling from "../zendeskBilling.js";
+import type * as zendeskPlan from "../zendeskPlan.js";
 import type * as zendeskStatelessAnalysis from "../zendeskStatelessAnalysis.js";
+import type * as zendeskSubscriptions from "../zendeskSubscriptions.js";
 import type * as zendeskUsage from "../zendeskUsage.js";
 
 import type {
@@ -41,6 +47,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  analysisJobs: typeof analysisJobs;
   auth: typeof auth;
   billing: typeof billing;
   billingCheckout: typeof billingCheckout;
@@ -63,8 +70,13 @@ declare const fullApi: ApiFromModules<{
   orgMembers: typeof orgMembers;
   orgs: typeof orgs;
   subscriptions: typeof subscriptions;
+  webhookRateLimit: typeof webhookRateLimit;
   zendesk: typeof zendesk;
+  zendeskAudit: typeof zendeskAudit;
+  zendeskBilling: typeof zendeskBilling;
+  zendeskPlan: typeof zendeskPlan;
   zendeskStatelessAnalysis: typeof zendeskStatelessAnalysis;
+  zendeskSubscriptions: typeof zendeskSubscriptions;
   zendeskUsage: typeof zendeskUsage;
 }>;
 
