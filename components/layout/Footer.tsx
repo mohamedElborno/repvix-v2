@@ -19,6 +19,10 @@ export default function Footer() {
         href: `/${locale}/conversation-insights`,
         label: t("conversationInsights") || "Conversation Insights",
       },
+      {
+        href: `/${locale}/zendesk-pricing`,
+        label: t("zendeskPricing") || "Zendesk Pricing",
+      },
     ],
     company: [
       { href: `/${locale}/terms`, label: t("terms") || "Terms" },
