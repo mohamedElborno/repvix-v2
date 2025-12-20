@@ -191,6 +191,35 @@
     "zendeskReload": "Yenile",
     "zendeskLoading": "Yükleniyor...",
     "zendeskNoComments": "Henüz yorum yok.",
+    "setup": {
+      "title": "Çalışma alanınız hazırlanıyor",
+      "description": "Hemen başlamanız için 'my-team' adlı varsayılan ekibinizi otomatik olarak oluşturuyoruz.",
+      "status": {
+        "checking": "Hesabınız kontrol ediliyor...",
+        "creating": "Kuruluşunuz şimdi hazırlanıyor...",
+        "activating": "Çalışma alanınız etkinleştiriliyor...",
+        "done": "Kurulum tamamlandı, yönlendiriliyorsunuz...",
+        "error": "Kurulum tamamlanamadı"
+      },
+      "waitingMessage": "Kurulum birkaç saniye sürer. Manuel adım gerekmez.",
+      "errorMessage": "Çalışma alanı oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
+      "retry": "Yeniden Dene",
+      "details": "Detaylar:",
+      "features": {
+        "inviteTeam": {
+          "title": "Ekip Davet Et",
+          "description": "Aynı çalışma alanında birlikte çalışmak için meslektaşlarınıza davetiye gönderin."
+        },
+        "uploadFiles": {
+          "title": "Dosyalarınızı Yükleyin",
+          "description": "Daha akıllı analizler ve konuşmalar elde etmek için çalışma dosyalarınızı yüklemeye başlayın."
+        },
+        "securePermissions": {
+          "title": "Güvenli İzinler",
+          "description": "Rolleri otomatik olarak ayarlıyoruz ve bunları daha sonra ekip bölümünden değiştirebilirsiniz."
+        }
+      }
+    },
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Çok negatif",

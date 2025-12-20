@@ -245,6 +245,35 @@
     "zendeskReload": "Reload",
     "zendeskLoading": "Loading...",
     "zendeskNoComments": "No comments yet.",
+    "setup": {
+      "title": "Setting up your workspace",
+      "description": "We're automatically creating your default team named 'my-team' so you can start right away.",
+      "status": {
+        "checking": "Checking your account...",
+        "creating": "Setting up your organization now...",
+        "activating": "Activating your workspace...",
+        "done": "Setup complete, redirecting...",
+        "error": "Failed to complete setup"
+      },
+      "waitingMessage": "Setup takes a few seconds. No manual steps needed.",
+      "errorMessage": "An error occurred while creating the workspace. Please try again.",
+      "retry": "Retry",
+      "details": "Details:",
+      "features": {
+        "inviteTeam": {
+          "title": "Invite Team",
+          "description": "Send invitations to your colleagues to work together in the same workspace."
+        },
+        "uploadFiles": {
+          "title": "Upload Your Files",
+          "description": "Start uploading your work files to get smarter analytics and conversations."
+        },
+        "securePermissions": {
+          "title": "Secure Permissions",
+          "description": "We set up roles automatically, and you can modify them from the team section later."
+        }
+      }
+    },
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Very negative",

@@ -13,12 +13,17 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { createOrganizationAction } from "../my-team/[memberConvexId]/actions";
+import { track } from "@/lib/metaPixel";
+import { useTranslations } from "next-intl";
+import { useUser } from "@clerk/nextjs";
 
 type SetupStatus = "checking" | "creating" | "activating" | "done" | "error";
 
 export default function SetupPage() {
   const { userMemberships, setActive, isLoaded } = useOrganizationList();
   const router = useRouter();
+  const t = useTranslations("dashboard.setup");
+  const { user, isLoaded: isUserLoaded, isSignedIn } = useUser();
 
   const creationStarted = useRef(false);
   const [status, setStatus] = useState<SetupStatus>("checking");
@@ -41,6 +46,27 @@ export default function SetupPage() {
     [router, setActive]
   );
 
+  useEffect(() => {
+    if (!isUserLoaded || !isSignedIn || !user?.id) return;
+
+    // IMPORTANT: wait for org memberships to load to avoid counting invited users
+    if (!isLoaded || userMemberships.data === undefined) return;
+
+    // invited/existing org member => not a fresh signup
+    if (userMemberships.data.length > 0) return;
+
+    const key = `px_complete_registration:${user.id}`;
+    if (localStorage.getItem(key)) return;
+
+    const eventID =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : String(Date.now());
+
+    track("CompleteRegistration", {}, { eventID });
+    localStorage.setItem(key, eventID);
+  }, [isUserLoaded, isSignedIn, user?.id, isLoaded, userMemberships.data]);
+
   const startCreation = useCallback(async () => {
     setStatus("creating");
     setError(null);
@@ -55,9 +81,9 @@ export default function SetupPage() {
     } catch (err: any) {
       creationStarted.current = false;
       setStatus("error");
-      setError(err?.message || "Failed to prepare your workspace.");
+      setError(err?.message || t("status.error"));
     }
-  }, [activateAndContinue]);
+  }, [activateAndContinue, t]);
 
   useEffect(() => {
     if (!isLoaded || userMemberships.data === undefined) return;
@@ -82,11 +108,11 @@ export default function SetupPage() {
     status === "done";
 
   const statusLabel: Record<SetupStatus, string> = {
-    checking: "جارٍ التحقق من حسابك...",
-    creating: "نجهز مؤسستك الآن...",
-    activating: "نفعل مساحة العمل الخاصة بك...",
-    done: "تم الإعداد، سيتم توجيهك...",
-    error: "تعذر إكمال الإعداد",
+    checking: t("status.checking"),
+    creating: t("status.creating"),
+    activating: t("status.activating"),
+    done: t("status.done"),
+    error: t("status.error"),
   };
 
   return (
@@ -99,10 +125,8 @@ export default function SetupPage() {
         </div>
 
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">تجهيز مساحتك</h1>
-          <p className="text-muted-foreground">
-            ننشئ فريقك الافتراضي باسم "my-team" تلقائياً حتى تبدأ فوراً.
-          </p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("description")}</p>
         </div>
 
         <div className="flex flex-col items-center gap-3">
@@ -111,7 +135,7 @@ export default function SetupPage() {
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
               <p className="font-medium">{statusLabel[status]}</p>
               <p className="text-sm text-muted-foreground text-center">
-                يستغرق الإعداد بضع ثوانٍ. لا حاجة لأي خطوة يدوية.
+                {t("waitingMessage")}
               </p>
             </>
           ) : (
@@ -120,7 +144,7 @@ export default function SetupPage() {
                 {statusLabel[status]}
               </p>
               <p className="text-sm text-muted-foreground text-center">
-                حدث خطأ أثناء إنشاء المساحة. جرّب إعادة المحاولة.
+                {t("errorMessage")}
               </p>
               <Button
                 onClick={() => {
@@ -128,11 +152,11 @@ export default function SetupPage() {
                   void startCreation();
                 }}
               >
-                إعادة المحاولة
+                {t("retry")}
               </Button>
               {error && (
                 <p className="text-xs text-muted-foreground text-center">
-                  التفاصيل: {error}
+                  {t("details")} {error}
                 </p>
               )}
             </>
@@ -145,9 +169,9 @@ export default function SetupPage() {
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-medium">دعوة الفريق</p>
+              <p className="font-medium">{t("features.inviteTeam.title")}</p>
               <p className="text-sm text-muted-foreground">
-                أرسل الدعوات لزملائك للعمل معاً في نفس المساحة.
+                {t("features.inviteTeam.description")}
               </p>
             </div>
           </div>
@@ -156,9 +180,9 @@ export default function SetupPage() {
               <MessageSquare className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-medium">ارفع ملفاتك</p>
+              <p className="font-medium">{t("features.uploadFiles.title")}</p>
               <p className="text-sm text-muted-foreground">
-                ابدأ برفع ملفات العمل لتحصل على تحليلات ومحادثات أذكى.
+                {t("features.uploadFiles.description")}
               </p>
             </div>
           </div>
@@ -167,9 +191,11 @@ export default function SetupPage() {
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-medium">صلاحيات آمنة</p>
+              <p className="font-medium">
+                {t("features.securePermissions.title")}
+              </p>
               <p className="text-sm text-muted-foreground">
-                نضبط الأدوار تلقائياً، ويمكنك تعديلها من قسم الفريق لاحقاً.
+                {t("features.securePermissions.description")}
               </p>
             </div>
           </div>
@@ -178,4 +204,3 @@ export default function SetupPage() {
     </div>
   );
 }
-

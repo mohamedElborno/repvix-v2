@@ -259,6 +259,35 @@
     "zendeskReload": "Recargar",
     "zendeskLoading": "Cargando...",
     "zendeskNoComments": "Aún no hay comentarios.",
+    "setup": {
+      "title": "Configurando tu espacio de trabajo",
+      "description": "Estamos creando automáticamente tu equipo predeterminado llamado 'my-team' para que puedas comenzar de inmediato.",
+      "status": {
+        "checking": "Verificando tu cuenta...",
+        "creating": "Configurando tu organización ahora...",
+        "activating": "Activando tu espacio de trabajo...",
+        "done": "Configuración completa, redirigiendo...",
+        "error": "Error al completar la configuración"
+      },
+      "waitingMessage": "La configuración toma unos segundos. No se necesitan pasos manuales.",
+      "errorMessage": "Ocurrió un error al crear el espacio de trabajo. Por favor, inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "details": "Detalles:",
+      "features": {
+        "inviteTeam": {
+          "title": "Invitar equipo",
+          "description": "Envía invitaciones a tus colegas para trabajar juntos en el mismo espacio de trabajo."
+        },
+        "uploadFiles": {
+          "title": "Sube tus archivos",
+          "description": "Comienza a subir tus archivos de trabajo para obtener análisis y conversaciones más inteligentes."
+        },
+        "securePermissions": {
+          "title": "Permisos seguros",
+          "description": "Configuramos los roles automáticamente, y puedes modificarlos desde la sección de equipo más tarde."
+        }
+      }
+    },
     "analysisLabels": {
       "sentiment": {
         "very_negative": "Muy negativo",

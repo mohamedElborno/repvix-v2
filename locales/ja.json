@@ -245,6 +245,35 @@
     "zendeskReload": "再読み込み",
     "zendeskLoading": "読み込み中...",
     "zendeskNoComments": "コメントはまだありません。",
+    "setup": {
+      "title": "ワークスペースをセットアップ中",
+      "description": "すぐに始められるように、'my-team'という名前のデフォルトチームを自動的に作成しています。",
+      "status": {
+        "checking": "アカウントを確認中...",
+        "creating": "組織をセットアップ中...",
+        "activating": "ワークスペースを有効化中...",
+        "done": "セットアップ完了、リダイレクト中...",
+        "error": "セットアップの完了に失敗しました"
+      },
+      "waitingMessage": "セットアップには数秒かかります。手動の手順は不要です。",
+      "errorMessage": "ワークスペースの作成中にエラーが発生しました。もう一度お試しください。",
+      "retry": "再試行",
+      "details": "詳細:",
+      "features": {
+        "inviteTeam": {
+          "title": "チームを招待",
+          "description": "同じワークスペースで一緒に作業するために、同僚に招待を送信します。"
+        },
+        "uploadFiles": {
+          "title": "ファイルをアップロード",
+          "description": "よりスマートな分析と会話を得るために、作業ファイルのアップロードを開始します。"
+        },
+        "securePermissions": {
+          "title": "セキュアな権限",
+          "description": "役割は自動的に設定され、後でチームセクションから変更できます。"
+        }
+      }
+    },
     "analysisLabels": {
       "sentiment": {
         "very_negative": "非常にネガティブ",
