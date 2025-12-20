@@ -66,11 +66,24 @@ export function SignUpForm() {
       const redirectUrl = `${window.location.origin}/${locale}/sso-callback`;
       const redirectUrlComplete = `${window.location.origin}/${locale}/dashboard/setup`;
 
-      await signUp.authenticateWithRedirect({
-        strategy: `oauth_${provider}`,
-        redirectUrl,
-        redirectUrlComplete,
-      });
+      // Use requestIdleCallback on mobile for better performance, or setTimeout as fallback
+      const startAuth = () => {
+        signUp.authenticateWithRedirect({
+          strategy: `oauth_${provider}`,
+          redirectUrl,
+          redirectUrlComplete,
+        }).catch((err: any) => {
+          toast.error(err.errors?.[0]?.message || t("errorOccurred"));
+          setIsLoading(false);
+        });
+      };
+
+      // Small delay to ensure UI updates before redirect (especially on mobile)
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(startAuth, { timeout: 100 });
+      } else {
+        setTimeout(startAuth, 50);
+      }
     } catch (err: any) {
       toast.error(err.errors?.[0]?.message || t("errorOccurred"));
       setIsLoading(false);
@@ -86,7 +99,7 @@ export function SignUpForm() {
   }
 
   return (
-    <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-[0_0_40px_rgba(0,0,0,0.45)]">
+    <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl md:backdrop-blur-xl backdrop-blur-md p-8 shadow-[0_0_40px_rgba(0,0,0,0.45)]">
       {/* Clerk CAPTCHA Element */}
       <div id="clerk-captcha" />
 

@@ -24,18 +24,27 @@ export default function Page() {
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-black">
-      {/* Animated Gradient Background */}
+      {/* Optimized Background for Mobile */}
       <div className="absolute inset-0 z-0">
-        {/* Main gradient orbs */}
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-fuchsia-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        {/* Simplified gradient orbs - reduced blur on mobile */}
+        <div
+          className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob will-change-transform"
+          style={{ transform: "translateZ(0)" }}
+        ></div>
+        <div
+          className="absolute top-0 -right-4 w-72 h-72 bg-fuchsia-500 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob animation-delay-2000 will-change-transform"
+          style={{ transform: "translateZ(0)" }}
+        ></div>
+        <div
+          className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-2xl md:blur-3xl opacity-20 animate-blob animation-delay-4000 will-change-transform"
+          style={{ transform: "translateZ(0)" }}
+        ></div>
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f0f_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f0f_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+        {/* Simplified grid pattern - hidden on mobile for performance */}
+        <div className="hidden md:block absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f0f_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f0f_1px,transparent_1px)] bg-size-[14px_24px]"></div>
 
         {/* Radial gradient overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/50 to-black"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-transparent via-black/50 to-black"></div>
       </div>
 
       {/* Back to Home Button */}
