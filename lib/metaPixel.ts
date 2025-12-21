@@ -40,3 +40,34 @@ export const trackCustom = (
   // fbq('trackCustom', eventName, params, options)
   window.fbq("trackCustom", event, params ?? {}, options ?? {});
 };
+
+function waitForFbq(timeoutMs = 3000) {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.fbq) return Promise.resolve(true);
+
+  return new Promise<boolean>((resolve) => {
+    const start = Date.now();
+    const timer = setInterval(() => {
+      if (window.fbq) {
+        clearInterval(timer);
+        resolve(true);
+      } else if (Date.now() - start > timeoutMs) {
+        clearInterval(timer);
+        resolve(false);
+      }
+    }, 50);
+  });
+}
+
+export async function trackSafe(
+  event: string,
+  params?: Record<string, any>,
+  options?: Record<string, any>
+) {
+  if (typeof window === "undefined") return;
+
+  const ok = await waitForFbq(3000);
+  if (!ok) return;
+
+  window.fbq!("track", event, params ?? {}, options ?? {});
+}

@@ -50,7 +50,7 @@ export default function ConversationInsightsPage() {
     trackLpEvent(event);
     const baseLocale = locale || "en";
     setTimeout(() => {
-      window.location.href = `/${baseLocale}/sign-in`;
+      window.location.href = `/${baseLocale}/sign-up`;
     }, 120);
   };
 

@@ -13,7 +13,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { createOrganizationAction } from "../my-team/[memberConvexId]/actions";
-import { track } from "@/lib/metaPixel";
+import { trackSafe } from "@/lib/metaPixel";
 import { useTranslations } from "next-intl";
 import { useUser } from "@clerk/nextjs";
 
@@ -49,11 +49,9 @@ export default function SetupPage() {
   useEffect(() => {
     if (!isUserLoaded || !isSignedIn || !user?.id) return;
 
-    // IMPORTANT: wait for org memberships to load to avoid counting invited users
-    if (!isLoaded || userMemberships.data === undefined) return;
-
-    // invited/existing org member => not a fresh signup
-    if (userMemberships.data.length > 0) return;
+    const createdAtMs = user.createdAt ? new Date(user.createdAt).getTime() : 0;
+    const isFresh = createdAtMs && Date.now() - createdAtMs < 10 * 60 * 1000; // 10 دقائق
+    if (!isFresh) return;
 
     const key = `px_complete_registration:${user.id}`;
     if (localStorage.getItem(key)) return;
@@ -63,9 +61,9 @@ export default function SetupPage() {
         ? crypto.randomUUID()
         : String(Date.now());
 
-    track("CompleteRegistration", {}, { eventID });
+    void trackSafe("CompleteRegistration", {}, { eventID });
     localStorage.setItem(key, eventID);
-  }, [isUserLoaded, isSignedIn, user?.id, isLoaded, userMemberships.data]);
+  }, [isUserLoaded, isSignedIn, user?.id, user?.createdAt]);
 
   const startCreation = useCallback(async () => {
     setStatus("creating");
