@@ -1,3 +1,4 @@
+import { serverBridgeSecret } from "@/lib/serverBridge";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getConvexServerClient } from "@/lib/convex";
@@ -144,7 +145,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const connection = await convex.query(api.zendesk.getConnectionByOrg, {
+    const connection = await convex.query(api.zendesk.getServerConnection, {
+      serverSecret: serverBridgeSecret(),
       organizationId: convexOrg,
     });
 

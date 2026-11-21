@@ -46,7 +46,7 @@ export default function DashboardMockup() {
                 <>
                   {theme === "dark" ? (
                     <Image
-                      src="/RepvixDashboardDarkMode.png"
+                      src="/demo-preview.svg"
                       alt="Repvix Dashboard"
                       width={10000}
                       height={10000}
@@ -55,7 +55,7 @@ export default function DashboardMockup() {
                     />
                   ) : (
                     <Image
-                      src="/RepvixDashboard.png"
+                      src="/demo-preview.svg"
                       alt="Repvix Dashboard"
                       width={10000}
                       height={10000}
@@ -76,8 +76,8 @@ export default function DashboardMockup() {
         <Image
           src={
             mounted && theme === "dark"
-              ? "/phoneMokDark.png"
-              : "/phoneMokLight.png"
+              ? "/demo-preview.svg"
+              : "/demo-preview.svg"
           }
           alt="Repvix Dashboard"
           width={10000}

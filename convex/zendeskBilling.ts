@@ -1,3 +1,4 @@
+import { internalQuery, internalMutation as securedMutation, internalAction as securedAction } from "./_generated/server";
 // convex/zendeskBilling.ts
 // Zendesk-specific billing functions (separate from main platform billing)
 
@@ -9,7 +10,7 @@ import { isZendeskVariant } from "./zendeskPlan";
 /**
  * Get the current Zendesk plan for a subdomain
  */
-export const getZendeskPlan = query({
+export const getZendeskPlan = internalQuery({
   args: {
     zendeskAccountKey: v.string(), // subdomain
   },
@@ -65,7 +66,7 @@ export const getZendeskPlan = query({
  * Create a Lemon Squeezy checkout URL for Zendesk plan upgrade
  * This is similar to createCheckout in billing.ts but specifically for Zendesk
  */
-export const createZendeskCheckout = action({
+export const createZendeskCheckout = securedAction({
   args: {
     zendeskAccountKey: v.string(), // subdomain
     variantId: v.string(), // Lemon Squeezy variant ID for Zendesk plan
@@ -96,7 +97,7 @@ export const createZendeskCheckout = action({
     }
 
     // Check if already has active paid plan
-    const currentPlan = await ctx.runQuery(api.zendeskBilling.getZendeskPlan, {
+    const currentPlan = await ctx.runQuery(internal.zendeskBilling.getZendeskPlan, {
       zendeskAccountKey,
     });
 
@@ -241,7 +242,7 @@ export const createZendeskCheckout = action({
  * Get billing portal URL for managing Zendesk subscription
  * Similar to createBillingPortal in billing.ts but for Zendesk
  */
-export const getZendeskBillingPortal = action({
+export const getZendeskBillingPortal = securedAction({
   args: {
     zendeskAccountKey: v.string(), // subdomain
   },
@@ -267,7 +268,7 @@ export const getZendeskBillingPortal = action({
 
     // Get subscription from database
     const subscription = await ctx.runQuery(
-      api.zendeskSubscriptions.getByAccount,
+      internal.zendeskSubscriptions.getByAccount,
       {
         zendeskAccountKey,
       }

@@ -400,6 +400,9 @@ export const getAllMessagesForMultipleChats = query({
       const messagesMap: Record<string, any[]> = {};
 
       for (const chatId of args.chatIds) {
+        const chat = await ctx.db.get(chatId);
+        if (!chat) throw new Error("Chat not found");
+        await requireOrgMembership(ctx, chat.organizationId);
         const messages = await ctx.db
           .query("chatMessages")
           .withIndex("by_chat_timestamp", (q) => q.eq("chatId", chatId))
@@ -627,6 +630,9 @@ export const getMessageEmbeddingsForChats = query({
 
     const embeddingsMap: Record<string, MessageEmbedding[]> = {};
     for (const chatId of args.chatIds) {
+        const chat = await ctx.db.get(chatId);
+        if (!chat) throw new Error("Chat not found");
+        await requireOrgMembership(ctx, chat.organizationId);
       const embeddings = await ctx.db
         .query("messageEmbeddings")
         .withIndex("by_chat", (q) => q.eq("chatId", chatId))

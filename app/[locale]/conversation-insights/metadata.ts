@@ -26,7 +26,7 @@ export async function generateMetadata({
       description,
       images: [
         {
-          url: "/conversation-insights.png",
+          url: "/demo-preview.svg",
           width: 1200,
           height: 630,
           alt: "Anonymized chat highlighting churn trigger",

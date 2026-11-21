@@ -98,7 +98,7 @@ export function SiteHeader() {
             {/* Logo - Left side */}
             <div className="flex items-center pointer-events-auto p-4 relative">
               <Image
-                src={`/RepvixLogo.png`}
+                src={`/Repvix.svg`}
                 alt={t("logoAlt") || "Repvix logo"}
                 width={500}
                 height={500}
@@ -178,7 +178,7 @@ export function SiteHeader() {
           {/* Logo - Left side */}
           <div className="flex items-center pointer-events-auto p-4 relative">
             <Image
-              src={`/RepvixLogo.png`}
+              src={`/Repvix.svg`}
               alt={t("logoAlt") || "Repvix logo"}
               width={500}
               height={500}

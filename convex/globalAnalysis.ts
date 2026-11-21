@@ -1,3 +1,4 @@
+import { requireOrgMembership } from "./auth";
 import { internalMutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
 import { v } from "convex/values";
@@ -15,6 +16,7 @@ export const prepareGlobalAnalysisStats = query({
     to: v.optional(v.number()), // timestamp
   },
   handler: async (ctx, args) => {
+    await requireOrgMembership(ctx, args.organizationId);
     const { organizationId, from, to } = args;
 
     // 1) Fetch all chatAnalyses for this org
@@ -296,6 +298,7 @@ export const prepareGlobalAnalysisStats = query({
 export const getLatestByOrg = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const items = await ctx.db
       .query("globalAnalyses")
       .withIndex("by_org_createdAt", (q) =>

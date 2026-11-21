@@ -1,3 +1,4 @@
+import { internalQuery, internalMutation as securedMutation, internalAction as securedAction } from "./_generated/server";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import {
@@ -34,7 +35,7 @@ function normalizeTs(ts: number | null | undefined): number | undefined {
   return ts;
 }
 
-export const zendeskSidebarAnalyze = action({
+export const zendeskSidebarAnalyze = securedAction({
   args: {
     subject: v.string(),
     comments: v.array(
@@ -61,6 +62,7 @@ export const zendeskSidebarAnalyze = action({
     requesterId: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    if (args.subject.length > 1000 || args.comments.length > 500 || args.comments.some(c => c.body.length > 10000) || args.comments.reduce((n, c) => n + c.body.length, 0) > 100000) throw new Error("Analysis input too large");
     if (args.comments.length === 0) {
       throw new Error("No comments provided");
     }

@@ -1,34 +1,11 @@
-import { getConvexServerClient } from "@/lib/convex";
-import { api } from "@/convex/_generated/api";
-
-export async function POST(req: Request) {
-  const payload = await req.json();
-  // Webhooks لا تحتاج إلى token المستخدم
-  const convex = await getConvexServerClient(true);
-
-  if (payload.type === "organization.membership.created") {
-    const data = payload.data;
-
-    // 1) اجلب Convex Org ID
-    const convexOrgId = await convex.query(api.orgs.getByClerkId, {
-      clerkOrgId: data.organization.id,
-    });
-
-    if (!convexOrgId) {
-      console.error("Organization not found in Convex");
-      return new Response("Organization not found", { status: 400 });
-    }
-
-    // 2) أضف العضو
-    await convex.mutation(api.orgMembers.addMemberFromInvite, {
-      organizationId: convexOrgId,
-      clerkUserId: data.publicUserData.userId,
-      name: data.publicUserData.firstName || "",
-      email: data.publicUserData.identifier,
-      imageUrl: data.publicUserData.imageUrl,
-      role: data.role,
-    });
+import { verifyWebhook } from "@clerk/nextjs/webhooks";
+import type { NextRequest } from "next/server";
+import { syncClerkOrganization } from "@/lib/syncClerkOrganization";
+export async function POST(req: NextRequest) {
+  let event;
+  try { event = await verifyWebhook(req); } catch { return new Response("Invalid signature", { status: 400 }); }
+  if (event.type === "organizationMembership.created" || event.type === "organizationMembership.updated" || event.type === "organizationMembership.deleted") {
+    await syncClerkOrganization(event.data.organization.id, true);
   }
-
-  return new Response("ok");
+  return new Response(null, { status: 204 });
 }

@@ -1,3 +1,4 @@
+import { verifyZendeskRequest } from "./zendeskRequestAuth";
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { api, internal } from "./_generated/api";
@@ -196,7 +197,10 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     let body: { subdomain: string; ticketId?: number };
     try {
-      body = (await request.json()) as { subdomain: string; ticketId?: number };
+      if (Number(request.headers.get("content-length") || 0) > 250000) return new Response("Payload too large", { status: 413 });
+      const raw = await request.text();
+      if (new TextEncoder().encode(raw).length > 250000) return new Response("Payload too large", { status: 413 });
+      body = JSON.parse(raw) as { subdomain: string; ticketId?: number };
     } catch {
       return new Response(JSON.stringify({ error: "invalid_json" }), {
         status: 400,
@@ -205,6 +209,7 @@ http.route({
     }
 
     const { subdomain } = body;
+    if (!await verifyZendeskRequest(request, subdomain)) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
     // Validation
     const validationError = validateSubdomain(subdomain);
@@ -281,7 +286,10 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     let body: { subdomain: string; ticketId: number };
     try {
-      body = (await request.json()) as { subdomain: string; ticketId: number };
+      if (Number(request.headers.get("content-length") || 0) > 250000) return new Response("Payload too large", { status: 413 });
+      const raw = await request.text();
+      if (new TextEncoder().encode(raw).length > 250000) return new Response("Payload too large", { status: 413 });
+      body = JSON.parse(raw) as { subdomain: string; ticketId: number };
     } catch {
       return new Response(JSON.stringify({ error: "invalid_json" }), {
         status: 400,
@@ -290,6 +298,7 @@ http.route({
     }
 
     const { subdomain, ticketId } = body;
+    if (!await verifyZendeskRequest(request, subdomain)) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
     // Validation
     const validationError = validateSubdomain(subdomain);
@@ -309,7 +318,7 @@ http.route({
     const zendeskAccountKey = subdomain;
 
     // Query job status
-    const job = await ctx.runQuery(api.analysisJobs.byTicket, {
+    const job = await ctx.runQuery(internal.analysisJobs.byTicket, {
       zendeskAccountKey,
       ticketId,
     });
@@ -364,7 +373,10 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     let body: { subdomain: string };
     try {
-      body = (await request.json()) as { subdomain: string };
+      if (Number(request.headers.get("content-length") || 0) > 250000) return new Response("Payload too large", { status: 413 });
+      const raw = await request.text();
+      if (new TextEncoder().encode(raw).length > 250000) return new Response("Payload too large", { status: 413 });
+      body = JSON.parse(raw) as { subdomain: string };
     } catch {
       return new Response(JSON.stringify({ error: "invalid_json" }), {
         status: 400,
@@ -373,6 +385,7 @@ http.route({
     }
 
     const { subdomain } = body;
+    if (!await verifyZendeskRequest(request, subdomain)) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
     // Validation
     const validationError = validateSubdomain(subdomain);
@@ -392,7 +405,7 @@ http.route({
     // Call the action to get billing portal URL
     try {
       const result = await ctx.runAction(
-        api.zendeskBilling.getZendeskBillingPortal,
+        internal.zendeskBilling.getZendeskBillingPortal,
         {
           zendeskAccountKey: subdomain,
         }
@@ -447,7 +460,10 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     let body: ZendeskAnalyzePayload;
     try {
-      body = (await request.json()) as ZendeskAnalyzePayload;
+      if (Number(request.headers.get("content-length") || 0) > 250000) return new Response("Payload too large", { status: 413 });
+      const raw = await request.text();
+      if (new TextEncoder().encode(raw).length > 250000) return new Response("Payload too large", { status: 413 });
+      body = JSON.parse(raw) as ZendeskAnalyzePayload;
     } catch {
       return new Response(JSON.stringify({ error: "invalid_json" }), {
         status: 400,
@@ -456,6 +472,7 @@ http.route({
     }
 
     const { subdomain, ticketId, subject, comments, requesterId } = body;
+    if (!await verifyZendeskRequest(request, subdomain)) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
     // Validation
     const validationError = validateSubdomain(subdomain);
@@ -472,7 +489,7 @@ http.route({
       );
     }
 
-    if (!Array.isArray(comments) || comments.length === 0) {
+    if (!Array.isArray(comments) || comments.length === 0 || comments.length > 500 || comments.some(c => !c || typeof c.body !== "string" || c.body.length > 10000) || comments.reduce((n, c) => n + c.body.length, 0) > 100000 || !Number.isSafeInteger(ticketId) || ticketId <= 0) {
       return new Response(
         JSON.stringify({
           error: "invalid_payload",
@@ -485,7 +502,7 @@ http.route({
       );
     }
 
-    if (!subject || typeof subject !== "string") {
+    if (!subject || typeof subject !== "string" || subject.length > 1000) {
       return new Response(
         JSON.stringify({
           error: "invalid_payload",
@@ -502,7 +519,7 @@ http.route({
 
     // 0️⃣ Check if there's already a running job for this ticket
     // Use the same endpoint logic as /zendesk/job-status
-    const existingJob = await ctx.runQuery(api.analysisJobs.byTicket, {
+    const existingJob = await ctx.runQuery(internal.analysisJobs.byTicket, {
       zendeskAccountKey,
       ticketId,
     });
@@ -567,7 +584,7 @@ http.route({
     ) => {
       try {
         // Use upsert instead of updateStatus to ensure job exists
-        await ctx.runMutation(api.analysisJobs.upsert, {
+        await ctx.runMutation(internal.analysisJobs.upsert, {
           zendeskAccountKey,
           ticketId,
           status,
@@ -609,7 +626,7 @@ http.route({
 
       try {
         const checkoutResult = await ctx.runAction(
-          api.zendeskBilling.createZendeskCheckout,
+          internal.zendeskBilling.createZendeskCheckout,
           {
             zendeskAccountKey,
             variantId: defaultVariantId,
@@ -659,6 +676,8 @@ http.route({
 
     // 4️⃣ Schedule analysis to run asynchronously
     try {
+      const reserved = await ctx.runMutation(internal.analysisJobs.reserve, { zendeskAccountKey, ticketId });
+      if (!reserved) return new Response("Quota exceeded or job already running", { status: 429, headers: corsHeaders });
       // Schedule the analysis to run immediately in the background
       await ctx.scheduler.runAfter(0, internal.analysisJobs.runAnalysis, {
         zendeskAccountKey,

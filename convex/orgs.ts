@@ -1,10 +1,9 @@
+import { requireServerBridge } from "./serverBridge";
 // convex/orgs.ts
 
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireAdmin, requireOrgMembership } from "./auth";
-import { limitsForTier } from "./billingPlan";
-import { Id } from "./_generated/dataModel";
 
 export const getByClerkId = query({
   args: { clerkOrgId: v.string() },
@@ -14,7 +13,9 @@ export const getByClerkId = query({
       .withIndex("by_clerkOrgId", (q) => q.eq("clerkOrgId", args.clerkOrgId))
       .first();
 
-    return org?._id ?? null;
+    if (!org) return null;
+    await requireOrgMembership(ctx, org._id);
+    return org._id;
   },
 });
 
@@ -38,11 +39,13 @@ function normalizeRole(clerkRole: string): "admin" | "member" {
 }
 export const syncOrganization = mutation({
   args: {
+    serverSecret: v.string(),
     clerkOrgId: v.string(),
     name: v.string(),
     createdBy: v.string(),
   },
   handler: async (ctx, args) => {
+    requireServerBridge(args.serverSecret);
     const existing = await ctx.db
       .query("organizations")
       .withIndex("by_clerkOrgId", (q) => q.eq("clerkOrgId", args.clerkOrgId))
@@ -61,6 +64,7 @@ export const syncOrganization = mutation({
 
 export const syncOrganizationMembers = mutation({
   args: {
+    serverSecret: v.string(),
     clerkOrgId: v.string(),
     members: v.array(
       v.object({
@@ -73,82 +77,23 @@ export const syncOrganizationMembers = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    requireServerBridge(args.serverSecret);
     const org = await ctx.db
       .query("organizations")
       .withIndex("by_clerkOrgId", (q) => q.eq("clerkOrgId", args.clerkOrgId))
       .first();
     if (!org) throw new Error("Organization not found.");
 
-    const caller = await ctx.auth.getUserIdentity();
-    if (!caller) throw new Error("Unauthorized.");
-
-    let callerMembership = await ctx.db
-      .query("organizationMembers")
-      .withIndex("by_user", (q) => q.eq("clerkUserId", caller.subject))
-      .filter((q) => q.eq(q.field("organizationId"), org._id))
-      .first();
-
-    if (!callerMembership) {
-      // Allow the caller to self-provision only if Clerk says they belong to this org
-      const selfFromClerk = args.members.find(
-        (m) => m.clerkUserId === caller.subject
-      );
-      if (!selfFromClerk) {
-        throw new Error(
-          "Unauthorized: caller is not a member of this organization."
-        );
-      }
-
-      const role = normalizeRole(selfFromClerk.role);
-
-      await assertMemberCapacity(
-        ctx,
-        org._id,
-        org.planTier,
-        (org as any).limits?.members,
-        1
-      );
-
-      await ctx.db.insert("organizationMembers", {
-        organizationId: org._id,
-        clerkUserId: selfFromClerk.clerkUserId,
-        name: selfFromClerk.name || undefined,
-        email: selfFromClerk.email || undefined,
-        imageUrl: selfFromClerk.imageUrl || undefined,
-        role,
-        joinedAt: Date.now(),
-      });
-      // Only sync the caller entry; ignore others
-      args.members = [selfFromClerk];
-    } else if (callerMembership.role !== "admin") {
-      // Non-admins may only sync their own record; ignore others
-      args.members = args.members.filter(
-        (m) => m.clerkUserId === caller.subject
-      );
-      if (!args.members.length) {
-        return true;
-      }
-    }
-
     const existingMembers = await ctx.db
       .query("organizationMembers")
       .withIndex("by_org", (q) => q.eq("organizationId", org._id))
       .collect();
 
-    const existingMap = new Map(existingMembers.map((m) => [m.clerkUserId, m]));
-
-    const memberLimit = await resolveMemberLimit(
-      org.planTier,
-      (org as any).limits?.members
-    );
-    const newMembers = args.members.filter(
-      (m) => !existingMap.has(m.clerkUserId)
-    );
-    if (memberLimit !== undefined && memberLimit !== "unlimited") {
-      if (existingMembers.length + newMembers.length > memberLimit) {
-        throw new Error("Member limit reached for your current plan.");
-      }
+    const incomingUsers = new Set(args.members.map(m => m.clerkUserId));
+    for (const member of existingMembers) {
+      if (!incomingUsers.has(member.clerkUserId)) await ctx.db.delete(member._id);
     }
+    const existingMap = new Map(existingMembers.filter(m => incomingUsers.has(m.clerkUserId)).map((m) => [m.clerkUserId, m]));
 
     for (const member of args.members) {
       const current = existingMap.get(member.clerkUserId);
@@ -186,37 +131,6 @@ export const syncOrganizationMembers = mutation({
     return true;
   },
 });
-
-async function assertMemberCapacity(
-  ctx: any,
-  organizationId: Id<"organizations">,
-  planTier?: string,
-  storedLimit?: number | "unlimited",
-  incoming = 1
-) {
-  const limit = await resolveMemberLimit(planTier, storedLimit);
-  if (limit === undefined || limit === "unlimited") return;
-
-  const currentCount = await ctx.db
-    .query("organizationMembers")
-    .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
-    .collect()
-    .then((arr: any[]) => arr.length);
-
-  if (currentCount + incoming > limit) {
-    throw new Error("Member limit reached for your current plan.");
-  }
-}
-
-async function resolveMemberLimit(
-  planTier?: string,
-  storedLimit?: number | "unlimited"
-): Promise<number | "unlimited" | undefined> {
-  if (storedLimit !== undefined) return storedLimit;
-  const tier = (planTier as any) || "basic";
-  const limits = limitsForTier(tier);
-  return limits.members;
-}
 
 /**
  * Get organization members by Clerk organization ID

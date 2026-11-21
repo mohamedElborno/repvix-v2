@@ -1,4 +1,5 @@
 "use server";
+import { serverBridgeSecret } from "@/lib/serverBridge";
 
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -107,7 +108,8 @@ export default async function ZendeskTicketPage({ params }: PageProps) {
     notFound();
   }
 
-  const connection = await convex.query(api.zendesk.getConnectionByOrg, {
+  const connection = await convex.query(api.zendesk.getServerConnection, {
+      serverSecret: serverBridgeSecret(),
     organizationId: convexOrgId,
   });
 

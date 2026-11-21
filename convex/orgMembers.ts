@@ -114,6 +114,8 @@ export const isMember = query({
     clerkUserId: v.string(),
   },
   handler: async (ctx, { organizationId, clerkUserId }) => {
+    const caller = await requireUser(ctx);
+    if (caller.subject !== clerkUserId) throw new Error("Unauthorized");
     const membership = await ctx.db
       .query("organizationMembers")
       .withIndex("by_user", (q) => q.eq("clerkUserId", clerkUserId))
@@ -128,6 +130,7 @@ export const getMemberLimitStatus = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const org = await ctx.db.get(organizationId);
     if (!org) {
       return {

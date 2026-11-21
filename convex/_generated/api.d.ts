@@ -47,6 +47,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  zendeskRequestAuth: typeof zendeskRequestAuth;
+  serverBridge: typeof serverBridge;
   analysisJobs: typeof analysisJobs;
   auth: typeof auth;
   billing: typeof billing;

@@ -1,3 +1,4 @@
+import { internalQuery, internalMutation as securedMutation, internalAction as securedAction } from "./_generated/server";
 // convex/zendeskSubscriptions.ts
 // Manage Zendesk subscriptions (separate from main platform subscriptions)
 
@@ -9,7 +10,7 @@ import { internal } from "./_generated/api";
 /**
  * Get subscription by Zendesk account key (subdomain)
  */
-export const getByAccount = query({
+export const getByAccount = internalQuery({
   args: {
     zendeskAccountKey: v.string(),
   },

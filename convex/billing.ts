@@ -99,6 +99,8 @@ async function resolveOrganizationId(ctx: any, ref?: string) {
 export const getViewerRole = query({
   args: { organizationId: v.id("organizations"), clerkUserId: v.string() },
   handler: async (ctx, { organizationId, clerkUserId }) => {
+    const caller = await ctx.auth.getUserIdentity();
+    if (!caller || caller.subject !== clerkUserId) throw new Error("Unauthorized");
     const member = await ctx.db
       .query("organizationMembers")
       .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
@@ -112,6 +114,7 @@ export const getViewerRole = query({
 export const getCurrentPlan = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const org = await ctx.db.get(organizationId);
     if (!org)
       return {

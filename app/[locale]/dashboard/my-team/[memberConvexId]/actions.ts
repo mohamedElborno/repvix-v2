@@ -1,15 +1,15 @@
 "use server";
+import { syncClerkOrganization } from "@/lib/syncClerkOrganization";
 
 import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
-import { getConvexServerClient } from "@/lib/convex";
-import { api } from "@/convex/_generated/api";
 
 /**
  * Server action to remove a member from Clerk organization
  */
 export async function removeMemberFromClerk(clerkUserId: string) {
   try {
-    const { orgId } = await auth();
+    const { orgId, userId, orgRole } = await auth();
+    if (!userId || orgRole !== "org:admin") throw new Error("Forbidden");
 
     if (!orgId) {
       throw new Error("Organization not found");
@@ -77,7 +77,6 @@ export async function createOrganizationAction(name: string) {
     }
 
     const clerk = await clerkClient();
-    const convex = await getConvexServerClient();
 
     // 1) Create organization in Clerk
     const org = await clerk.organizations.createOrganization({
@@ -85,32 +84,7 @@ export async function createOrganizationAction(name: string) {
       createdBy: user.id,
     });
 
-    // 2) Sync organization to Convex
-    await convex.mutation(api.orgs.syncOrganization, {
-      clerkOrgId: org.id,
-      name: org.name,
-      createdBy: user.id,
-    });
-
-    // 3) Get organization members from Clerk
-    const memberships = await clerk.organizations.getOrganizationMembershipList({
-      organizationId: org.id,
-    });
-
-    // 4) Sync members to Convex
-    await convex.mutation(api.orgs.syncOrganizationMembers, {
-      clerkOrgId: org.id,
-      members: memberships.data.map((m) => ({
-        clerkUserId: m.publicUserData?.userId || "",
-        name:
-          m.publicUserData?.firstName && m.publicUserData?.lastName
-            ? `${m.publicUserData.firstName} ${m.publicUserData.lastName}`
-            : m.publicUserData?.identifier || "",
-        email: m.publicUserData?.identifier || "",
-        role: m.role,
-        imageUrl: m.publicUserData?.imageUrl || "",
-      })),
-    });
+    await syncClerkOrganization(org.id);
 
     return {
       success: true,

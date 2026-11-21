@@ -1,3 +1,4 @@
+import { requireOrgMembership } from "./auth";
 // convex/chatAnalysisData.ts
 
 import { v } from "convex/values";
@@ -89,6 +90,9 @@ export const getChatWithMessagesForAnalysis = query({
     chatId: v.id("chats"),
   },
   handler: async (ctx, args) => {
+    const authorizedChat = await ctx.db.get(args.chatId);
+    if (!authorizedChat) return null;
+    await requireOrgMembership(ctx, authorizedChat.organizationId);
     const chat = await ctx.db.get(args.chatId);
     if (!chat) {
       return null;
@@ -411,6 +415,7 @@ export const getAnalysesForOrg = query({
     to: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requireOrgMembership(ctx, args.organizationId);
     const { organizationId, from, to } = args;
 
     // Get all analyses for the organization

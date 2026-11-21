@@ -1,3 +1,4 @@
+import { requireOrgMembership } from "./auth";
 // convex/feature.gate.ts
 import { v } from "convex/values";
 import { query } from "./_generated/server";
@@ -6,6 +7,7 @@ import { limitsForTier, mapVariantToPlan } from "./billingPlan";
 export const getOrgCapabilities = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const org = await ctx.db.get(organizationId);
 
     if (!org?.planTier) {
@@ -44,6 +46,7 @@ export const getOrgCapabilities = query({
 export const getDailyAnalysisCount = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, { organizationId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const now = Date.now();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
@@ -69,6 +72,7 @@ export const canPerformAnalysis = query({
     chatId: v.optional(v.id("chats")),
   },
   handler: async (ctx, { organizationId, chatId }) => {
+    await requireOrgMembership(ctx, organizationId);
     const org = await ctx.db.get(organizationId);
 
     // Resolve subscription/tier even if org.planTier is missing

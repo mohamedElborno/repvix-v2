@@ -10,7 +10,7 @@ export const createCheckoutSession = mutation({
     variantId: v.string(),
   },
   handler: async (ctx, { organizationId, clerkUserId, variantId }) => {
-    await assertOrgRole(ctx.db, organizationId, clerkUserId, ["admin"]);
+    await assertOrgRole(ctx, organizationId, clerkUserId, ["admin"]);
 
     // يمكنك هنا فقط إرجاع token/nonce وتستدعي Route Next.js للسيرفر-سايد call إلى Lemon
     // أو تقوم بالـ fetch من هنا إذا أردت (Edge fetch OK).

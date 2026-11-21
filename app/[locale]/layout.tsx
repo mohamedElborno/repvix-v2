@@ -52,7 +52,7 @@ export async function generateMetadata({
       siteName: "Repvix",
       images: [
         {
-          url: "/thumbnail.png",
+          url: "/demo-preview.svg",
           width: 1200,
           height: 630,
           alt: "Repvix AI Chat Analysis Dashboard Preview",
@@ -63,7 +63,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: t("title"),
       description: t("description"),
-      images: ["/thumbnail.png"],
+      images: ["/demo-preview.svg"],
       creator: "@repvix",
     },
     alternates: {
@@ -90,9 +90,9 @@ export async function generateMetadata({
       },
     },
     icons: {
-      icon: "/RepvixIcon.png",
-      shortcut: "/RepvixIcon.png",
-      apple: "/RepvixIcon.png",
+      icon: "/Repvix.svg",
+      shortcut: "/Repvix.svg",
+      apple: "/Repvix.svg",
     },
   };
 }
@@ -138,7 +138,7 @@ export default async function RootLayout({
   "applicationCategory": "BusinessApplication",
   "description": "Repvix analyzes customer support and sales chats using AI to deliver performance insights, sentiment analytics, and multilingual reports.",
   "url": "https://repvix.com",
-  "image": "https://repvix.com/thumbnail.png",
+  "image": "https://repvix.com/demo-preview.svg",
   "author": {
     "@type": "Person",
     "name": "Mohamed Elborno"

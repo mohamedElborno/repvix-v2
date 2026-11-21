@@ -1,3 +1,4 @@
+import { internalQuery, internalMutation as securedMutation, internalAction as securedAction } from "./_generated/server";
 import {
   mutation,
   query,
@@ -10,7 +11,7 @@ import { api, internal } from "./_generated/api";
 /**
  * Create or update an analysis job
  */
-export const upsert = mutation({
+export const upsert = securedMutation({
   args: {
     zendeskAccountKey: v.string(),
     ticketId: v.number(),
@@ -69,7 +70,7 @@ export const upsert = mutation({
 /**
  * Get analysis job by zendeskAccountKey and ticketId
  */
-export const byTicket = query({
+export const byTicket = internalQuery({
   args: {
     zendeskAccountKey: v.string(),
     ticketId: v.number(),
@@ -89,7 +90,7 @@ export const byTicket = query({
 /**
  * Update job status and progress message
  */
-export const updateStatus = mutation({
+export const updateStatus = securedMutation({
   args: {
     zendeskAccountKey: v.string(),
     ticketId: v.number(),
@@ -183,7 +184,7 @@ export const runAnalysis = internalAction({
       error?: string
     ) => {
       try {
-        await ctx.runMutation(api.analysisJobs.upsert, {
+        await ctx.runMutation(internal.analysisJobs.upsert, {
           zendeskAccountKey,
           ticketId,
           status,
@@ -214,7 +215,7 @@ export const runAnalysis = internalAction({
       // Run analysis (this is the main AI processing step)
       checkTimeout();
       const analysisResult = await ctx.runAction(
-        api.zendeskStatelessAnalysis.zendeskSidebarAnalyze,
+        internal.zendeskStatelessAnalysis.zendeskSidebarAnalyze,
         {
           subject,
           comments,
@@ -238,12 +239,9 @@ export const runAnalysis = internalAction({
       }
 
       // Increment usage (only after successful analysis)
-      await ctx.runMutation(internal.zendeskUsage.increment, {
-        zendeskAccountKey,
-      });
 
       // Calculate remaining count
-      const remaining = usage.monthlyQuota - usage.usedThisMonth - 1;
+      const remaining = Math.max(0, usage.monthlyQuota - usage.usedThisMonth);
 
       // Mark job as done with result
       await updateJob("done", "Completed", {
@@ -296,5 +294,20 @@ export const cleanupOldJobs = internalMutation({
 
     console.log(`[Cleanup] Deleted ${deleted} old analysis jobs`);
     return { deleted };
+  },
+});
+
+export const reserve = internalMutation({
+  args: { zendeskAccountKey: v.string(), ticketId: v.number() },
+  handler: async (ctx, args) => {
+    const usage = await ctx.db.query("zendeskUsage").withIndex("by_zendeskAccountKey", q => q.eq("zendeskAccountKey", args.zendeskAccountKey)).first();
+    if (!usage || usage.usedThisMonth >= usage.monthlyQuota) return false;
+    const job = await ctx.db.query("analysisJobs").withIndex("by_zendeskAccountKey_ticketId", q => q.eq("zendeskAccountKey", args.zendeskAccountKey).eq("ticketId", args.ticketId)).first();
+    if (job && job.status !== "done" && job.status !== "error" && job.updatedAt > Date.now() - 600000) return false;
+    await ctx.db.patch(usage._id, { usedThisMonth: usage.usedThisMonth + 1 });
+    const fields = { ...args, status: "preparing" as const, progressMessage: "Queued", startedAt: Date.now(), updatedAt: Date.now() };
+    if (job) await ctx.db.patch(job._id, { ...fields, result: undefined, error: undefined });
+    else await ctx.db.insert("analysisJobs", fields);
+    return true;
   },
 });

@@ -9,37 +9,18 @@
   "orientation": "portrait",
   "background_color": "#0f0f12",
   "theme_color": "#6b46c1",
-  "categories": ["business", "productivity", "analytics", "ai"],
+  "categories": [
+    "business",
+    "productivity",
+    "analytics",
+    "ai"
+  ],
   "icons": [
     {
-      "src": "/RepvixIcon.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/RepvixIcon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "/RepvixIcon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screens/repvix-dashboard.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "AI Chat Analysis Dashboard"
-    },
-    {
-      "src": "/screens/repvix-analysis.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Conversation Report and Insights"
+      "src": "/Repvix.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "shortcuts": [

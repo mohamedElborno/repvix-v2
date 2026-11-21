@@ -8,7 +8,7 @@ export default function Logo({ open }: { open: boolean }) {
   return (
     <div className="flex items-center gap-2">
       <Image
-        src="/RepvixLogo.png"
+        src="/Repvix.svg"
         alt="Logo"
         className={`h-5 w-auto dark:invert shrink-0 transition-opacity ease-in-out duration-400 ${
           open ? "opacity-100" : "opacity-0"

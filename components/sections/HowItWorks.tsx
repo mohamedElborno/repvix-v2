@@ -24,7 +24,7 @@ export default function HowItWorks() {
             "Paste your WhatsApp chat (copy/paste) or connect Zendesk to import conversations.",
         }),
         badge: t("step1.badge", { default: "Input" }),
-        image: isDark ? "/tut1.png" : "/tut1Light.png",
+        image: isDark ? "/demo-preview.svg" : "/demo-preview.svg",
       },
       {
         icon: Brain,
@@ -34,7 +34,7 @@ export default function HowItWorks() {
             "We embed, cluster and summarize conversations using advanced AI.",
         }),
         badge: t("step2.badge", { default: "AI" }),
-        image: isDark ? "/tut2.png" : "/tut2Light.png",
+        image: isDark ? "/demo-preview.svg" : "/demo-preview.svg",
       },
       {
         icon: FileOutput,
@@ -43,7 +43,7 @@ export default function HowItWorks() {
           default: "Export polished PDFs/Markdown, FAQs and analytics reports.",
         }),
         badge: t("step3.badge", { default: "Output" }),
-        image: isDark ? "/tut3.png" : "/tut3Light.png",
+        image: isDark ? "/demo-preview.svg" : "/demo-preview.svg",
       },
     ],
     [t, isDark]

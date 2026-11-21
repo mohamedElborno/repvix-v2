@@ -46,7 +46,7 @@ export default function IntegrationsClient() {
 
   const isQueryLoading =
     convexOrgId === undefined || zendeskConnection === undefined;
-  const isConnected = Boolean(zendeskConnection?.accessToken);
+  const isConnected = Boolean(zendeskConnection?.subdomain);
   const connectedSubdomain = zendeskConnection?.subdomain;
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 

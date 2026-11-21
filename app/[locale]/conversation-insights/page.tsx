@@ -67,7 +67,7 @@ export default function ConversationInsightsPage() {
             onClick={() => trackLpEvent("lp_exit_to_main_site")}
           >
             <Image
-              src="/RepvixLogo.png"
+              src="/Repvix.svg"
               alt={t("hero.logoAlt")}
               width={120}
               height={32}
@@ -157,17 +157,7 @@ export default function ConversationInsightsPage() {
           <h2 className="text-lg font-semibold">{t("video.title")}</h2>
           <p className="text-sm text-muted-foreground">{t("video.subtitle")}</p>
           <div className="rounded-2xl overflow-hidden border border-border bg-card shadow-lg">
-            <video
-              poster="/RepvixDashboard.png"
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-auto"
-              controls
-            >
-              <source src="/videos/DemoVid.mp4" type="video/mp4" />
-            </video>
+            <img src="/demo-preview.svg" alt="Repvix demo with synthetic data" className="w-full rounded-2xl" />
           </div>
         </section>
 

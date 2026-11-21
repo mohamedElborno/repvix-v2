@@ -1,7 +1,8 @@
-import { mutation, query, action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { requireServerBridge } from "./serverBridge";
+import { mutation, query, action, internalQuery, internalMutation, internalAction } from "./_generated/server";
+import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
-import { requireUser } from "./auth";
+import { requireUser, requireAdmin, requireOrgMembership } from "./auth";
 import {
   chooseAnalysisLanguage,
   chooseConversationLanguage,
@@ -34,6 +35,10 @@ export const saveConnection = mutation({
     createdBy: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.organizationId);
+    if (!/^[a-zA-Z0-9-]+$/.test(args.subdomain)) throw new Error("Invalid subdomain");
+    const caller = await requireUser(ctx);
+    if (caller.subject !== args.createdBy) throw new Error("Unauthorized");
     const now = Date.now();
 
     // Upsert per org
@@ -71,14 +76,24 @@ export const saveConnection = mutation({
 });
 
 export const getConnectionByOrg = query({
-  args: {
-    organizationId: v.id("organizations"),
-  },
+  args: { organizationId: v.id("organizations") },
   handler: async (ctx, args) => {
-    return ctx.db
-      .query("zendeskConnections")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
-      .first();
+    await requireOrgMembership(ctx, args.organizationId);
+    const connection = await ctx.db.query("zendeskConnections").withIndex("by_org", q => q.eq("organizationId", args.organizationId)).first();
+    if (!connection) return null;
+    return { _id: connection._id, subdomain: connection.subdomain, expiresAt: connection.expiresAt, scope: connection.scope };
+  },
+});
+export const getConnectionInternal = internalQuery({
+  args: { organizationId: v.id("organizations") },
+  handler: async (ctx, args) => ctx.db.query("zendeskConnections").withIndex("by_org", q => q.eq("organizationId", args.organizationId)).first(),
+});
+export const getServerConnection = query({
+  args: { organizationId: v.id("organizations"), serverSecret: v.string() },
+  handler: async (ctx, args) => {
+    requireServerBridge(args.serverSecret);
+    await requireOrgMembership(ctx, args.organizationId);
+    return ctx.db.query("zendeskConnections").withIndex("by_org", q => q.eq("organizationId", args.organizationId)).first();
   },
 });
 
@@ -87,6 +102,7 @@ export const deleteConnectionByOrg = mutation({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.organizationId);
     const existing = await ctx.db
       .query("zendeskConnections")
       .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
@@ -101,7 +117,7 @@ export const deleteConnectionByOrg = mutation({
 });
 
 // Create or get a chat document for a Zendesk ticket
-export const getOrCreateZendeskChat = mutation({
+export const getOrCreateZendeskChat = internalMutation({
   args: {
     organizationId: v.id("organizations"),
     ticketId: v.number(),
@@ -151,7 +167,7 @@ export const getOrCreateZendeskChat = mutation({
   },
 });
 
-export const saveZendeskAnalysis = mutation({
+export const saveZendeskAnalysis = internalMutation({
   args: {
     chatId: v.id("chats"),
     organizationId: v.id("organizations"),
@@ -260,7 +276,7 @@ export const saveZendeskAnalysis = mutation({
 });
 
 // Optional: refresh Zendesk access token when a refresh_token is stored
-export const refreshAccessToken = action({
+export const refreshAccessToken = internalAction({
   args: {
     organizationId: v.id("organizations"),
   },
@@ -271,7 +287,7 @@ export const refreshAccessToken = action({
     | { ok: true; expiresAt: number }
     | { ok: false; error: string; details?: string }
   > => {
-    const connection = await ctx.runQuery(api.zendesk.getConnectionByOrg, {
+    const connection = await ctx.runQuery(internal.zendesk.getConnectionInternal, {
       organizationId: args.organizationId,
     });
 
@@ -321,7 +337,7 @@ export const refreshAccessToken = action({
 
     const expiresAt = Date.now() + expiresIn * 1000;
 
-    await ctx.runMutation(api.zendesk.saveConnection, {
+    await ctx.runMutation(internal.zendesk.updateTokens, {
       organizationId: args.organizationId,
       subdomain: connection.subdomain,
       accessToken,
@@ -341,6 +357,7 @@ export const getZendeskChat = query({
     ticketId: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireOrgMembership(ctx, args.organizationId);
     return ctx.db
       .query("chats")
       .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
@@ -361,6 +378,7 @@ export const getLatestAnalysis = query({
     ticketId: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireOrgMembership(ctx, args.organizationId);
     // Reuse getZendeskChat to avoid code duplication
     const chat = await ctx.db
       .query("chats")
@@ -640,7 +658,7 @@ export const analyzeTicket = action({
     // المرحلة 0.5: التحقق من وجود/إنشاء chat والتحقق من الليمت أولاً
     // (قبل استدعاء Zendesk API أو AI لتوفير التكاليف)
     // ==========================================
-    const connection = await ctx.runQuery(api.zendesk.getConnectionByOrg, {
+    const connection = await ctx.runQuery(internal.zendesk.getConnectionInternal, {
       organizationId: args.organizationId,
     });
 
@@ -666,11 +684,11 @@ export const analyzeTicket = action({
     } catch (error) {
       // إذا فشل، حاول تحديث الـ token
       if (connection.refreshToken && connection.expiresAt <= Date.now()) {
-        const refreshed = await ctx.runAction(api.zendesk.refreshAccessToken, {
+        const refreshed = await ctx.runAction(internal.zendesk.refreshAccessToken, {
           organizationId: args.organizationId,
         });
         if (refreshed?.ok) {
-          const latest = await ctx.runQuery(api.zendesk.getConnectionByOrg, {
+          const latest = await ctx.runQuery(internal.zendesk.getConnectionInternal, {
             organizationId: args.organizationId,
           });
           if (latest) {
@@ -694,7 +712,7 @@ export const analyzeTicket = action({
     }
 
     // إنشاء أو جلب chat document أولاً
-    const chatId = await ctx.runMutation(api.zendesk.getOrCreateZendeskChat, {
+    const chatId = await ctx.runMutation(internal.zendesk.getOrCreateZendeskChat, {
       organizationId: args.organizationId,
       ticketId: args.ticketId,
       subject: ticket.subject,
@@ -923,7 +941,7 @@ export const analyzeTicket = action({
     // (chat document و الليمت تم التحقق منهما في البداية)
     // ==========================================
     const analysisId: Id<"chatAnalyses"> = await ctx.runMutation(
-      api.zendesk.saveZendeskAnalysis,
+      internal.zendesk.saveZendeskAnalysis,
       {
         chatId,
         organizationId: args.organizationId,
@@ -963,5 +981,14 @@ export const analyzeTicket = action({
       tokenInputCount,
       tokenOutputCount,
     };
+  },
+});
+
+export const updateTokens = internalMutation({
+  args: { organizationId: v.id("organizations"), subdomain: v.string(), accessToken: v.string(), refreshToken: v.optional(v.string()), expiresAt: v.number(), scope: v.optional(v.string()), createdBy: v.string() },
+  handler: async (ctx, args) => {
+    const row = await ctx.db.query("zendeskConnections").withIndex("by_org", q => q.eq("organizationId", args.organizationId)).first();
+    if (!row || row.subdomain !== args.subdomain) throw new Error("Connection changed");
+    await ctx.db.patch(row._id, { accessToken: args.accessToken, refreshToken: args.refreshToken, expiresAt: args.expiresAt, scope: args.scope, updatedAt: Date.now() });
   },
 });

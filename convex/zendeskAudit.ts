@@ -1,3 +1,4 @@
+import { internalQuery, internalMutation as securedMutation, internalAction as securedAction } from "./_generated/server";
 // convex/zendeskAudit.ts
 // Audit logging and security monitoring for Zendesk subscriptions
 
@@ -54,7 +55,7 @@ export const logEvent = internalMutation({
 /**
  * Get audit logs for a Zendesk account
  */
-export const getAuditLogs = query({
+export const getAuditLogs = internalQuery({
   args: {
     zendeskAccountKey: v.string(),
     limit: v.optional(v.number()),
@@ -82,7 +83,7 @@ export const getAuditLogs = query({
 /**
  * Get critical security events (hijacking attempts, etc.)
  */
-export const getCriticalEvents = query({
+export const getCriticalEvents = internalQuery({
   args: {
     since: v.optional(v.number()), // timestamp in ms
     limit: v.optional(v.number()),

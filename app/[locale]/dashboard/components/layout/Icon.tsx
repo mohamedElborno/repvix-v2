@@ -5,7 +5,7 @@ export default function Icon() {
   return (
     <div>
       <Image
-        src="/3.png"
+        src="/Repvix.svg"
         alt="Icon"
         width={500}
         height={500}

@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
   // 🔒 SECURITY: CSRF protection - verify state matches cookie nonce
   const cookieState = req.cookies.get("zendesk_oauth_state")?.value;
-  if (!cookieState || !state.startsWith(cookieState)) {
+  if (!cookieState || state.split("|")[0] !== cookieState) {
     return NextResponse.json(
       { ok: false, error: "Invalid OAuth state" },
       { status: 400 }

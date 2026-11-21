@@ -10,7 +10,7 @@ export const listInvoices = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { organizationId, clerkUserId, limit }) => {
-    await assertOrgRole(ctx.db, organizationId, clerkUserId, ["admin"]);
+    await assertOrgRole(ctx, organizationId, clerkUserId, ["admin"]);
 
     const invoices = await ctx.db
       .query("invoices")
